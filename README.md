@@ -21,9 +21,9 @@ You can find the last D3ds release in master branch.
 
 	b) Install:
 		1) Run downloaded file
-		2) Sign Up in Qt and then Sign In(src/installStep/Qt/SignUpQt.jpg)
-		3) Choose install Directory as C:\Qt (as default) (src/installStep/Qt/InstallDir.jpg)
-		4) Choose Qt 5.15.0 -> Mark MSVC 2019 64-bit as on picture (src/installStep/Qt/installQtPlugin.jpg)
+		2) Sign Up in Qt and then Sign In ![SignUpQt](src/installStep/Qt/SignUpQt.jpg)
+		3) Choose install Directory as C:\Qt (as default) ![InstallDir](src/installStep/Qt/InstallDir.jpg)
+		4) Choose Qt 5.15.0 -> Mark MSVC 2019 64-bit as on picture ![InstallQtPlugin](src/installStep/Qt/installQtPlugin.jpg)
 		5) Next steps as default
 
 2) Install VS2019:
@@ -34,12 +34,12 @@ You can find the last D3ds release in master branch.
 	b) Install:
 		1) Run downloaded file
 		2) All step by default until choose components.
-		3) Choose the next path (as default) and components (src/installStep/VisualStudio/vsInstall.jpg)
+		3) Choose the next path (as default) and components ![VsInstallComponents](src/installStep/VisualStudio/vsInstall.jpg)
 		4) Next steps by default
 		5) After Vs2019 installed, restart computer
 
 3) Clone D3ds project in your directory
-4) Run batBuilder.bat  (src/installStep/butBuild.jpg)
+4) Run batBuilder.bat  ![buildBat](src/installStep/butBuild.jpg)
 5) Executable file will be create in BuildDir\release\d3ds.exe
 6)Enjoy
 
