@@ -40,13 +40,13 @@ You can find the last D3ds release in master branch.
 
 3) Clone D3ds project in your directory     
 4) Run batBuilder.bat  ![buildBat](src/installStep/butBuild.png)      
-5) Executable file will be create in BuildDir\release\d3ds.exe     
+5) Executable file will be create in BuildDir\release\d3ds.exe   
 6)Enjoy    
 
  
 # License
 
- The D3ds source is released under the [LGPL License](LICENSE.txt).
+ The D3ds source is released under the [GPL License](LICENSE.txt).
  
 # Copyright
 
