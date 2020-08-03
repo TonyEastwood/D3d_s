@@ -347,19 +347,28 @@ void OpenGlViewer::alignSecondMesh()
     }
 
 
+
     vcg::AlignPair::Result result;
+
+    vcg::AlignPair::Result previousResult;
+
     vcg::AlignPair::Param ap;
     vcg::AlignPair::A2Mesh fix;
     vcg::AlignPair aa;
+    vcg::AlignPair::A2Grid UG;
+    vcg::AlignPair::A2GridVert VG;
+    std::vector<vcg::AlignPair::A2Vertex> tmpmv;
 
 
     // 1) Convert fixed mesh and put it into the grid.
+
+
+
+
+
     aa.convertMesh<MyMesh>(*drawFirstObject,fix);
 
 
-
-    vcg::AlignPair::A2Grid UG;
-    vcg::AlignPair::A2GridVert VG;
 
     if((*drawFirstObject).fn==0 || ap.UseVertexOnly) {
         fix.initVert(vcg::Matrix44d::Identity());
@@ -371,31 +380,64 @@ void OpenGlViewer::alignSecondMesh()
     }
 
 
+
     // 2) Convert the second mesh and sample a <ap.SampleNum> points on it.
-    std::vector<vcg::AlignPair::A2Vertex> tmpmv;
-    aa.convertVertex((*drawSecondObject).vert,tmpmv);
+    float previousError=100000;
+    std::pair<double,double> distance;
+    for(uint i=0;i<COUNT_ALIGN_CYCLES;++i)
+    {
+        aa.convertVertex((*drawSecondObject).vert,tmpmv);
 
 
-    aa.sampleMovVert(tmpmv, ap.SampleNum, ap.SampleMode);
-
-    aa.mov=&tmpmv;
-    aa.fix=&fix;
-    aa.ap = ap;
 
 
-    //use identity as first matrix
-    vcg::Matrix44d In;
-    In.SetIdentity();
+        aa.sampleMovVert(tmpmv, ap.SampleNum, ap.SampleMode);
 
-    // Perform the ICP algorithm
-    aa.align(In,UG,VG,result);
+        aa.mov=&tmpmv;
+        aa.fix=&fix;
+        aa.ap = ap;
 
-    //rotate m2 using the resulting transformation
-    vcg::tri::UpdatePosition<MyMesh>::Matrix(*drawSecondObject, result.Tr, true);
-    vcg::tri::UpdateBounding<MyMesh>::Box(*drawSecondObject);
 
-    auto distance=result.computeAvgErr();
-    emit setDistanceInLabel(QString("Distance:\ndd="+QString::number(distance.first)+"\ndd="+QString::number(distance.second)));
+        //use identity as first matrix
+        vcg::Matrix44d In;
+        In.SetIdentity();
+
+
+        // Perform the ICP algorithm
+        aa.align(In,UG,VG,result);
+
+        //rotate m2 using the resulting transformation
+        vcg::tri::UpdatePosition<MyMesh>::Matrix(*drawSecondObject, result.Tr, true);
+        vcg::tri::UpdateBounding<MyMesh>::Box(*drawSecondObject);
+
+
+
+        distance=result.computeAvgErr();
+
+        if(distance.second<previousError)
+        {
+            //  qDebug()<<"prev x="<<(*drawSecondObject).face[10523].P(0).X();
+            previousResult=result;
+            previousError=distance.second;
+            // qDebug()<<"Prev value"<<distance.second;
+        }
+        else{
+            //  qDebug()<<"new Prev Value="<<distance.second;
+            vcg::tri::UpdatePosition<MyMesh>::Matrix(*drawSecondObject,vcg::Inverse(result.Tr), true);
+            vcg::tri::UpdatePosition<MyMesh>::Matrix(*drawSecondObject, previousResult.Tr, true);
+            vcg::tri::UpdateBounding<MyMesh>::Box(*drawSecondObject);
+            //  qDebug()<<"new x="<<(*drawSecondObject).face[10523].P(0).X();
+            distance=previousResult.computeAvgErr();
+            // qDebug()<<"New value value"<<distance.second;
+            break;
+        }
+        //   qDebug()<<"iteration="<<i;
+
+    }
+    if(distance.second>ERROR_ALIGN)
+        emit setDistanceInLabel(QString("Defective mesh\nDistance="+QString::number(distance.second)+">"+QString::number(ERROR_ALIGN)));
+    else
+        emit setDistanceInLabel(QString("Distance:\ndd="+QString::number(distance.first)+"\ndd="+QString::number(distance.second)));
     update();
 }
 
