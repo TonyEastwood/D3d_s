@@ -14,7 +14,7 @@
 #include "headers/vcgUtils.h"
 #include <math.h>
 #include <QDebug>
-
+#include <QFile>
 namespace Ui {
 class OpenGlViewer;
 }
@@ -36,6 +36,8 @@ public:
 
     void alignSecondMesh();
     void appendSecondMeshToFirst();
+
+    void openAlignFile();
 
  signals:
     void setDistanceInLabel(QString textDistance);
