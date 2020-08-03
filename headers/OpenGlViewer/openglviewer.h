@@ -13,7 +13,7 @@
 #include <QFileInfo>
 #include "headers/vcgUtils.h"
 #include <math.h>
-//#include <QDebug>
+#include <QDebug>
 
 namespace Ui {
 class OpenGlViewer;
@@ -59,6 +59,11 @@ private:
     void drawSecondMesh();
 
     void calcNormal(std::vector<std::tuple<float,float,float>> & normalArray, const float &Vx,const float &Vy,const float &Vz,const float &Sx,const float &Sy, const float &Sz);
+
+    //temporary const
+private:
+    const uint COUNT_ALIGN_CYCLES=5;
+    const double ERROR_ALIGN=0.021f;
 
 private:
     MyMesh *  drawFirstObject;                     // object that need to draw
