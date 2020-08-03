@@ -341,6 +341,7 @@ void OpenGlViewer::saveFirstMesh()
 
 void OpenGlViewer::alignSecondMesh()
 {
+     QApplication::setOverrideCursor(Qt::WaitCursor);
     if(drawFirstObject->fn==0 || drawSecondObject->fn==0)
     {
         QMessageBox::warning(this, "Warning","Please, choose two objects");
@@ -440,10 +441,12 @@ void OpenGlViewer::alignSecondMesh()
     else
         emit setDistanceInLabel(QString("Distance:\ndd="+QString::number(distance.first)+"\ndd="+QString::number(distance.second)));
     update();
+    QApplication::restoreOverrideCursor();
 }
 
 void OpenGlViewer::appendSecondMeshToFirst()
 {
+    QApplication::setOverrideCursor(Qt::WaitCursor);
     if((*drawFirstObject).fn==0 || (*drawSecondObject).fn==0)
     {
         QMessageBox::warning(this, "Warning extension","Please select two objects");
@@ -458,6 +461,7 @@ void OpenGlViewer::appendSecondMeshToFirst()
     (*drawSecondObject).vert.clear();
     emit setDistanceInLabel(QString(""));
     update();
+    QApplication::restoreOverrideCursor();
 }
 
 void OpenGlViewer::openAlignFile()
