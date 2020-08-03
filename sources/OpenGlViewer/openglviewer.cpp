@@ -259,6 +259,7 @@ void OpenGlViewer::setFirstMesh(QString path )
 
 void OpenGlViewer::setSecondMesh(QString path)
 {
+
     if(drawFirstObject->fn==0)
     {
         QMessageBox::warning(this, "Warning","Please, choose first object");
@@ -461,8 +462,26 @@ void OpenGlViewer::appendSecondMeshToFirst()
 
 void OpenGlViewer::openAlignFile()
 {
-    //Method that read and do Align with all file
-    qDebug()<<"Align file opened";
+    //path to file with meshes that need to align
+    QString pathAlignMeshes=QFileDialog::getOpenFileName(this,"Open file with collect of meshes" );
+
+
+    QFileInfo fileInfo(pathAlignMeshes);
+
+    //get path to dir where file with meshes located
+    QString pathToDir=pathAlignMeshes.mid(0,pathAlignMeshes.size()-fileInfo.fileName().size());
+
+    if(pathAlignMeshes.isEmpty())
+        return;
+
+    QFile fileWithAlignMeshes(pathAlignMeshes);
+    if(fileWithAlignMeshes.open(QIODevice::ReadOnly))
+        //read all meshes from file and import it
+        while(!fileWithAlignMeshes.atEnd())
+            setSecondMesh(pathToDir+QString::fromStdString(fileWithAlignMeshes.readLine().toStdString()).split(QRegExp("[\r\n]"),QString::SkipEmptyParts)[0]);
+
+    fileWithAlignMeshes.close();
+
 }
 
 void OpenGlViewer::setShowGrid(bool value)

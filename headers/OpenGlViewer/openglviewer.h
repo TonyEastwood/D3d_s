@@ -14,7 +14,7 @@
 #include "headers/vcgUtils.h"
 #include <math.h>
 #include <QDebug>
-
+#include <QFile>
 namespace Ui {
 class OpenGlViewer;
 }
