@@ -8,20 +8,22 @@ MainAppWindow::MainAppWindow(  QWidget *parent)
 {
 
 
-   // this->setStyleSheet("QMenu::item { background-color: #262527; selection-color: white; } ");
-     //this->setStyleSheet("QMenu  { background-color: #262527; selection-color: white; border: 1px solid black;} ");
-   // this->setStyleSheet("QMenu::item:selected { background-color: green; } ");
+    // this->setStyleSheet("QMenu::item { background-color: #262527; selection-color: white; } ");
+    //this->setStyleSheet("QMenu  { background-color: #262527; selection-color: white; border: 1px solid black;} ");
+    // this->setStyleSheet("QMenu::item:selected { background-color: green; } ");
     //  this
 
 
-   // this->setStyleSheet("color:"+CONSTANTS::textColorMenu+";  background-color:"+CONSTANTS::backgroundColor+"; ");
+    // this->setStyleSheet("color:"+CONSTANTS::textColorMenu+";  background-color:"+CONSTANTS::backgroundColor+"; ");
     QMenu *fileMenu = new QMenu(tr("&File"), this);
 
-  // fileMenu->setStyleSheet(" QMenu::title { background-color: red;} ");
-   // fileMenu->setStyleSheet(" QMenu::item {   selection-background-color:"+CONSTANTS::selectedMenuItemColor+";color:"+CONSTANTS::textColorMenu+";} ");
+    // fileMenu->setStyleSheet(" QMenu::title { background-color: red;} ");
+    // fileMenu->setStyleSheet(" QMenu::item {   selection-background-color:"+CONSTANTS::selectedMenuItemColor+";color:"+CONSTANTS::textColorMenu+";} ");
 
-   // fileMenu->setStyleSheet("");
+    // fileMenu->setStyleSheet("");
 
+    tableView = new QTableWidget(this);
+    tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 
     QAction *  openFirstMesh = fileMenu->addAction(tr("Open first mesh"));
     QAction *  openSecondMesh = fileMenu->addAction(tr("Open second mesh"));
@@ -42,6 +44,15 @@ MainAppWindow::MainAppWindow(  QWidget *parent)
     QLabel * lightLabel=new QLabel("Enable Light");
 
     QLabel * distanceLabel=new QLabel("");
+
+    QFont fontHeaders;
+    fontHeaders.setPointSize(13);
+    fontHeaders.setBold(true);
+
+    QLabel * CONSTANT_OBJECTVIEWER=new QLabel("Object Viewer");
+    CONSTANT_OBJECTVIEWER->setFont(fontHeaders);
+
+
 
     drawGrid->setFont(font);
     drawFace->setFont(font);
@@ -106,6 +117,8 @@ MainAppWindow::MainAppWindow(  QWidget *parent)
     horizLay2->setAlignment(Qt::AlignTop);
     horizLay3->setAlignment(Qt::AlignTop);
 
+    Vbox->addWidget(CONSTANT_OBJECTVIEWER);
+    Vbox->addWidget(tableView);
     Vbox->addLayout(horizLay,1);
     Vbox->addLayout(horizLay2,7);
     Vbox->addLayout(horizLay3,400);
@@ -119,6 +132,9 @@ MainAppWindow::MainAppWindow(  QWidget *parent)
 
 
     ui->setupUi(this);
+    this->createTable(QStringList()<< trUtf8("Index")
+                      << trUtf8("Visible")
+                      << trUtf8("Name"));
     openGlViewer = new OpenGlViewer();
 
 
@@ -132,8 +148,8 @@ MainAppWindow::MainAppWindow(  QWidget *parent)
     mainLayout = new QHBoxLayout();
 
     mainLayout->setMenuBar(menuBar);
-    mainLayout->addWidget(openGlViewer,90);
-    mainLayout->addLayout(Vbox,10);
+    mainLayout->addWidget(openGlViewer,80);
+    mainLayout->addLayout(Vbox,20);
 
     ui->centralwidget->setLayout(mainLayout);
     ui->centralwidget->show();
@@ -234,6 +250,64 @@ void MainAppWindow::appendSecondToFirst()
 void MainAppWindow::openAlignFile()
 {
     openGlViewer->openAlignFile();
+}
+
+void MainAppWindow::createTable(const QStringList &headers)
+{
+    tableView->setColumnCount(3);
+    tableView->setShowGrid(false); // Включаем сетку
+    tableView->verticalHeader()->setVisible(false);
+    // Разрешаем выделение только одного элемента
+    // tableView->setSelectionMode(QAbstractItemView::SingleSelection);
+    // Разрешаем выделение построчно
+    tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
+    // Устанавливаем заголовки колонок
+    tableView->setHorizontalHeaderLabels(headers);
+    // Растягиваем последнюю колонку на всё доступное пространство
+  //  tableView->horizontalHeader()->setStretchLastSection(true);
+
+    // Скрываем колонку под номером 0
+    // tableView->hideColumn(0);
+
+    // Создаём запрос для для выборки записей из базы данных
+    //    QSqlQuery query("SELECT "
+    //                    DEVICE ".id, "
+    //                    DEVICE "." DEVICE_CHECK_STATE ", "
+    //                    DEVICE "." DEVICE_HOSTNAME ", "
+    //                    DEVICE "." DEVICE_IP ", "
+    //                    DEVICE "." DEVICE_MAC
+    //                    " FROM " DEVICE);
+
+    /* Выполняем заполнение QTableWidget записями с помощью цикла
+        * */
+    for(int i = 0;i<10; i++){
+        // Вставляем строку
+        tableView->insertRow(i);
+        /* Устанавливаем в первую колонку id забирая его из результата SQL-запроса
+            * Эта колонка будет скрыта
+            * */
+
+        tableView->setItem(i,0, new QTableWidgetItem("index"));
+
+        // Создаём элемент, который будет выполнять роль чекбокса
+        QTableWidgetItem *item = new QTableWidgetItem();
+        item->data(Qt::CheckStateRole);
+        /* Проверяем, на статус нечетности, если нечетное устройство, то
+            * выставляем состояние чекбокса в Checked, иначе в Unchecked
+            * */
+        item->setCheckState(Qt::Checked);
+        //   item->setCheckState(Qt::Unchecked);
+
+        // Устанавливаем чекбокс во вторую колонку
+
+
+        tableView->setItem(i,1, item);
+        // Далее забираем все данные из результата запроса и устанавливаем в остальные поля
+        tableView->setItem(i,2, new QTableWidgetItem("Name"));
+        //tableView->setItem(i,3, new QTableWidgetItem(query.value(3).toString()));
+        //tableView->setItem(i,4, new QTableWidgetItem(query.value(4).toString()));
+        tableView->resizeColumnsToContents();
+    }
 }
 
 
