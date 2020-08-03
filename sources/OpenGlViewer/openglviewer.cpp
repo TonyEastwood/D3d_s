@@ -459,6 +459,12 @@ void OpenGlViewer::appendSecondMeshToFirst()
     update();
 }
 
+void OpenGlViewer::openAlignFile()
+{
+    //Method that read and do Align with all file
+    qDebug()<<"Align file opened";
+}
+
 void OpenGlViewer::setShowGrid(bool value)
 {
     isDrawGrid=value;

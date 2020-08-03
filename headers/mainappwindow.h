@@ -39,6 +39,8 @@ public slots:
 
     void alignSecondMesh();
     void appendSecondToFirst();
+
+    void openAlignFile();
 private:
     void initAlignWindow();
 
