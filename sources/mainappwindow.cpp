@@ -29,6 +29,8 @@ MainAppWindow::MainAppWindow(  QWidget *parent)
     QAction *  saveFirstMesh = fileMenu->addAction(tr("Save first mesh"));
     QAction *  saveSecondMesh = fileMenu->addAction(tr("Save second mesh"));
     fileMenu->addSeparator();
+    QAction *  openAlignFile = fileMenu->addAction(tr("Open align file"));
+        fileMenu->addSeparator();
     QAction *  exitAction = fileMenu->addAction(tr("E&xit"));
 
     QFont font;
@@ -143,6 +145,7 @@ MainAppWindow::MainAppWindow(  QWidget *parent)
     connect(isLightOn, &QCheckBox::toggled, this, &MainAppWindow::setLight);
     connect(openFirstMesh, &QAction::triggered, this, &MainAppWindow::setFirstOpenglMesh);
     connect(openSecondMesh, &QAction::triggered, this, &MainAppWindow::setSecondOpenglMesh);
+    connect(openAlignFile, &QAction::triggered, this, &MainAppWindow::openAlignFile);
     connect(saveSecondMesh, &QAction::triggered, this, &MainAppWindow::saveSecondMesh);
     connect(saveFirstMesh, &QAction::triggered, this, &MainAppWindow::saveFirstMesh);
     connect(exitAction, &QAction::triggered, this, &QWidget::close);
@@ -228,4 +231,7 @@ void MainAppWindow::appendSecondToFirst()
     openGlViewer->appendSecondMeshToFirst();
 }
 
-
+void MainAppWindow::openAlignFile()
+{
+    openGlViewer->openAlignFile();
+}
