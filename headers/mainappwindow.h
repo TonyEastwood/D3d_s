@@ -13,6 +13,7 @@
 #include <QPushButton>
 #include <QCheckBox>
 #include <QStyleFactory>
+#include "customtable.h"
 namespace Ui {
 class MainAppWindow;
 }
@@ -45,9 +46,12 @@ private:
     void initAlignWindow();
 
 
+
     Ui::MainAppWindow *ui;
     OpenGlViewer *openGlViewer; // openGl viewer
     QHBoxLayout *mainLayout;
+    CustomTable * objectViewer;
+
 
 };
 

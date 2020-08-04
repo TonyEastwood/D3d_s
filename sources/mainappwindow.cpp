@@ -8,20 +8,29 @@ MainAppWindow::MainAppWindow(  QWidget *parent)
 {
 
 
-   // this->setStyleSheet("QMenu::item { background-color: #262527; selection-color: white; } ");
-     //this->setStyleSheet("QMenu  { background-color: #262527; selection-color: white; border: 1px solid black;} ");
-   // this->setStyleSheet("QMenu::item:selected { background-color: green; } ");
+    // this->setStyleSheet("QMenu::item { background-color: #262527; selection-color: white; } ");
+    //this->setStyleSheet("QMenu  { background-color: #262527; selection-color: white; border: 1px solid black;} ");
+    // this->setStyleSheet("QMenu::item:selected { background-color: green; } ");
     //  this
 
 
-   // this->setStyleSheet("color:"+CONSTANTS::textColorMenu+";  background-color:"+CONSTANTS::backgroundColor+"; ");
+    // this->setStyleSheet("color:"+CONSTANTS::textColorMenu+";  background-color:"+CONSTANTS::backgroundColor+"; ");
     QMenu *fileMenu = new QMenu(tr("&File"), this);
 
-  // fileMenu->setStyleSheet(" QMenu::title { background-color: red;} ");
-   // fileMenu->setStyleSheet(" QMenu::item {   selection-background-color:"+CONSTANTS::selectedMenuItemColor+";color:"+CONSTANTS::textColorMenu+";} ");
+    // fileMenu->setStyleSheet(" QMenu::title { background-color: red;} ");
+    // fileMenu->setStyleSheet(" QMenu::item {   selection-background-color:"+CONSTANTS::selectedMenuItemColor+";color:"+CONSTANTS::textColorMenu+";} ");
 
-   // fileMenu->setStyleSheet("");
+    // fileMenu->setStyleSheet("");
 
+   objectViewer = new CustomTable(QStringList()<< trUtf8("Index")
+                                  << trUtf8("Visible")
+                                  << trUtf8("Name")<<trUtf8("Selected"));
+
+   objectViewer->addRowData("we.stl");
+   objectViewer->addRowData("we.stl");
+   objectViewer->addRowData("we.stl");
+   objectViewer->addRowData("we.stl");
+   objectViewer->addRowData("we.stl");
 
     QAction *  openFirstMesh = fileMenu->addAction(tr("Open first mesh"));
     QAction *  openSecondMesh = fileMenu->addAction(tr("Open second mesh"));
@@ -42,6 +51,15 @@ MainAppWindow::MainAppWindow(  QWidget *parent)
     QLabel * lightLabel=new QLabel("Enable Light");
 
     QLabel * distanceLabel=new QLabel("");
+
+    QFont fontHeaders;
+    fontHeaders.setPointSize(13);
+    fontHeaders.setBold(true);
+
+    QLabel * CONSTANT_OBJECTVIEWER=new QLabel("Object Viewer");
+    CONSTANT_OBJECTVIEWER->setFont(fontHeaders);
+
+
 
     drawGrid->setFont(font);
     drawFace->setFont(font);
@@ -106,6 +124,8 @@ MainAppWindow::MainAppWindow(  QWidget *parent)
     horizLay2->setAlignment(Qt::AlignTop);
     horizLay3->setAlignment(Qt::AlignTop);
 
+    Vbox->addWidget(CONSTANT_OBJECTVIEWER);
+    Vbox->addWidget(objectViewer->getTablePtr());
     Vbox->addLayout(horizLay,1);
     Vbox->addLayout(horizLay2,7);
     Vbox->addLayout(horizLay3,400);
@@ -121,7 +141,6 @@ MainAppWindow::MainAppWindow(  QWidget *parent)
     ui->setupUi(this);
     openGlViewer = new OpenGlViewer();
 
-
     QMenuBar * menuBar = new QMenuBar(this);
 
     menuBar->addMenu(fileMenu);
@@ -132,8 +151,8 @@ MainAppWindow::MainAppWindow(  QWidget *parent)
     mainLayout = new QHBoxLayout();
 
     mainLayout->setMenuBar(menuBar);
-    mainLayout->addWidget(openGlViewer,90);
-    mainLayout->addLayout(Vbox,10);
+    mainLayout->addWidget(openGlViewer,80);
+    mainLayout->addLayout(Vbox,20);
 
     ui->centralwidget->setLayout(mainLayout);
     ui->centralwidget->show();
@@ -235,5 +254,6 @@ void MainAppWindow::openAlignFile()
 {
     openGlViewer->openAlignFile();
 }
+
 
 
