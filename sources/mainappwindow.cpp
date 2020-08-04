@@ -223,7 +223,7 @@ void MainAppWindow::saveSecondMesh()
 
 void MainAppWindow::alignSecondMesh()
 {
-    openGlViewer->alignSecondMesh();
+    openGlViewer->alignSecondMesh(nullptr,nullptr);
 }
 
 void MainAppWindow::appendSecondToFirst()

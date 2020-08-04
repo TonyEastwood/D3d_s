@@ -35,7 +35,7 @@ public:
     void saveFirstMesh();
     void saveSecondMesh();
 
-    void alignSecondMesh();
+    void alignSecondMesh(vcg::Matrix44d * resultTransformMatrix, bool * isVisible);
     void appendSecondMeshToFirst();
 
      void openAlignFile();

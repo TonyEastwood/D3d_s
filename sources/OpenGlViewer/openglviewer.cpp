@@ -338,9 +338,9 @@ void OpenGlViewer::saveFirstMesh()
 
 }
 
-void OpenGlViewer::alignSecondMesh()
+void OpenGlViewer::alignSecondMesh(vcg::Matrix44d * resultTransformMatrix=nullptr, bool * isVisible=nullptr)
 {
-     QApplication::setOverrideCursor(Qt::WaitCursor);
+    QApplication::setOverrideCursor(Qt::WaitCursor);
     if(drawFirstObject->fn==0 || drawSecondObject->fn==0)
     {
         QMessageBox::warning(this, "Warning","Please, choose two objects");
@@ -384,7 +384,7 @@ void OpenGlViewer::alignSecondMesh()
 
     // 2) Convert the second mesh and sample a <ap.SampleNum> points on it.
     float previousError=100000;
-    std::pair<double,double> distance;
+    std::pair<double,double> distance={10000,10000};
     for(uint i=0;i<COUNT_ALIGN_CYCLES;++i)
     {
         aa.convertVertex((*drawSecondObject).vert,tmpmv);
@@ -415,11 +415,22 @@ void OpenGlViewer::alignSecondMesh()
 
         distance=result.computeAvgErr();
 
+        if(distance.second==distance.first || isnan(distance.second) || isnan(distance.first))
+        {
+            if(isVisible!=nullptr)
+                (*isVisible)=false;
+            QApplication::restoreOverrideCursor();
+            return;
+        }
+
         if(distance.second<previousError)
         {
             //  qDebug()<<"prev x="<<(*drawSecondObject).face[10523].P(0).X();
             previousResult=result;
             previousError=distance.second;
+
+            if(resultTransformMatrix!=nullptr)
+                (*resultTransformMatrix)=result.Tr;
             // qDebug()<<"Prev value"<<distance.second;
         }
         else{
@@ -429,6 +440,8 @@ void OpenGlViewer::alignSecondMesh()
             vcg::tri::UpdateBounding<MyMesh>::Box(*drawSecondObject);
             //  qDebug()<<"new x="<<(*drawSecondObject).face[10523].P(0).X();
             distance=previousResult.computeAvgErr();
+            if(resultTransformMatrix!=nullptr)
+                (*resultTransformMatrix)=previousResult.Tr;
             // qDebug()<<"New value value"<<distance.second;
             break;
         }
@@ -436,16 +449,24 @@ void OpenGlViewer::alignSecondMesh()
 
     }
     if(distance.second>ERROR_ALIGN)
+    {
+        if(isVisible!=nullptr)
+            (*isVisible)=false;
         emit setDistanceInLabel(QString("Defective mesh\nDistance="+QString::number(distance.second)+">"+QString::number(ERROR_ALIGN)));
+    }
     else
+    {
+        if(isVisible!=nullptr)
+            (*isVisible)=true;
         emit setDistanceInLabel(QString("Distance:\ndd="+QString::number(distance.first)+"\ndd="+QString::number(distance.second)));
+    }
     update();
-     QApplication::restoreOverrideCursor();
+    QApplication::restoreOverrideCursor();
 }
 
 void OpenGlViewer::appendSecondMeshToFirst()
 {
-     QApplication::setOverrideCursor(Qt::WaitCursor);
+    QApplication::setOverrideCursor(Qt::WaitCursor);
     if((*drawFirstObject).fn==0 || (*drawSecondObject).fn==0)
     {
         QMessageBox::warning(this, "Warning extension","Please select two objects");
@@ -478,24 +499,43 @@ void OpenGlViewer::setShowFaces(bool value)
 void OpenGlViewer::openAlignFile()
 {
     //path to file with meshes that need to align
-       QString pathAlignMeshes=QFileDialog::getOpenFileName(this,"Open file with collect of meshes" );
+    QString pathAlignMeshes=QFileDialog::getOpenFileName(this,"Open file with collect of meshes" );
 
 
-       QFileInfo fileInfo(pathAlignMeshes);
+    QFileInfo fileInfo(pathAlignMeshes);
 
-       //get path to dir where file with meshes located
-       QString pathToDir=pathAlignMeshes.mid(0,pathAlignMeshes.size()-fileInfo.fileName().size());
+    //get path to dir where file with meshes located
+    QString pathToDir=pathAlignMeshes.mid(0,pathAlignMeshes.size()-fileInfo.fileName().size());
 
-       if(pathAlignMeshes.isEmpty())
-           return;
+    if(pathAlignMeshes.isEmpty())
+        return;
 
-       QFile fileWithAlignMeshes(pathAlignMeshes);
-       if(fileWithAlignMeshes.open(QIODevice::ReadOnly))
-           //read all meshes from file and import it
-           while(!fileWithAlignMeshes.atEnd())
-               setSecondMesh(pathToDir+QString::fromStdString(fileWithAlignMeshes.readLine().toStdString()).split(QRegExp("[\r\n]"),QString::SkipEmptyParts)[0]);
+    QFile fileWithAlignMeshes(pathAlignMeshes);
+    if(fileWithAlignMeshes.open(QIODevice::ReadOnly))
+    {
+        setFirstMesh(pathToDir+QString::fromStdString(fileWithAlignMeshes.readLine().toStdString()).split(QRegExp("[\r\n]"),QString::SkipEmptyParts)[0]);
+        //read all meshes from file and import it
+        vcg::Matrix44d tempMatrix;
+        bool isVisible=false;
 
-       fileWithAlignMeshes.close();
+        while(!fileWithAlignMeshes.atEnd())
+        {
+            setSecondMesh(pathToDir+QString::fromStdString(fileWithAlignMeshes.readLine().toStdString()).split(QRegExp("[\r\n]"),QString::SkipEmptyParts)[0]);
+            alignSecondMesh(&tempMatrix,&isVisible);
+
+            if(isVisible)
+            {
+                //write it to result file visible =true + matrix
+                appendSecondMeshToFirst();
+            }
+            else
+            {
+                //write it to result file with visible =false + matrix
+            }
+        }
+    }
+    update();
+    fileWithAlignMeshes.close();
 }
 
 
