@@ -26,13 +26,11 @@ MainAppWindow::MainAppWindow(  QWidget *parent)
                                   << trUtf8("Visible")
                                   << trUtf8("Name")<<trUtf8("Selected"));
 
-   objectViewer->addRowData("we.stl");
-   objectViewer->addRowData("we.stl");
-   objectViewer->addRowData("we.stl");
-   objectViewer->addRowData("we.stl");
-   objectViewer->addRowData("we.stl");
+   objectViewer->updateTable({{"Swe.ew",true,false},{"Swe.ew",true,false}});
 
-    QAction *  openFirstMesh = fileMenu->addAction(tr("Open first mesh"));
+
+
+    QAction *  openFirstMesh = fileMenu->addAction(tr("Import meshes..."));
     QAction *  openSecondMesh = fileMenu->addAction(tr("Open second mesh"));
     fileMenu->addSeparator();
     QAction *  saveFirstMesh = fileMenu->addAction(tr("Save first mesh"));
