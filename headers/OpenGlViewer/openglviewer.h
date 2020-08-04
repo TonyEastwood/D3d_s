@@ -40,6 +40,8 @@ public:
 
      void openAlignFile();
 
+     void exportAsMLP();
+
  signals:
     void setDistanceInLabel(QString textDistance);
 public slots:
@@ -57,7 +59,7 @@ protected:
 private:
     QString vcgMatrixToString(const vcg::Matrix44d & resultTransformMatrix);
 
-    void exportAsMLP(const std::vector<QStringList> & objectsData);
+
 
     void calculateNormalFirstObject();
     void calculateNormalSecondObject();
@@ -73,8 +75,15 @@ private:
     const double ERROR_ALIGN=0.021f;
 
 private:
+    std::vector<QStringList> vectorContentMLP;
+
     MyMesh *  drawFirstObject;                     // object that need to draw
     MyMesh *  drawSecondObject;                     // object that need to draw
+
+    QString identityMatrix="1 0 0 0 "
+                           "0 1 0 0 "
+                           "0 0 1 0 "
+                           "0 0 0 1";
 
    // std::vector<std::tuple<float,float,float>> normalFirstMesh;
    // std::vector<std::tuple<float,float,float>> normalSecondMesh;

@@ -42,6 +42,8 @@ public slots:
 
     void openAlignFile();
 
+    void exportMlpFile();
+
 private:
     void initAlignWindow();
 

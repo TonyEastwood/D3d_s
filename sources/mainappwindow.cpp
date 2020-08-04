@@ -29,7 +29,7 @@ MainAppWindow::MainAppWindow(  QWidget *parent)
     QAction *  saveFirstMesh = fileMenu->addAction(tr("Save first mesh"));
     QAction *  saveSecondMesh = fileMenu->addAction(tr("Save second mesh"));
     fileMenu->addSeparator();
-    QAction *  openAlignFile = fileMenu->addAction(tr("Open align file"));
+    QAction *  openAlignFile = fileMenu->addAction(tr("Load align file"));
     fileMenu->addSeparator();
     QAction *  exportMlp = fileMenu->addAction(tr("export MLP file"));
     fileMenu->addSeparator();
@@ -152,6 +152,7 @@ MainAppWindow::MainAppWindow(  QWidget *parent)
     connect(saveFirstMesh, &QAction::triggered, this, &MainAppWindow::saveFirstMesh);
     connect(exitAction, &QAction::triggered, this, &QWidget::close);
     connect(openGlViewer, &OpenGlViewer::setDistanceInLabel, distanceLabel, &QLabel::setText);
+    connect(exportMlp, &QAction::triggered, this, &MainAppWindow::exportMlpFile);
 
 }
 
@@ -236,6 +237,11 @@ void MainAppWindow::appendSecondToFirst()
 void MainAppWindow::openAlignFile()
 {
     openGlViewer->openAlignFile();
+}
+
+void MainAppWindow::exportMlpFile()
+{
+    openGlViewer->exportAsMLP();
 }
 
 

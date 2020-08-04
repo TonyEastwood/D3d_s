@@ -155,43 +155,49 @@ QString OpenGlViewer::vcgMatrixToString(const vcg::Matrix44d &resultTransformMat
         for(int j=0;j<4;++j)
         {
             auto we=resultTransformMatrix.ElementAt(i,j);
-             result.append(QString::number(we,'f',10)+" ");
+            result.append(QString::number(we,'f',10)+" ");
         }
     return result;
 }
 
-void OpenGlViewer::exportAsMLP(const std::vector<QStringList> &objectsData)
+void OpenGlViewer::exportAsMLP()
 {
+    if(vectorContentMLP.empty())
+    {
+        QMessageBox::warning(this,"Warning", "Load align meshes");
+        qDebug()<<"Vector exportMLP empty";
+        return;
+    }
     QString exportPath=QFileDialog::getSaveFileName(this,"Save object","C://",tr("MLP (*.mlp)"));
     if(exportPath.isEmpty())
         return;
 
 
     QByteArray mlpFileContent="<!DOCTYPE MeshLabDocument>\n"
-            "<MeshLabProject>\n"
-             "<MeshGroup>\n";
+                              "<MeshLabProject>\n"
+                              "<MeshGroup>\n";
 
     QStringList matrixElements;
-    for(int i=0;i<objectsData.size();++i)
+    for(int i=0;i<vectorContentMLP.size();++i)
     {
-         matrixElements = objectsData[i][1].split(QRegExp("\\s+"), QString::SkipEmptyParts);
+        matrixElements = vectorContentMLP[i][1].split(QRegExp("\\s+"), QString::SkipEmptyParts);
 
-         mlpFileContent.append("<MLMesh label=\""+objectsData[i][0]+"\" filename=\""+objectsData[i][0]+"\" visible=\""+objectsData[i][2]+"\">\n"
-                 "<MLMatrix44>\n"+
-                 matrixElements[0]+" "+matrixElements[1]+" "+matrixElements[2]+" "+matrixElements[3]+" \n"+
-                 matrixElements[4]+" "+matrixElements[5]+" "+matrixElements[6]+" "+matrixElements[7]+" \n"+
-                 matrixElements[8]+" "+matrixElements[9]+" "+matrixElements[10]+" "+matrixElements[11]+" \n"+
-                 matrixElements[12]+" "+matrixElements[13]+" "+matrixElements[14]+" "+matrixElements[15]+" \n"+
-                 "</MLMatrix44>\n");
+        mlpFileContent.append("<MLMesh label=\""+vectorContentMLP[i][0]+"\" filename=\""+vectorContentMLP[i][0]+"\" visible=\""+vectorContentMLP[i][2]+"\">\n"
+                                                                                                                                                       "<MLMatrix44>\n"+
+                matrixElements[0]+" "+matrixElements[1]+" "+matrixElements[2]+" "+matrixElements[3]+" \n"+
+                matrixElements[4]+" "+matrixElements[5]+" "+matrixElements[6]+" "+matrixElements[7]+" \n"+
+                matrixElements[8]+" "+matrixElements[9]+" "+matrixElements[10]+" "+matrixElements[11]+" \n"+
+                matrixElements[12]+" "+matrixElements[13]+" "+matrixElements[14]+" "+matrixElements[15]+" \n"+
+                "</MLMatrix44>\n");
 
-         mlpFileContent.append("<RenderingOption pointColor=\"131 149 69 255\" pointSize=\"3\" wireColor=\"64 64 64 255\" wireWidth=\"1\" boxColor=\"234 234 234 255\" solidColor=\"192 192 192 255\">100001000000000000000100000001011000001010100000000100111010000111001001</RenderingOption>\n"
-                               "</MLMesh>\n");
+        mlpFileContent.append("<RenderingOption pointColor=\"131 149 69 255\" pointSize=\"3\" wireColor=\"64 64 64 255\" wireWidth=\"1\" boxColor=\"234 234 234 255\" solidColor=\"192 192 192 255\">100001000000000000000100000001011000001010100000000100111010000111001001</RenderingOption>\n"
+                              "</MLMesh>\n");
     }
 
 
     mlpFileContent.append("</MeshGroup>\n"
                           "<RasterGroup/>\n"
-                         "</MeshLabProject>\n");
+                          "</MeshLabProject>\n");
 
     QFile file(exportPath);
     if(file.open(QIODevice::WriteOnly))
@@ -549,7 +555,7 @@ void OpenGlViewer::setShowFaces(bool value)
 
 void OpenGlViewer::openAlignFile()
 {
-    std::vector<QStringList> vectorContentMLP;
+    vectorContentMLP.clear();
     //exportAsMLP({{"FileName.ply","0 61 3 53 2 3 6 3 223 2 1 3 2 4 21 32","1"},{"FileName2.ply","0 61 3 53 2 3 6 3 223 2 1 3 2 4 21 32","0"},{"FileName.ply","0 61 3 53 2 3 6 3 223 2 1 3 2 4 21 32","1"}});
 
     //path to file with meshes that need to align
@@ -567,35 +573,35 @@ void OpenGlViewer::openAlignFile()
     QFile fileWithAlignMeshes(pathAlignMeshes);
     if(fileWithAlignMeshes.open(QIODevice::ReadOnly))
     {
-        setFirstMesh(pathToDir+QString::fromStdString(fileWithAlignMeshes.readLine().toStdString()).split(QRegExp("[\r\n]"),QString::SkipEmptyParts)[0]);
+        QString fileName=QString::fromStdString(fileWithAlignMeshes.readLine().toStdString()).split(QRegExp("[\r\n]"),QString::SkipEmptyParts)[0];
+
+        setFirstMesh(pathToDir+fileName);
+        vectorContentMLP.push_back({fileName,identityMatrix,"1"}); //add First mesh to MPL vector with Identity matrix
+
         //read all meshes from file and import it
         vcg::Matrix44d tempMatrix;
         bool isVisible=false;
 
+
         while(!fileWithAlignMeshes.atEnd())
         {
-            setSecondMesh(pathToDir+QString::fromStdString(fileWithAlignMeshes.readLine().toStdString()).split(QRegExp("[\r\n]"),QString::SkipEmptyParts)[0]);
+            fileName=QString::fromStdString(fileWithAlignMeshes.readLine().toStdString()).split(QRegExp("[\r\n]"),QString::SkipEmptyParts)[0];
+            setSecondMesh(pathToDir+fileName);
             alignSecondMesh(&tempMatrix,&isVisible);
 
-            vectorContentMLP.push_back({"FileName","Matrx","1"});   //REPLACE ON DATA
-
-            QString result=vcgMatrixToString(tempMatrix);
             if(isVisible)
             {
-
-                //write it to result file visible =true + matrix
+                vectorContentMLP.push_back({fileName,vcgMatrixToString(tempMatrix),"1"});  //if visible push actual matrix data with visible ==1
                 appendSecondMeshToFirst();
             }
-            else
-            {
-                //write it to result file with visible =false + matrix
+            else{
+                vectorContentMLP.push_back({fileName,identityMatrix,"0"}); //if non visible, - push Matrix Identity with visible ==0
             }
+
         }
     }
     update();
     fileWithAlignMeshes.close();
-
-    exportAsMLP(vectorContentMLP);
 
 }
 
