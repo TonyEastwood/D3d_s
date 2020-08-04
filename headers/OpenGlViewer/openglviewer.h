@@ -55,6 +55,8 @@ protected:
     void wheelEvent(QWheelEvent *event) override;  // object scale
 
 private:
+    QString vcgMatrixToString(const vcg::Matrix44d & resultTransformMatrix);
+
     void exportAsMLP(const std::vector<QStringList> & objectsData);
 
     void calculateNormalFirstObject();

@@ -148,6 +148,18 @@ void OpenGlViewer::wheelEvent(QWheelEvent *event) {
     update();
 }
 
+QString OpenGlViewer::vcgMatrixToString(const vcg::Matrix44d &resultTransformMatrix)
+{
+    QString result;
+    for(int i=0;i<4;++i)
+        for(int j=0;j<4;++j)
+        {
+            auto we=resultTransformMatrix.ElementAt(i,j);
+             result.append(QString::number(we,'f',10)+" ");
+        }
+    return result;
+}
+
 void OpenGlViewer::exportAsMLP(const std::vector<QStringList> &objectsData)
 {
     QString exportPath=QFileDialog::getSaveFileName(this,"Save object","C://",tr("MLP (*.mlp)"));
@@ -468,7 +480,6 @@ void OpenGlViewer::alignSecondMesh(vcg::Matrix44d * resultTransformMatrix=nullpt
             //  qDebug()<<"prev x="<<(*drawSecondObject).face[10523].P(0).X();
             previousResult=result;
             previousError=distance.second;
-
             if(resultTransformMatrix!=nullptr)
                 (*resultTransformMatrix)=result.Tr;
             // qDebug()<<"Prev value"<<distance.second;
@@ -538,7 +549,8 @@ void OpenGlViewer::setShowFaces(bool value)
 
 void OpenGlViewer::openAlignFile()
 {
-    exportAsMLP({{"FileName.ply","0 61 3 53 2 3 6 3 223 2 1 3 2 4 21 32","1"},{"FileName2.ply","0 61 3 53 2 3 6 3 223 2 1 3 2 4 21 32","0"},{"FileName.ply","0 61 3 53 2 3 6 3 223 2 1 3 2 4 21 32","1"}});
+    std::vector<QStringList> vectorContentMLP;
+    //exportAsMLP({{"FileName.ply","0 61 3 53 2 3 6 3 223 2 1 3 2 4 21 32","1"},{"FileName2.ply","0 61 3 53 2 3 6 3 223 2 1 3 2 4 21 32","0"},{"FileName.ply","0 61 3 53 2 3 6 3 223 2 1 3 2 4 21 32","1"}});
 
     //path to file with meshes that need to align
     QString pathAlignMeshes=QFileDialog::getOpenFileName(this,"Open file with collect of meshes" );
@@ -565,8 +577,12 @@ void OpenGlViewer::openAlignFile()
             setSecondMesh(pathToDir+QString::fromStdString(fileWithAlignMeshes.readLine().toStdString()).split(QRegExp("[\r\n]"),QString::SkipEmptyParts)[0]);
             alignSecondMesh(&tempMatrix,&isVisible);
 
+            vectorContentMLP.push_back({"FileName","Matrx","1"});   //REPLACE ON DATA
+
+            QString result=vcgMatrixToString(tempMatrix);
             if(isVisible)
             {
+
                 //write it to result file visible =true + matrix
                 appendSecondMeshToFirst();
             }
@@ -578,6 +594,9 @@ void OpenGlViewer::openAlignFile()
     }
     update();
     fileWithAlignMeshes.close();
+
+    exportAsMLP(vectorContentMLP);
+
 }
 
 
