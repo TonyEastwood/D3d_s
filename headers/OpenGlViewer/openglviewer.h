@@ -11,10 +11,10 @@
 #include <QMessageBox>
 #include <QFileDialog>
 #include <QFileInfo>
-#include "headers/vcgUtils.h"
 #include <math.h>
 #include <QDebug>
 #include <QFile>
+#include "../vcgapifunctions.h"
 namespace Ui {
 class OpenGlViewer;
 }
@@ -68,6 +68,7 @@ private:
     const double ERROR_ALIGN=0.021f;
 
 private:
+
     MyMesh *  drawFirstObject;                     // object that need to draw
     MyMesh *  drawSecondObject;                     // object that need to draw
 

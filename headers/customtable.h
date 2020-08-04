@@ -13,21 +13,19 @@ class CustomTable: public QObject
 Q_OBJECT
 private:
     QTableWidget * tableView;
-    //Object name | Visible | Selected
-    std::vector<std::tuple<QString,bool,bool>> vectorRowData;
 
 private:
     void InitializeTable(const QStringList &headers);
-    void updateTable();
+
 
 private slots:
     void cellClicked(int row, int column);
+public slots:
+    void updateTable(const std::vector<std::tuple<QString,bool,bool>> &vectorRowData);
 public:
     CustomTable(const QStringList &headers,QObject *_parent=nullptr);
     ~CustomTable();
 
-public slots:
-    void addRowData(const QString &objectName);
 
 
 
