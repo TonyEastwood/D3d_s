@@ -55,6 +55,8 @@ protected:
     void wheelEvent(QWheelEvent *event) override;  // object scale
 
 private:
+    void exportAsMLP(const std::vector<QStringList> & objectsData);
+
     void calculateNormalFirstObject();
     void calculateNormalSecondObject();
 

@@ -148,6 +148,46 @@ void OpenGlViewer::wheelEvent(QWheelEvent *event) {
     update();
 }
 
+void OpenGlViewer::exportAsMLP(const std::vector<QStringList> &objectsData)
+{
+    QString exportPath=QFileDialog::getSaveFileName(this,"Save object","C://",tr("MLP (*.mlp)"));
+    if(exportPath.isEmpty())
+        return;
+
+
+    QByteArray mlpFileContent="<!DOCTYPE MeshLabDocument>\n"
+            "<MeshLabProject>\n"
+             "<MeshGroup>\n";
+
+    QStringList matrixElements;
+    for(int i=0;i<objectsData.size();++i)
+    {
+         matrixElements = objectsData[i][1].split(QRegExp("\\s+"), QString::SkipEmptyParts);
+
+         mlpFileContent.append("<MLMesh label=\""+objectsData[i][0]+"\" filename=\""+objectsData[i][0]+"\" visible=\""+objectsData[i][2]+"\">\n"
+                 "<MLMatrix44>\n"+
+                 matrixElements[0]+" "+matrixElements[1]+" "+matrixElements[2]+" "+matrixElements[3]+" \n"+
+                 matrixElements[4]+" "+matrixElements[5]+" "+matrixElements[6]+" "+matrixElements[7]+" \n"+
+                 matrixElements[8]+" "+matrixElements[9]+" "+matrixElements[10]+" "+matrixElements[11]+" \n"+
+                 matrixElements[12]+" "+matrixElements[13]+" "+matrixElements[14]+" "+matrixElements[15]+" \n"+
+                 "</MLMatrix44>\n");
+
+         mlpFileContent.append("<RenderingOption pointColor=\"131 149 69 255\" pointSize=\"3\" wireColor=\"64 64 64 255\" wireWidth=\"1\" boxColor=\"234 234 234 255\" solidColor=\"192 192 192 255\">100001000000000000000100000001011000001010100000000100111010000111001001</RenderingOption>\n"
+                               "</MLMesh>\n");
+    }
+
+
+    mlpFileContent.append("</MeshGroup>\n"
+                          "<RasterGroup/>\n"
+                         "</MeshLabProject>\n");
+
+    QFile file(exportPath);
+    if(file.open(QIODevice::WriteOnly))
+        file.write(mlpFileContent);
+    file.close();
+
+}
+
 
 void OpenGlViewer::drawFirstMesh()
 {
@@ -498,6 +538,8 @@ void OpenGlViewer::setShowFaces(bool value)
 
 void OpenGlViewer::openAlignFile()
 {
+    exportAsMLP({{"FileName.ply","0 61 3 53 2 3 6 3 223 2 1 3 2 4 21 32","1"},{"FileName2.ply","0 61 3 53 2 3 6 3 223 2 1 3 2 4 21 32","0"},{"FileName.ply","0 61 3 53 2 3 6 3 223 2 1 3 2 4 21 32","1"}});
+
     //path to file with meshes that need to align
     QString pathAlignMeshes=QFileDialog::getOpenFileName(this,"Open file with collect of meshes" );
 

@@ -8,19 +8,19 @@ MainAppWindow::MainAppWindow(  QWidget *parent)
 {
 
 
-   // this->setStyleSheet("QMenu::item { background-color: #262527; selection-color: white; } ");
-     //this->setStyleSheet("QMenu  { background-color: #262527; selection-color: white; border: 1px solid black;} ");
-   // this->setStyleSheet("QMenu::item:selected { background-color: green; } ");
+    // this->setStyleSheet("QMenu::item { background-color: #262527; selection-color: white; } ");
+    //this->setStyleSheet("QMenu  { background-color: #262527; selection-color: white; border: 1px solid black;} ");
+    // this->setStyleSheet("QMenu::item:selected { background-color: green; } ");
     //  this
 
 
-   // this->setStyleSheet("color:"+CONSTANTS::textColorMenu+";  background-color:"+CONSTANTS::backgroundColor+"; ");
+    // this->setStyleSheet("color:"+CONSTANTS::textColorMenu+";  background-color:"+CONSTANTS::backgroundColor+"; ");
     QMenu *fileMenu = new QMenu(tr("&File"), this);
 
-  // fileMenu->setStyleSheet(" QMenu::title { background-color: red;} ");
-   // fileMenu->setStyleSheet(" QMenu::item {   selection-background-color:"+CONSTANTS::selectedMenuItemColor+";color:"+CONSTANTS::textColorMenu+";} ");
+    // fileMenu->setStyleSheet(" QMenu::title { background-color: red;} ");
+    // fileMenu->setStyleSheet(" QMenu::item {   selection-background-color:"+CONSTANTS::selectedMenuItemColor+";color:"+CONSTANTS::textColorMenu+";} ");
 
-   // fileMenu->setStyleSheet("");
+    // fileMenu->setStyleSheet("");
 
 
     QAction *  openFirstMesh = fileMenu->addAction(tr("Open first mesh"));
@@ -30,7 +30,9 @@ MainAppWindow::MainAppWindow(  QWidget *parent)
     QAction *  saveSecondMesh = fileMenu->addAction(tr("Save second mesh"));
     fileMenu->addSeparator();
     QAction *  openAlignFile = fileMenu->addAction(tr("Open align file"));
-        fileMenu->addSeparator();
+    fileMenu->addSeparator();
+    QAction *  exportMlp = fileMenu->addAction(tr("export MLP file"));
+    fileMenu->addSeparator();
     QAction *  exitAction = fileMenu->addAction(tr("E&xit"));
 
     QFont font;
@@ -235,3 +237,5 @@ void MainAppWindow::openAlignFile()
 {
     openGlViewer->openAlignFile();
 }
+
+

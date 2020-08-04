@@ -41,6 +41,7 @@ public slots:
     void appendSecondToFirst();
 
     void openAlignFile();
+
 private:
     void initAlignWindow();
 
