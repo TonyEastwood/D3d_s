@@ -13,9 +13,7 @@
 #include <QPushButton>
 #include <QCheckBox>
 #include <QStyleFactory>
-#include <QTableWidget>
-#include <QTableView>
-#include <QHeaderView>
+#include "customtable.h"
 namespace Ui {
 class MainAppWindow;
 }
@@ -47,13 +45,13 @@ public slots:
 private:
     void initAlignWindow();
 
-    void createTable(const QStringList &headers);
 
 
     Ui::MainAppWindow *ui;
     OpenGlViewer *openGlViewer; // openGl viewer
     QHBoxLayout *mainLayout;
-    QTableWidget * tableView;
+    CustomTable * objectViewer;
+
 
 };
 
