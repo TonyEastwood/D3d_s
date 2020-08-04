@@ -6,12 +6,6 @@ OpenGlViewer::OpenGlViewer( QWidget *parent)
 
     ui->setupUi(this);
 
-    drawFirstObject=new MyMesh();
-    drawFirstObject->fn=0;
-
-    drawSecondObject=new MyMesh();
-    drawSecondObject->fn=0;
-
     setFormat(QGLFormat(QGL::DoubleBuffer));  // double buff
 
     light_diffuse[0]=0.7;
@@ -26,8 +20,6 @@ OpenGlViewer::OpenGlViewer( QWidget *parent)
 }
 
 OpenGlViewer::~OpenGlViewer() {
-    delete drawFirstObject;
-    delete drawSecondObject;
     delete ui;
 }
 
@@ -52,8 +44,7 @@ void OpenGlViewer::resizeGL(int w, int h) {
 }
 
 void OpenGlViewer::paintGL() {
-    if(!drawFirstObject)
-        return;
+
     //  timerForTest->restart();
 
     glClear(GL_COLOR_BUFFER_BIT |
@@ -92,22 +83,12 @@ void OpenGlViewer::paintGL() {
     if(isDrawGrid)
     {
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-        glColor3f(1.0f, 0.5f, 0.2f);  // outline color (orange)
-        drawFirstMesh();
-
-        glColor3f(1.0f, 0.0f, 0.0f);  // outline color (red)
-        drawSecondMesh();
+        drawMeshes(true);
     }
     if(isDrawFaces)
     {
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-        glColor3f(0.5f, 0.5f, 0.5f);  // filling color (grey)
-        drawFirstMesh();
-
-        glColor3f(0.4f, 0.7f, 0.9f);  // filling color (grey)
-        drawSecondMesh();
+        drawMeshes(false);
     }
     glPopMatrix(); // load the unscaled matrix
 
@@ -146,39 +127,32 @@ void OpenGlViewer::wheelEvent(QWheelEvent *event) {
 }
 
 
-void OpenGlViewer::drawFirstMesh()
+void OpenGlViewer::drawMeshes(bool isGrid)
 {
-    if(drawFirstObject)
+    for(int i=0;i<meshes.size();++i)
     {
-        uint size=drawFirstObject->face.size();
-        glBegin(GL_TRIANGLES);  // START TRIANGLES DRAWING
-        for (uint i = 0; i < size; ++i) {
-            glNormal3f((*drawFirstObject).face[i].N().X(),(*drawFirstObject).face[i].N().Y(),(*drawFirstObject).face[i].N().Z());
-            glVertex3f((*drawFirstObject).face[i].P0(0).X(),(*drawFirstObject).face[i].P0(0).Y(),(*drawFirstObject).face[i].P0(0).Z());
-            glVertex3f((*drawFirstObject).face[i].P0(1).X(),(*drawFirstObject).face[i].P0(1).Y(),(*drawFirstObject).face[i].P0(1).Z());
-            glVertex3f((*drawFirstObject).face[i].P0(2).X(),(*drawFirstObject).face[i].P0(2).Y(),(*drawFirstObject).face[i].P0(2).Z());
+        if(meshes[i].isVisible())
+        {
+            if(isGrid)
+            glColor3f(std::get<0>(meshes[i].getColorGrid()),std::get<1>(meshes[i].getColorGrid()), std::get<2>(meshes[i].getColorGrid()));  // outline color (orange)
+           else
+             glColor3f(std::get<0>(meshes[i].getColorFaces()),std::get<1>(meshes[i].getColorFaces()), std::get<2>(meshes[i].getColorFaces()));  // outline color (orange)
+            uint size=meshes[i].getMeshPtr()->face.size();
+            glBegin(GL_TRIANGLES);  // START TRIANGLES DRAWING
+            for (uint i = 0; i < size; ++i) {
+                glNormal3f((*meshes[i].getMeshPtr()).face[i].N().X(),(*meshes[i].getMeshPtr()).face[i].N().Y(),(*meshes[i].getMeshPtr()).face[i].N().Z());
+                glVertex3f((*meshes[i].getMeshPtr()).face[i].P0(0).X(),(*meshes[i].getMeshPtr()).face[i].P0(0).Y(),(*meshes[i].getMeshPtr()).face[i].P0(0).Z());
+                glVertex3f((*meshes[i].getMeshPtr()).face[i].P0(1).X(),(*meshes[i].getMeshPtr()).face[i].P0(1).Y(),(*meshes[i].getMeshPtr()).face[i].P0(1).Z());
+                glVertex3f((*meshes[i].getMeshPtr()).face[i].P0(2).X(),(*meshes[i].getMeshPtr()).face[i].P0(2).Y(),(*meshes[i].getMeshPtr()).face[i].P0(2).Z());
 
+            }
+            glEnd();  // END TRIANGLES DRAWING
         }
-        glEnd();  // END TRIANGLES DRAWING
     }
 
 }
 
-void OpenGlViewer::drawSecondMesh()
-{
-    if(drawSecondObject)
-    {
-        uint size=drawSecondObject->face.size();
-        glBegin(GL_TRIANGLES);  // START TRIANGLES DRAWING
-        for (uint i = 0; i < size; ++i) {
-            glNormal3f((*drawSecondObject).face[i].N().X(),(*drawSecondObject).face[i].N().Y(),(*drawSecondObject).face[i].N().Z());
-            glVertex3f((*drawSecondObject).face[i].P0(0).X(),(*drawSecondObject).face[i].P0(0).Y(),(*drawSecondObject).face[i].P0(0).Z());
-            glVertex3f((*drawSecondObject).face[i].P0(1).X(),(*drawSecondObject).face[i].P0(1).Y(),(*drawSecondObject).face[i].P0(1).Z());
-            glVertex3f((*drawSecondObject).face[i].P0(2).X(),(*drawSecondObject).face[i].P0(2).Y(),(*drawSecondObject).face[i].P0(2).Z());
-        }
-        glEnd();  // END TRIANGLES DRAWING
-    }
-}
+
 
 
 void OpenGlViewer::setFirstMesh(QString path )
@@ -296,7 +270,7 @@ void OpenGlViewer::saveSecondMesh()
         return;
     if(file1.completeSuffix()=="ply")
     {
-       vcgApiFunctions::exportPly(drawSecondObject ,resultPath);
+        vcgApiFunctions::exportPly(drawSecondObject ,resultPath);
         return;
     }
     if(file1.completeSuffix()=="stl")
@@ -327,7 +301,7 @@ void OpenGlViewer::saveFirstMesh()
     }
     if(file1.completeSuffix()=="stl")
     {
-       vcgApiFunctions::exportStl(drawFirstObject ,resultPath);
+        vcgApiFunctions::exportStl(drawFirstObject ,resultPath);
         return;
     }
     QMessageBox::warning(this, "Warning extension","Please select object with another format");
@@ -337,7 +311,7 @@ void OpenGlViewer::saveFirstMesh()
 
 void OpenGlViewer::alignSecondMesh()
 {
-     QApplication::setOverrideCursor(Qt::WaitCursor);
+    QApplication::setOverrideCursor(Qt::WaitCursor);
 
     emit setDistanceInLabel(vcgApiFunctions::alignSecondMesh(drawFirstObject,drawSecondObject));
     update();
@@ -374,6 +348,70 @@ void OpenGlViewer::openAlignFile()
             setSecondMesh(pathToDir+QString::fromStdString(fileWithAlignMeshes.readLine().toStdString()).split(QRegExp("[\r\n]"),QString::SkipEmptyParts)[0]);
 
     fileWithAlignMeshes.close();
+
+}
+
+void OpenGlViewer::importMesh(const QString &path)
+{
+    rotate_x=0;
+    rotate_y=0;
+    prevRotation_x=0;
+    prevRotation_y=0;
+    int err=0;
+
+
+    Object3d newObject;
+    err=vcgApiFunctions::importMesh(newObject.getMeshPtr(),path);
+    if(err) { // all the importers return 0 in case of success
+        printf("Error in reading %s: '%s'\n");
+        exit(-1);
+    }
+
+
+    vcgApiFunctions::normalizeMesh(newObject.getMeshPtr());
+
+
+
+    float elements[6];//minX maxX minY maxY minZ maxZ
+
+    elements[0]=(*drawFirstObject).bbox.min.X();
+    elements[1]=(*drawFirstObject).bbox.max.X();
+    elements[2]=(*drawFirstObject).bbox.min.Y();
+    elements[3]=(*drawFirstObject).bbox.max.Y();
+    elements[4]=(*drawFirstObject).bbox.min.Z();
+    elements[5]=(*drawFirstObject).bbox.max.Z();
+
+    int length[3];
+
+    length[0]=elements[1]-elements[0];
+    length[1]=elements[3]-elements[2];
+    length[2]=elements[5]-elements[4];
+
+    scaleSpeed=length[0];
+
+    for(int i=1;i<3;++i)
+        if(scaleSpeed<length[i])
+            scaleSpeed=length[i];
+
+    scaleSpeed*=0.02;
+
+    maxOrigin=abs(elements[0]);
+
+    for(int i=0;i<6;++i)
+        if(maxOrigin<abs(elements[i]))
+            maxOrigin=abs(elements[i]);
+
+    scaleWheel=maxOrigin*5;
+
+    light_position[0]=-orthoCoefficient * maxOrigin;
+    light_position[1]=-orthoCoefficient * maxOrigin;
+    light_position[2]=-orthoCoefficient * maxOrigin;
+    light_position[3]=1;
+
+
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    glTranslatef(-(elements[1] + elements[0])/2.0f,-(elements[3] + elements[2])/2.0f,-(elements[5] + elements[4])/2.0f);
 
 }
 

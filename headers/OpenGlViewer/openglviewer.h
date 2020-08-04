@@ -15,6 +15,7 @@
 #include <QDebug>
 #include <QFile>
 #include "../vcgapifunctions.h"
+#include "../object3d.h"
 namespace Ui {
 class OpenGlViewer;
 }
@@ -39,6 +40,8 @@ public:
 
     void openAlignFile();
 
+    void importMesh(const QString &path);
+
  signals:
     void setDistanceInLabel(QString textDistance);
 public slots:
@@ -54,23 +57,16 @@ protected:
     void wheelEvent(QWheelEvent *event) override;  // object scale
 
 private:
-    void calculateNormalFirstObject();
-    void calculateNormalSecondObject();
 
-    void drawFirstMesh();
-    void drawSecondMesh();
-
-    void calcNormal(std::vector<std::tuple<float,float,float>> & normalArray, const float &Vx,const float &Vy,const float &Vz,const float &Sx,const float &Sy, const float &Sz);
+    void drawMeshes(bool isDrawGrid);// True - Grid False - Face
 
     //temporary const
 private:
-    const uint COUNT_ALIGN_CYCLES=5;
-    const double ERROR_ALIGN=0.021f;
+ //   const uint COUNT_ALIGN_CYCLES=5;
+  //  const double ERROR_ALIGN=0.021f;
 
 private:
-
-    MyMesh *  drawFirstObject;                     // object that need to draw
-    MyMesh *  drawSecondObject;                     // object that need to draw
+    std::vector<Object3d> meshes;
 
    // std::vector<std::tuple<float,float,float>> normalFirstMesh;
    // std::vector<std::tuple<float,float,float>> normalSecondMesh;

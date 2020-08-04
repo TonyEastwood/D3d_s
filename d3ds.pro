@@ -19,6 +19,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
     headers/customtable.cpp \
+    headers/object3d.cpp \
     headers/vcgapifunctions.cpp \
     main.cpp \
     sources/mainappwindow.cpp \
@@ -332,6 +333,7 @@ HEADERS += \
     headers/mainappwindow.h \
     headers/mainwindow.h \
     headers/OpenGlViewer/openglviewer.h \
+    headers/object3d.h \
     headers/vcgUtils.h \
     headers/vcgapifunctions.h \
     vcg/complex/algorithms/align_pair.h \

@@ -7,6 +7,13 @@
    #include <wrap/io_trimesh/import.h>
    #include <wrap/io_trimesh/export_ply.h>
 #include <wrap/io_trimesh/export_stl.h>
+
+namespace constants{
+enum MeshesFormat{
+    PLY,STL
+};
+}
+
 class MyFace;
 class MyVertex;
 

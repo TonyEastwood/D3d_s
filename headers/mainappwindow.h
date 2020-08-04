@@ -26,8 +26,9 @@ public:
     explicit MainAppWindow(  QWidget *parent = nullptr);
     ~MainAppWindow();
 public slots:
-    void setFirstOpenglMesh();
-    void setSecondOpenglMesh();
+   // void setFirstOpenglMesh();
+    void importMesh();
+    //void setSecondOpenglMesh();
 
 
     void setDrawGrid(bool value);
@@ -35,8 +36,8 @@ public slots:
 
     void setLight(bool value);
 
-    void saveFirstMesh();
-    void saveSecondMesh();
+    void exportMesh();
+ //   void saveSecondMesh();
 
     void alignSecondMesh();
     void appendSecondToFirst();

@@ -22,16 +22,15 @@ MainAppWindow::MainAppWindow(  QWidget *parent)
 
     // fileMenu->setStyleSheet("");
 
-   objectViewer = new CustomTable(QStringList()<< trUtf8("Index")
-                                  << trUtf8("Visible")
-                                  << trUtf8("Name")<<trUtf8("Selected"));
+    objectViewer = new CustomTable(QStringList()<< trUtf8("Index")
+                                   << trUtf8("Visible")
+                                   << trUtf8("Name")<<trUtf8("Selected"));
 
-   objectViewer->updateTable({{"Swe.ew",true,false},{"Swe.ew",true,false}});
+    objectViewer->updateTable({{"Swe.ew",true,false},{"Swe.ew",true,false}});
 
 
 
-    QAction *  openFirstMesh = fileMenu->addAction(tr("Import meshes..."));
-    QAction *  openSecondMesh = fileMenu->addAction(tr("Open second mesh"));
+    QAction *  importMesh = fileMenu->addAction(tr("Import meshes..."));
     fileMenu->addSeparator();
     QAction *  saveFirstMesh = fileMenu->addAction(tr("Save first mesh"));
     QAction *  saveSecondMesh = fileMenu->addAction(tr("Save second mesh"));
@@ -160,7 +159,7 @@ MainAppWindow::MainAppWindow(  QWidget *parent)
     connect(isFaceGrid, &QCheckBox::toggled, this, &MainAppWindow::setDrawFaces);
     connect(isDrawGrid, &QCheckBox::toggled, this, &MainAppWindow::setDrawGrid);
     connect(isLightOn, &QCheckBox::toggled, this, &MainAppWindow::setLight);
-    connect(openFirstMesh, &QAction::triggered, this, &MainAppWindow::setFirstOpenglMesh);
+    connect(importMesh, &QAction::triggered, this, &MainAppWindow::setFirstOpenglMesh);
     connect(openSecondMesh, &QAction::triggered, this, &MainAppWindow::setSecondOpenglMesh);
     connect(openAlignFile, &QAction::triggered, this, &MainAppWindow::openAlignFile);
     connect(saveSecondMesh, &QAction::triggered, this, &MainAppWindow::saveSecondMesh);
@@ -177,7 +176,7 @@ MainAppWindow::~MainAppWindow()
     delete ui;
 }
 
-void MainAppWindow::setFirstOpenglMesh()
+void MainAppWindow::importMesh()
 {
     QString path=QFileDialog::getOpenFileName(this,"Open object","C://",tr("STL (*.stl);;PLY (*.ply)" ));
 
@@ -189,28 +188,30 @@ void MainAppWindow::setFirstOpenglMesh()
     {
         QMessageBox::warning(this, "Warning extension","Please select object with another format");
         return;
-
     }
-    openGlViewer->setFirstMesh(path);
+    openGlViewer->importMesh(path);
+
 
 
 
 }
 
-void MainAppWindow::setSecondOpenglMesh()
-{
-    QString path=QFileDialog::getOpenFileName(this,"Open object","C://",tr("STL (*.stl);;PLY (*.ply)" ));
-    if(path.isEmpty())
-        return;
-    QFileInfo file1(path);
 
-    if(file1.completeSuffix()!="ply" && file1.completeSuffix()!="stl")
-    {
-        QMessageBox::warning(this, "Warning extension","Please select object with another format");
-        return;
-    }
-    openGlViewer->setSecondMesh(path);
-}
+
+//void MainAppWindow::setSecondOpenglMesh()
+//{
+//    QString path=QFileDialog::getOpenFileName(this,"Open object","C://",tr("STL (*.stl);;PLY (*.ply)" ));
+//    if(path.isEmpty())
+//        return;
+//    QFileInfo file1(path);
+
+//    if(file1.completeSuffix()!="ply" && file1.completeSuffix()!="stl")
+//    {
+//        QMessageBox::warning(this, "Warning extension","Please select object with another format");
+//        return;
+//    }
+//    openGlViewer->setSecondMesh(path);
+//}
 
 
 void MainAppWindow::setDrawGrid(bool value)
