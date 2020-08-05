@@ -89,6 +89,8 @@ private:
    // std::vector<std::tuple<float,float,float>> normalSecondMesh;
 
     float x_pos, y_pos, rotate_y, rotate_x;  // rotate values
+    float rotationSpeed=0.3f;
+
     float prevRotation_x=0;
     float prevRotation_y=0;
     float scaleSpeed=10;// current scale (zoom in\zoom out)

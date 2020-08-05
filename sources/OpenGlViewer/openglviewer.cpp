@@ -120,23 +120,30 @@ void OpenGlViewer::paintGL() {
     doubleBuffer();
 }
 
-void OpenGlViewer::mousePressEvent(QMouseEvent *event) {
-    if (event->button() ==
-            Qt::LeftButton) {  // memorize coords x and y mouse when we start clicking
-        x_pos = event->x();
-        y_pos = event->y();
-    }
-}
+
 
 void OpenGlViewer::mouseMoveEvent(QMouseEvent *event) {
-    if (event->buttons() & Qt::LeftButton) {
-        if(x_pos && y_pos)
-        {
-            rotate_y = (event->x() - x_pos);  // rotate Object on x
-            rotate_x = (event->y() + y_pos);  // rotate Object on y
-            update();                       // update Form that display Object
-        }
-    }
+  if (event->buttons() & Qt::LeftButton) {
+    x_pos = event->x();
+    y_pos = event->y();
+    rotate_y += (x_pos - prevRotation_x) * rotationSpeed;
+    rotate_x += (y_pos - prevRotation_y) * rotationSpeed;
+   // rotate_y = (rotate_y > 360.0f) ? 360.0f : rotate_y - 360.0f;
+  //  rotate_x = (rotate_x > 360.0f) ? 360.0f : rotate_x - 360.0f;
+
+    prevRotation_x = x_pos;
+    prevRotation_y = y_pos;
+    update();  // update Form that display Object
+  }
+}
+void OpenGlViewer::mousePressEvent(QMouseEvent *event) {
+  if (event->button() ==
+      Qt::LeftButton) {  // memorize coords x and y mouse when we start clicking
+    x_pos = event->x();
+    y_pos = event->y();
+    prevRotation_x = x_pos;
+    prevRotation_y = y_pos;
+  }
 }
 
 void OpenGlViewer::mouseReleaseEvent(QMouseEvent *e) {
