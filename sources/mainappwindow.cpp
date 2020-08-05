@@ -29,9 +29,9 @@ MainAppWindow::MainAppWindow(  QWidget *parent)
     QAction *  saveFirstMesh = fileMenu->addAction(tr("Save first mesh"));
     QAction *  saveSecondMesh = fileMenu->addAction(tr("Save second mesh"));
     fileMenu->addSeparator();
-    QAction *  openAlignFile = fileMenu->addAction(tr("Load align file"));
+    QAction *  openAlignFile = fileMenu->addAction(tr("Load mesh file to align"));
     fileMenu->addSeparator();
-    QAction *  exportMlp = fileMenu->addAction(tr("export MLP file"));
+    QAction *  exportMlp = fileMenu->addAction(tr("Export mlp file"));
     fileMenu->addSeparator();
     QAction *  exitAction = fileMenu->addAction(tr("E&xit"));
 

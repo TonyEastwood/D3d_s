@@ -75,6 +75,15 @@ private:
     const uint COUNT_ALIGN_CYCLES=5;
     const double ERROR_ALIGN=0.021f;
 
+    const QColor BACKGROUND_COLOR=QColor(255,255,255); //White background
+
+    const std::tuple<float,float,float> MESH1_FACES_COLOR={0.5f, 0.5f, 0.5f}; //color faces mesh1
+    const std::tuple<float,float,float> MESH1_GRID_COLOR={1.0f, 0.5f, 0.2f}; // color grid mesh1
+
+    const std::tuple<float,float,float> MESH2_FACES_COLOR={0.4f, 0.7f, 0.9f}; //color faces mesh2
+    const std::tuple<float,float,float> MESH2_GRID_COLOR={1.0f, 0.0f, 0.0f}; // color grid mesh2
+
+
 private:
     std::vector<QStringList> vectorContentMLP;
 

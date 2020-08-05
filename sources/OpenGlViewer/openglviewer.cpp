@@ -43,7 +43,7 @@ void OpenGlViewer::initializeGL() {
 
     initializeOpenGLFunctions();
     glDepthFunc(GL_LEQUAL);   // buff deep
-    qglClearColor(Qt::white);  // set background
+    qglClearColor(BACKGROUND_COLOR);  // set background
 
     glEnable(GL_DEPTH_TEST);  // line that we can't see - become invisible
     glEnable(GL_COLOR_MATERIAL);
@@ -103,20 +103,20 @@ void OpenGlViewer::paintGL() {
     {
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-        glColor3f(1.0f, 0.5f, 0.2f);  // outline color (orange)
+        glColor3f(std::get<0>(MESH1_GRID_COLOR),std::get<1>(MESH1_GRID_COLOR),std::get<2>(MESH1_GRID_COLOR));  // outline color (orange)
         drawFirstMesh();
 
-        glColor3f(1.0f, 0.0f, 0.0f);  // outline color (red)
+        glColor3f(std::get<0>(MESH2_GRID_COLOR),std::get<1>(MESH2_GRID_COLOR),std::get<2>(MESH2_GRID_COLOR));  // outline color (red)
         drawSecondMesh();
     }
     if(isDrawFaces)
     {
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-        glColor3f(0.5f, 0.5f, 0.5f);  // filling color (grey)
+         glColor3f(std::get<0>(MESH1_FACES_COLOR),std::get<1>(MESH1_FACES_COLOR),std::get<2>(MESH1_FACES_COLOR));  // filling color (grey)
         drawFirstMesh();
 
-        glColor3f(0.4f, 0.7f, 0.9f);  // filling color (grey)
+       glColor3f(std::get<0>(MESH2_FACES_COLOR),std::get<1>(MESH2_FACES_COLOR),std::get<2>(MESH2_FACES_COLOR));   // filling color (grey)
         drawSecondMesh();
     }
     glPopMatrix(); // load the unscaled matrix
