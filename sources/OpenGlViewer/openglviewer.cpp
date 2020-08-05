@@ -9,6 +9,9 @@ OpenGlViewer::OpenGlViewer( QWidget *parent)
 
     ui->setupUi(this);
 
+    translateX=0;
+    translateY=0;
+
     drawFirstObject=new MyMesh();
     drawFirstObject->fn=0;
 
@@ -86,6 +89,8 @@ void OpenGlViewer::paintGL() {
     // DRAW LINES START
     glPushMatrix(); // save the current matrix
 
+    glTranslatef(translateX, translateY, 0);
+
     glRotatef( rotate_x, 1.0, 0.0, 0.0);  // rotate x
     glRotatef( rotate_y, 0.0, 1.0, 0.0);  // rotate y
 
@@ -123,27 +128,39 @@ void OpenGlViewer::paintGL() {
 
 
 void OpenGlViewer::mouseMoveEvent(QMouseEvent *event) {
-  if (event->buttons() & Qt::LeftButton) {
-    x_pos = event->x();
-    y_pos = event->y();
-    rotate_y += (x_pos - prevRotation_x) * rotationSpeed;
-    rotate_x += (y_pos - prevRotation_y) * rotationSpeed;
-   // rotate_y = (rotate_y > 360.0f) ? 360.0f : rotate_y - 360.0f;
-  //  rotate_x = (rotate_x > 360.0f) ? 360.0f : rotate_x - 360.0f;
+    if (event->buttons() & Qt::LeftButton && cameraMove) {
+        x_pos = event->x();
+        y_pos = event->y();
+        translateX += (x_pos - prevRotation_x) * translateSpeed;
+        translateY += (y_pos - prevRotation_y) * translateSpeed;
 
-    prevRotation_x = x_pos;
-    prevRotation_y = y_pos;
-    update();  // update Form that display Object
-  }
+        prevRotation_x = x_pos;
+        prevRotation_y = y_pos;
+        update();  // update Form that display Object
+        qDebug() << "Shift";
+        return;
+    }
+    if (event->buttons() & Qt::LeftButton) {
+        x_pos = event->x();
+        y_pos = event->y();
+        rotate_y += (x_pos - prevRotation_x) *rotationSpeed;
+        rotate_x += (y_pos - prevRotation_y) * rotationSpeed;
+       // rotate_y = (rotate_y > 360.0f) ? 360.0f : rotate_y - 360.0f;
+        //rotate_x = (rotate_x > 360.0f) ? 360.0f : rotate_x - 360.0f;
+
+        prevRotation_x = x_pos;
+        prevRotation_y = y_pos;
+        update();  // update Form that display Object
+    }
 }
 void OpenGlViewer::mousePressEvent(QMouseEvent *event) {
-  if (event->button() ==
-      Qt::LeftButton) {  // memorize coords x and y mouse when we start clicking
-    x_pos = event->x();
-    y_pos = event->y();
-    prevRotation_x = x_pos;
-    prevRotation_y = y_pos;
-  }
+    if (event->button() ==
+            Qt::LeftButton) {  // memorize coords x and y mouse when we start clicking
+        x_pos = event->x();
+        y_pos = event->y();
+        prevRotation_x = x_pos;
+        prevRotation_y = y_pos;
+    }
 }
 
 void OpenGlViewer::mouseReleaseEvent(QMouseEvent *e) {
@@ -153,6 +170,22 @@ void OpenGlViewer::wheelEvent(QWheelEvent *event) {
     scaleWheel +=
             event->angleDelta().y()*scaleSpeed;  // change scale when scroll wheel
     update();
+}
+
+void OpenGlViewer::keyPressEvent(QKeyEvent *event)
+{
+    if (event->key() == Qt::Key_Shift) {
+      cameraMove = true;
+      qDebug() << "Pressed shift";
+    }
+}
+
+void OpenGlViewer::keyReleaseEvent(QKeyEvent *event)
+{
+    if (event->key() == Qt::Key_Shift) {
+       cameraMove = false;
+       qDebug() << "Pressed shift";
+     }
 }
 
 QString OpenGlViewer::vcgMatrixToString(const vcg::Matrix44d &resultTransformMatrix)
@@ -303,6 +336,8 @@ void OpenGlViewer::setFirstMesh(QString path )
         for(int i=0;i<6;++i)
             if(maxOrigin<abs(elements[i]))
                 maxOrigin=abs(elements[i]);
+
+        translateSpeed=maxOrigin*orthoCoefficient*0.005;
 
         scaleWheel=maxOrigin*5;
 

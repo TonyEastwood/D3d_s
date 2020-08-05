@@ -55,7 +55,8 @@ protected:
     void mouseMoveEvent(QMouseEvent *event) override;  // object roration
     void mouseReleaseEvent(QMouseEvent *e) override;
     void wheelEvent(QWheelEvent *event) override;  // object scale
-
+    void keyPressEvent(QKeyEvent *event) override;
+    void keyReleaseEvent(QKeyEvent *event) override;
 private:
     QString vcgMatrixToString(const vcg::Matrix44d & resultTransformMatrix);
 
@@ -89,11 +90,15 @@ private:
    // std::vector<std::tuple<float,float,float>> normalSecondMesh;
 
     float x_pos, y_pos, rotate_y, rotate_x;  // rotate values
+    float translateX, translateY;
     float rotationSpeed=0.3f;
+    float translateSpeed=0.3f;
 
     float prevRotation_x=0;
     float prevRotation_y=0;
     float scaleSpeed=10;// current scale (zoom in\zoom out)
+
+    bool cameraMove=false;
 
     Ui::OpenGlViewer *ui;
 

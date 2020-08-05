@@ -122,6 +122,7 @@ MainAppWindow::MainAppWindow(  QWidget *parent)
 
     ui->setupUi(this);
     openGlViewer = new OpenGlViewer();
+    openGlViewer->setFocusPolicy(Qt::FocusPolicy::StrongFocus);
 
 
     QMenuBar * menuBar = new QMenuBar(this);
