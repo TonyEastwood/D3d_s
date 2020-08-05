@@ -94,6 +94,8 @@ private:
     float rotationSpeed=0.3f;
     float translateSpeed=0.3f;
 
+    double ratioWidthHeight;
+
     float prevRotation_x=0;
     float prevRotation_y=0;
     float scaleSpeed=10;// current scale (zoom in\zoom out)

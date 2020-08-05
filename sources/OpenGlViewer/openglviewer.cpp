@@ -15,6 +15,8 @@ OpenGlViewer::OpenGlViewer( QWidget *parent)
     drawFirstObject=new MyMesh();
     drawFirstObject->fn=0;
 
+    ratioWidthHeight=1;
+
     drawSecondObject=new MyMesh();
     drawSecondObject->fn=0;
 
@@ -54,7 +56,8 @@ void OpenGlViewer::initializeGL() {
 void OpenGlViewer::resizeGL(int w, int h) {
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glViewport(0, 0, (GLint)w, (GLint)w);
+    glViewport(0, 0, (GLint)w, (GLint)h);
+    ratioWidthHeight = (double)w / h;
 }
 
 void OpenGlViewer::paintGL() {
@@ -94,8 +97,7 @@ void OpenGlViewer::paintGL() {
     glRotatef( rotate_x, 1.0, 0.0, 0.0);  // rotate x
     glRotatef( rotate_y, 0.0, 1.0, 0.0);  // rotate y
 
-    glScalef(scaleWheel,scaleWheel,scaleWheel);
-
+    glScalef(scaleWheel,scaleWheel* ratioWidthHeight,scaleWheel);
 
     if(isDrawGrid)
     {
@@ -145,7 +147,7 @@ void OpenGlViewer::mouseMoveEvent(QMouseEvent *event) {
         y_pos = event->y();
         rotate_y += (x_pos - prevRotation_x) *rotationSpeed;
         rotate_x += (y_pos - prevRotation_y) * rotationSpeed;
-       // rotate_y = (rotate_y > 360.0f) ? 360.0f : rotate_y - 360.0f;
+        // rotate_y = (rotate_y > 360.0f) ? 360.0f : rotate_y - 360.0f;
         //rotate_x = (rotate_x > 360.0f) ? 360.0f : rotate_x - 360.0f;
 
         prevRotation_x = x_pos;
@@ -175,17 +177,17 @@ void OpenGlViewer::wheelEvent(QWheelEvent *event) {
 void OpenGlViewer::keyPressEvent(QKeyEvent *event)
 {
     if (event->key() == Qt::Key_Shift) {
-      cameraMove = true;
-      qDebug() << "Pressed shift";
+        cameraMove = true;
+        qDebug() << "Pressed shift";
     }
 }
 
 void OpenGlViewer::keyReleaseEvent(QKeyEvent *event)
 {
     if (event->key() == Qt::Key_Shift) {
-       cameraMove = false;
-       qDebug() << "Pressed shift";
-     }
+        cameraMove = false;
+        qDebug() << "Pressed shift";
+    }
 }
 
 QString OpenGlViewer::vcgMatrixToString(const vcg::Matrix44d &resultTransformMatrix)
@@ -288,6 +290,9 @@ void OpenGlViewer::setFirstMesh(QString path )
     rotate_y=0;
     prevRotation_x=0;
     prevRotation_y=0;
+
+    translateX=0;
+    translateY=0;
     int err=0;
 
     err =  vcg::tri::io::Importer<MyMesh>::Open(*drawFirstObject,path.toLocal8Bit());
@@ -329,7 +334,8 @@ void OpenGlViewer::setFirstMesh(QString path )
             if(scaleSpeed<length[i])
                 scaleSpeed=length[i];
 
-        scaleSpeed*=0.02;
+        scaleSpeed = orthoCoefficient * 0.005;
+        scaleWheel = orthoCoefficient / 2 * maxOrigin;
 
         maxOrigin=abs(elements[0]);
 
