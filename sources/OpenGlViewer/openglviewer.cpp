@@ -31,6 +31,9 @@ OpenGlViewer::OpenGlViewer( QWidget *parent)
     light_ambient[2]=0.5;
     light_ambient[3]=0.4;
 
+    minMaxXYZ[0]=minMaxXYZ[2]=minMaxXYZ[4]=100000000;
+    minMaxXYZ[1]=minMaxXYZ[3]=minMaxXYZ[5]=-100000000;
+
 }
 
 OpenGlViewer::~OpenGlViewer() {
@@ -202,6 +205,48 @@ QString OpenGlViewer::vcgMatrixToString(const vcg::Matrix44d &resultTransformMat
     return result;
 }
 
+void OpenGlViewer::InitMaxOrigin(float minX, float maxX, float minY, float maxY, float minZ, float maxZ)
+{
+    rotate_x=0;
+    rotate_y=0;
+    prevRotation_x=0;
+    prevRotation_y=0;
+
+    translateX=0;
+    translateY=0;
+
+    minMaxXYZ[0]=minMaxXYZ[0]>minX? minX: minMaxXYZ[0];
+    minMaxXYZ[1]=minMaxXYZ[1]<maxX? maxX: minMaxXYZ[1];
+    minMaxXYZ[2]=minMaxXYZ[2]>minY? minY: minMaxXYZ[2];
+    minMaxXYZ[3]=minMaxXYZ[3]<maxY? maxY: minMaxXYZ[3];
+    minMaxXYZ[4]=minMaxXYZ[4]>minZ? minZ: minMaxXYZ[4];
+    minMaxXYZ[5]=minMaxXYZ[5]<maxZ? maxZ: minMaxXYZ[5];
+
+
+    maxOrigin=abs(minMaxXYZ[0]);
+
+    for(int i=0;i<6;++i)
+        if(maxOrigin<abs(minMaxXYZ[i]))
+            maxOrigin=abs(minMaxXYZ[i]);
+
+    translateSpeed=maxOrigin*orthoCoefficient*0.005;
+
+ //   scaleWheel=maxOrigin*5;
+    scaleSpeed = orthoCoefficient*maxOrigin * 0.0001;
+    scaleWheel = orthoCoefficient * maxOrigin*0.05;
+
+    light_position[0]=-orthoCoefficient * maxOrigin;
+    light_position[1]=-orthoCoefficient * maxOrigin;
+    light_position[2]=-orthoCoefficient * maxOrigin;
+    light_position[3]=1;
+
+
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    glTranslatef(-(minMaxXYZ[1] + minMaxXYZ[0])/2.0f,-(minMaxXYZ[3] + minMaxXYZ[2])/2.0f,-(minMaxXYZ[5] + minMaxXYZ[4])/2.0f);
+
+}
+
 void OpenGlViewer::exportAsMLP()
 {
     if(vectorContentMLP.empty())
@@ -286,13 +331,13 @@ void OpenGlViewer::drawSecondMesh()
 
 void OpenGlViewer::setFirstMesh(QString path )
 {
-    rotate_x=0;
-    rotate_y=0;
-    prevRotation_x=0;
-    prevRotation_y=0;
+//    rotate_x=0;
+//    rotate_y=0;
+//    prevRotation_x=0;
+//    prevRotation_y=0;
 
-    translateX=0;
-    translateY=0;
+//    translateX=0;
+//    translateY=0;
     int err=0;
 
     err =  vcg::tri::io::Importer<MyMesh>::Open(*drawFirstObject,path.toLocal8Bit());
@@ -305,61 +350,41 @@ void OpenGlViewer::setFirstMesh(QString path )
         exit(-1);
     }
 
-    if(drawFirstObject)
-    {
+
 
         vcg::tri::UpdateNormal<MyMesh>::PerVertexNormalizedPerFace(*drawFirstObject);
 
         // calculateNormalFirstObject();
 
+        InitMaxOrigin((*drawFirstObject).bbox.min.X(),(*drawFirstObject).bbox.max.X(),
+                     (*drawFirstObject).bbox.min.Y(), (*drawFirstObject).bbox.max.Y(),
+                     (*drawFirstObject).bbox.min.Z(),(*drawFirstObject).bbox.max.Z() );
+//        minMaxXYZ[0]=(*drawFirstObject).bbox.min.X();
+//        minMaxXYZ[1]=(*drawFirstObject).bbox.max.X();
+//        minMaxXYZ[2]=(*drawFirstObject).bbox.min.Y();
+//        minMaxXYZ[3]=(*drawFirstObject).bbox.max.Y();
+//        minMaxXYZ[4]=(*drawFirstObject).bbox.min.Z();
+//        minMaxXYZ[5]=(*drawFirstObject).bbox.max.Z();
 
-        float elements[6];//minX maxX minY maxY minZ maxZ
+//        int length[3];
 
-        elements[0]=(*drawFirstObject).bbox.min.X();
-        elements[1]=(*drawFirstObject).bbox.max.X();
-        elements[2]=(*drawFirstObject).bbox.min.Y();
-        elements[3]=(*drawFirstObject).bbox.max.Y();
-        elements[4]=(*drawFirstObject).bbox.min.Z();
-        elements[5]=(*drawFirstObject).bbox.max.Z();
+//        length[0]=minMaxXYZ[1]-minMaxXYZ[0];
+//        length[1]=minMaxXYZ[3]-minMaxXYZ[2];
+//        length[2]=minMaxXYZ[5]-minMaxXYZ[4];
 
-        int length[3];
+//        scaleSpeed=length[0];
 
-        length[0]=elements[1]-elements[0];
-        length[1]=elements[3]-elements[2];
-        length[2]=elements[5]-elements[4];
-
-        scaleSpeed=length[0];
-
-        for(int i=1;i<3;++i)
-            if(scaleSpeed<length[i])
-                scaleSpeed=length[i];
-
-
-
-        maxOrigin=abs(elements[0]);
-
-        for(int i=0;i<6;++i)
-            if(maxOrigin<abs(elements[i]))
-                maxOrigin=abs(elements[i]);
-
-        translateSpeed=maxOrigin*orthoCoefficient*0.005;
-
-     //   scaleWheel=maxOrigin*5;
-        scaleSpeed = orthoCoefficient*maxOrigin * 0.0001;
-        scaleWheel = orthoCoefficient * maxOrigin*0.05;
-
-        light_position[0]=-orthoCoefficient * maxOrigin;
-        light_position[1]=-orthoCoefficient * maxOrigin;
-        light_position[2]=-orthoCoefficient * maxOrigin;
-        light_position[3]=1;
+//        for(int i=1;i<3;++i)
+//            if(scaleSpeed<length[i])
+//                scaleSpeed=length[i];
 
 
-        glMatrixMode(GL_MODELVIEW);
-        glLoadIdentity();
-        glTranslatef(-(elements[1] + elements[0])/2.0f,-(elements[3] + elements[2])/2.0f,-(elements[5] + elements[4])/2.0f);
 
-    }
 
+
+
+
+    update();
 
 
 }
@@ -379,12 +404,18 @@ void OpenGlViewer::setSecondMesh(QString path)
 
 
 
+
     if(err) { // all the importers return 0 in case of success
         printf("Error in reading %s: '%s'\n");
         exit(-1);
     }
 
+    InitMaxOrigin((*drawSecondObject).bbox.min.X(),(*drawSecondObject).bbox.max.X(),
+                 (*drawSecondObject).bbox.min.Y(), (*drawSecondObject).bbox.max.Y(),
+                 (*drawSecondObject).bbox.min.Z(),(*drawSecondObject).bbox.max.Z() );
+
     vcg::tri::UpdateNormal<MyMesh>::PerVertexNormalizedPerFace(*drawSecondObject);
+    update();
 }
 
 void OpenGlViewer::setLight(bool value)
@@ -526,6 +557,7 @@ void OpenGlViewer::alignSecondMesh(vcg::Matrix44d * resultTransformMatrix=nullpt
         {
             if(isVisible!=nullptr)
                 (*isVisible)=false;
+             emit setDistanceInLabel("Defective mesh, distance so long");
             QApplication::restoreOverrideCursor();
             return;
         }

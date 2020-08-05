@@ -61,7 +61,7 @@ private:
     QString vcgMatrixToString(const vcg::Matrix44d & resultTransformMatrix);
 
 
-
+    void InitMaxOrigin(float minX, float maxX, float minY, float maxY, float minZ, float maxZ);
     void calculateNormalFirstObject();
     void calculateNormalSecondObject();
 
@@ -73,7 +73,7 @@ private:
     //temporary const
 private:
     const uint COUNT_ALIGN_CYCLES=5;
-    const double ERROR_ALIGN=0.0021f;
+    const double ERROR_ALIGN=0.021f;
 
     const QColor BACKGROUND_COLOR=QColor(255,255,255); //White background
 
@@ -86,6 +86,8 @@ private:
 
 private:
     std::vector<QStringList> vectorContentMLP;
+
+    float minMaxXYZ[6];//minX maxX minY maxY minZ maxZ
 
     MyMesh *  drawFirstObject;                     // object that need to draw
     MyMesh *  drawSecondObject;                     // object that need to draw
