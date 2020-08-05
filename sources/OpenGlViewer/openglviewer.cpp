@@ -334,8 +334,7 @@ void OpenGlViewer::setFirstMesh(QString path )
             if(scaleSpeed<length[i])
                 scaleSpeed=length[i];
 
-        scaleSpeed = orthoCoefficient * 0.005;
-        scaleWheel = orthoCoefficient / 2 * maxOrigin;
+
 
         maxOrigin=abs(elements[0]);
 
@@ -345,7 +344,9 @@ void OpenGlViewer::setFirstMesh(QString path )
 
         translateSpeed=maxOrigin*orthoCoefficient*0.005;
 
-        scaleWheel=maxOrigin*5;
+     //   scaleWheel=maxOrigin*5;
+        scaleSpeed = orthoCoefficient*maxOrigin * 0.0001;
+        scaleWheel = orthoCoefficient * maxOrigin*0.05;
 
         light_position[0]=-orthoCoefficient * maxOrigin;
         light_position[1]=-orthoCoefficient * maxOrigin;

@@ -73,7 +73,7 @@ private:
     //temporary const
 private:
     const uint COUNT_ALIGN_CYCLES=5;
-    const double ERROR_ALIGN=0.021f;
+    const double ERROR_ALIGN=0.0021f;
 
     const QColor BACKGROUND_COLOR=QColor(255,255,255); //White background
 
