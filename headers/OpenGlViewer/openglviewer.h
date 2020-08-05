@@ -61,7 +61,7 @@ private:
     QString vcgMatrixToString(const vcg::Matrix44d & resultTransformMatrix);
 
 
-    void InitMaxOrigin(float minX, float maxX, float minY, float maxY, float minZ, float maxZ);
+    void InitMaxOrigin();
     void calculateNormalFirstObject();
     void calculateNormalSecondObject();
 
