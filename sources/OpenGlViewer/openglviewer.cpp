@@ -149,7 +149,7 @@ void OpenGlViewer::mouseMoveEvent(QMouseEvent *event) {
         x_pos = event->x();
         y_pos = event->y();
         rotate_y += (x_pos - prevRotation_x) *rotationSpeed;
-        rotate_x += (y_pos - prevRotation_y) * rotationSpeed;
+        rotate_x -= (y_pos - prevRotation_y) * rotationSpeed;
         // rotate_y = (rotate_y > 360.0f) ? 360.0f : rotate_y - 360.0f;
         //rotate_x = (rotate_x > 360.0f) ? 360.0f : rotate_x - 360.0f;
 
@@ -172,7 +172,7 @@ void OpenGlViewer::mouseReleaseEvent(QMouseEvent *e) {
 }
 
 void OpenGlViewer::wheelEvent(QWheelEvent *event) {
-    scaleWheel +=
+    scaleWheel -=
             event->angleDelta().y()*scaleSpeed;  // change scale when scroll wheel
     update();
 }
