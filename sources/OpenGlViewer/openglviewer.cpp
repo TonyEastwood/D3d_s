@@ -193,41 +193,41 @@ void OpenGlViewer::keyReleaseEvent(QKeyEvent *event)
     }
 }
 
-void OpenGlViewer::compareObjects()
-{
-    qDebug()<<"COmpare first object start";
-    for(int i=0;i<testFirstObject.vn;++i)
-    {
-        if(testFirstObject.vert[i].P().X()-(*drawFirstObject).vert[i].P().X()!=0)
-        {
-            qDebug()<<"["<<i<<"]="<<testFirstObject.vert[i].P().X()-(*drawFirstObject).vert[i].P().X();
-        }
-    }
-       qDebug()<<"COmpare first object finished";
+//void OpenGlViewer::compareObjects()
+//{
+////    qDebug()<<"COmpare first object start";
+////    for(int i=0;i<testFirstObject.vn;++i)
+////    {
+////        if(testFirstObject.vert[i].P().X()-(*drawFirstObject).vert[i].P().X()!=0)
+////        {
+////            qDebug()<<"["<<i<<"]="<<testFirstObject.vert[i].P().X()-(*drawFirstObject).vert[i].P().X();
+////        }
+////    }
+////       qDebug()<<"COmpare first object finished";
 
-       qDebug()<<"COmpare second object start";
-       for(int i=0;i<testSecondObject.vn;++i)
-       {
-           if(testSecondObject.vert[i].P().X()-(*drawSecondObject).vert[i].P().X()!=0)
-           {
-               qDebug()<<"["<<i<<"]="<<testSecondObject.vert[i].P().X()-(*drawSecondObject).vert[i].P().X();
-           }
-       }
-          qDebug()<<"COmpare second object finished";
-}
+//       qDebug()<<"COmpare second object start";
+//       for(int i=0;i<testSecondObject.vn;++i)
+//       {
+//           if(testSecondObject.vert[i].P().X()-(*drawSecondObject).vert[i].P().X()!=0)
+//           {
+//               qDebug()<<"["<<i<<"]="<<testSecondObject.vert[i].P().X()-(*drawSecondObject).vert[i].P().X();
+//           }
+//       }
+//          qDebug()<<"COmpare second object finished";
+//}
 
-void OpenGlViewer::coutMatrix(vcg::Matrix44d *resultTransformMatrix)
-{
-    qDebug()<<"Matrix cout start:";
-    for(int i=0;i<4;++i)
-    {
-        for(int j=0;j<4;++j)
-        {
-            qDebug()<<"Element["<<i<<","<<j<<"]="<<resultTransformMatrix->ElementAt(i,j);
-        }
-    }
-    qDebug()<<"Matrix cout end:";
-}
+//void OpenGlViewer::coutMatrix(vcg::Matrix44d *resultTransformMatrix)
+//{
+//    qDebug()<<"Matrix cout start:";
+//    for(int i=0;i<4;++i)
+//    {
+//        for(int j=0;j<4;++j)
+//        {
+//            qDebug()<<"Element["<<i<<","<<j<<"]="<<resultTransformMatrix->ElementAt(i,j);
+//        }
+//    }
+//    qDebug()<<"Matrix cout end:";
+//}
 
 QString OpenGlViewer::vcgMatrixToString(const vcg::Matrix44d &resultTransformMatrix)
 {
@@ -555,7 +555,8 @@ void OpenGlViewer::alignSecondMesh(vcg::Matrix44d * resultTransformMatrix=nullpt
         return;
     }
 
-
+    if(resultTransformMatrix!=nullptr)
+        resultTransformMatrix->SetIdentity();
 
     vcg::AlignPair::Result result;
 
@@ -595,11 +596,9 @@ void OpenGlViewer::alignSecondMesh(vcg::Matrix44d * resultTransformMatrix=nullpt
     std::pair<double,double> distance={10000,10000};
     for(uint i=0;i<COUNT_ALIGN_CYCLES;++i)
     {
+
+
         aa.convertVertex((*drawSecondObject).vert,tmpmv);
-
-
-
-
         aa.sampleMovVert(tmpmv, ap.SampleNum, ap.SampleMode);
 
         aa.mov=&tmpmv;
@@ -638,8 +637,11 @@ void OpenGlViewer::alignSecondMesh(vcg::Matrix44d * resultTransformMatrix=nullpt
             previousResult=result;
             previousError=distance.first;
             if(resultTransformMatrix!=nullptr)
-                (*resultTransformMatrix)=result.Tr;
-             qDebug()<<"Iteration =="<<i<<" distance second< previous";
+            {
+                 //(*resultTransformMatrix)=previousResult.Tr;
+                (*resultTransformMatrix)=(*resultTransformMatrix)*result.Tr;
+            }
+           //  qDebug()<<"Iteration =="<<i<<" distance second< previous";
         }
         else{
             //  qDebug()<<"new Prev Value="<<distance.second;
@@ -649,12 +651,13 @@ void OpenGlViewer::alignSecondMesh(vcg::Matrix44d * resultTransformMatrix=nullpt
             //  qDebug()<<"new x="<<(*drawSecondObject).face[10523].P(0).X();
             distance=previousResult.computeAvgErr();
             if(resultTransformMatrix!=nullptr)
-                (*resultTransformMatrix)=previousResult.Tr;
-             qDebug()<<"Do inversion and break. Iteration =="<<i;
+                //(*resultTransformMatrix)=previousResult.Tr;
+                (*resultTransformMatrix)=(*resultTransformMatrix)*result.Tr;
+          //   qDebug()<<"Do inversion and break. Iteration =="<<i;
 
 
-             compareObjects();
-             coutMatrix(&previousResult.Tr);
+           //  compareObjects();
+            // coutMatrix(&previousResult.Tr);
             break;
         }
         //   qDebug()<<"iteration="<<i;
