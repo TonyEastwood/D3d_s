@@ -15,7 +15,7 @@
 #include <math.h>
 #include <QDebug>
 #include <QFile>
-
+#include <GL/GLU.h>
 namespace Ui {
 class OpenGlViewer;
 }

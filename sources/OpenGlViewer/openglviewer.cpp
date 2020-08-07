@@ -570,14 +570,14 @@ void OpenGlViewer::alignSecondMesh(vcg::Matrix44d * resultTransformMatrix=nullpt
             return;
         }
 
-        if(distance.second<previousError)
+        if(distance.first<previousError)
         {
             //  qDebug()<<"prev x="<<(*drawSecondObject).face[10523].P(0).X();
             previousResult=result;
-            previousError=distance.second;
+            previousError=distance.first;
             if(resultTransformMatrix!=nullptr)
                 (*resultTransformMatrix)=result.Tr;
-            // qDebug()<<"Prev value"<<distance.second;
+             qDebug()<<"Iteration =="<<i<<" distance second< previous";
         }
         else{
             //  qDebug()<<"new Prev Value="<<distance.second;
@@ -588,23 +588,23 @@ void OpenGlViewer::alignSecondMesh(vcg::Matrix44d * resultTransformMatrix=nullpt
             distance=previousResult.computeAvgErr();
             if(resultTransformMatrix!=nullptr)
                 (*resultTransformMatrix)=previousResult.Tr;
-            // qDebug()<<"New value value"<<distance.second;
+             qDebug()<<"Do inversion and break. Iteration =="<<i;
             break;
         }
         //   qDebug()<<"iteration="<<i;
 
     }
-    if(distance.second>ERROR_ALIGN)
+    if(distance.first>ERROR_ALIGN)
     {
         if(isVisible!=nullptr)
             (*isVisible)=false;
-        emit setDistanceInLabel(QString("Defective mesh\nDistance="+QString::number(distance.second)+">"+QString::number(ERROR_ALIGN)));
+        emit setDistanceInLabel(QString("Defective mesh\nDistance="+QString::number(distance.first)+">"+QString::number(ERROR_ALIGN)));
     }
     else
     {
         if(isVisible!=nullptr)
             (*isVisible)=true;
-        emit setDistanceInLabel(QString("Distance:\ndd="+QString::number(distance.first)+"\ndd="+QString::number(distance.second)));
+        emit setDistanceInLabel(QString("Distance:\ndd="+QString::number(distance.first)+"\ndd="+QString::number(distance.first)));
     }
     update();
     QApplication::restoreOverrideCursor();
