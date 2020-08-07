@@ -61,6 +61,9 @@ void OpenGlViewer::resizeGL(int w, int h) {
     glLoadIdentity();
     glViewport(0, 0, (GLint)w, (GLint)h);
     ratioWidthHeight = (double)w / h;
+
+    screenWidth=w;
+    screenHeight=h;
 }
 
 void OpenGlViewer::paintGL() {
@@ -75,10 +78,31 @@ void OpenGlViewer::paintGL() {
     glShadeModel(GL_SMOOTH);
     glLoadIdentity();  // load matrix
 
-    glOrtho(-orthoCoefficient * maxOrigin, orthoCoefficient * maxOrigin,
-            orthoCoefficient * maxOrigin,-orthoCoefficient * maxOrigin,
-            - orthoCoefficient * maxOrigin*5,
-            orthoCoefficient * maxOrigin*5);  // set matrix scope. Need get opportunity to
+     /*   glOrtho(-orthoCoefficient * maxOrigin, orthoCoefficient * maxOrigin,
+                orthoCoefficient * maxOrigin,-orthoCoefficient * maxOrigin,
+                - orthoCoefficient * maxOrigin*5,
+                orthoCoefficient * maxOrigin*5); */ // set matrix scope. Need get opportunity to
+    glOrtho(-maxOrigin*orthoCoefficient,maxOrigin*orthoCoefficient,
+            maxOrigin*orthoCoefficient,-maxOrigin*orthoCoefficient,
+           -maxOrigin*orthoCoefficient,maxOrigin*orthoCoefficient);
+//    glOrtho(orthoCoefficient * minMaxXYZ[0], orthoCoefficient * minMaxXYZ[1],
+//            orthoCoefficient * minMaxXYZ[3],orthoCoefficient * minMaxXYZ[2],
+//            orthoCoefficient * minMaxXYZ[4]*5,
+//            orthoCoefficient * minMaxXYZ[5]*5);  // set matrix scope. Need get opportunity to
+    //  double centerX=(orthoCoefficient * minMaxXYZ[0]+orthoCoefficient * minMaxXYZ[1])/2;
+    // double centerY=(orthoCoefficient * minMaxXYZ[2]+orthoCoefficient * minMaxXYZ[3])/2;
+    // double centerZ=(orthoCoefficient * minMaxXYZ[4]+orthoCoefficient * minMaxXYZ[5])/2;
+    //    gluLookAt(orthoCoefficient * minMaxXYZ[0],orthoCoefficient * minMaxXYZ[2],orthoCoefficient * minMaxXYZ[4]*5,
+    //           centerX,centerY,centerZ,
+    //            0,1,0);
+
+    //    qDebug()<<"Ortho:";
+    //    qDebug()<<"x="<<orthoCoefficient * minMaxXYZ[0] <<" "<< orthoCoefficient * minMaxXYZ[1] ;
+    //    qDebug()<<"y="<<orthoCoefficient * minMaxXYZ[2] <<" "<< orthoCoefficient * minMaxXYZ[3] ;
+    //    qDebug()<<"z="<<orthoCoefficient * minMaxXYZ[4]*5 <<" "<< orthoCoefficient * minMaxXYZ[5]*5 ;
+
+           qDebug()<<"Ortho:";
+            qDebug()<<"x="<<-orthoCoefficient * maxOrigin <<" "<<orthoCoefficient * maxOrigin ;
 
     if(isLight)
     {
@@ -100,7 +124,7 @@ void OpenGlViewer::paintGL() {
     glRotatef( rotate_x, 1.0, 0.0, 0.0);  // rotate x
     glRotatef( rotate_y, 0.0, 1.0, 0.0);  // rotate y
 
-    glScalef(scaleWheel,scaleWheel* ratioWidthHeight,scaleWheel);
+  //  glScalef(scaleWheel,scaleWheel* ratioWidthHeight,scaleWheel);
 
     if(isDrawGrid)
     {
@@ -174,6 +198,7 @@ void OpenGlViewer::mouseReleaseEvent(QMouseEvent *e) {
 void OpenGlViewer::wheelEvent(QWheelEvent *event) {
     scaleWheel -=
             event->angleDelta().y()*scaleSpeed;  // change scale when scroll wheel
+    qDebug()<<"ScaleWhhel="<<scaleWheel;
     update();
 }
 
@@ -190,6 +215,27 @@ void OpenGlViewer::keyReleaseEvent(QKeyEvent *event)
     if (event->key() == Qt::Key_Shift) {
         cameraMove = false;
         qDebug() << "Pressed shift";
+    }
+}
+
+void OpenGlViewer::findMinMaxForStl(MyMesh *_object)
+{
+    for(int i=0;i<_object->vn;++i)
+    {
+        if(minMaxXYZ[0]>_object->vert[i].P().X())
+            minMaxXYZ[0]=_object->vert[i].P().X();
+        if(minMaxXYZ[1]<_object->vert[i].P().X())
+            minMaxXYZ[1]=_object->vert[i].P().X();
+
+        if(minMaxXYZ[2]>_object->vert[i].P().Y())
+            minMaxXYZ[2]=_object->vert[i].P().Y();
+        if(minMaxXYZ[3]<_object->vert[i].P().Y())
+            minMaxXYZ[3]=_object->vert[i].P().Y();
+
+        if(minMaxXYZ[4]>_object->vert[i].P().Z())
+            minMaxXYZ[4]=_object->vert[i].P().Z();
+        if(minMaxXYZ[5]<_object->vert[i].P().Z())
+            minMaxXYZ[5]=_object->vert[i].P().Z();
     }
 }
 
@@ -259,29 +305,51 @@ void OpenGlViewer::InitMaxOrigin()
         minMaxXYZ[3]=(*drawFirstObject).bbox.max.Y();
         minMaxXYZ[4]=(*drawFirstObject).bbox.min.Z();
         minMaxXYZ[5]=(*drawFirstObject).bbox.max.Z();
+
+        if(minMaxXYZ[0]>minMaxXYZ[1])
+            findMinMaxForStl(drawFirstObject);
+
+        qDebug()<<"First object box:\n x["+QString::number(minMaxXYZ[0],'f',6)+","+QString::number(minMaxXYZ[1],'f',6)+"]\n";
+        qDebug()<<"y["+QString::number(minMaxXYZ[2],'f',6)+","+QString::number(minMaxXYZ[3],'f',6)+"]\n";
+        qDebug()<<"z["+QString::number(minMaxXYZ[4],'f',6)+","+QString::number(minMaxXYZ[5],'f',6)+"]\n";
     }
     else{
-            minMaxXYZ[0]=(*drawFirstObject).bbox.min.X()>(*drawSecondObject).bbox.min.X()? (*drawSecondObject).bbox.min.X(): (*drawFirstObject).bbox.min.X();
-            minMaxXYZ[1]=(*drawFirstObject).bbox.max.X()<(*drawSecondObject).bbox.max.X()? (*drawSecondObject).bbox.max.X(): (*drawFirstObject).bbox.max.X();
-            minMaxXYZ[2]=(*drawFirstObject).bbox.min.Y()>(*drawSecondObject).bbox.min.Y()? (*drawSecondObject).bbox.min.Y(): (*drawFirstObject).bbox.min.Y();
-            minMaxXYZ[3]=(*drawFirstObject).bbox.max.Y()<(*drawSecondObject).bbox.max.Y()? (*drawSecondObject).bbox.max.Y(): (*drawFirstObject).bbox.max.Y();
-            minMaxXYZ[4]=(*drawFirstObject).bbox.min.Z()>(*drawSecondObject).bbox.min.Z()? (*drawSecondObject).bbox.min.Z(): (*drawFirstObject).bbox.min.Z();
-            minMaxXYZ[5]=(*drawFirstObject).bbox.max.Z()<(*drawSecondObject).bbox.max.Z()? (*drawSecondObject).bbox.max.Z(): (*drawFirstObject).bbox.max.Z();
+        minMaxXYZ[0]=(*drawFirstObject).bbox.min.X()>(*drawSecondObject).bbox.min.X()? (*drawSecondObject).bbox.min.X(): (*drawFirstObject).bbox.min.X();
+        minMaxXYZ[1]=(*drawFirstObject).bbox.max.X()<(*drawSecondObject).bbox.max.X()? (*drawSecondObject).bbox.max.X(): (*drawFirstObject).bbox.max.X();
+        minMaxXYZ[2]=(*drawFirstObject).bbox.min.Y()>(*drawSecondObject).bbox.min.Y()? (*drawSecondObject).bbox.min.Y(): (*drawFirstObject).bbox.min.Y();
+        minMaxXYZ[3]=(*drawFirstObject).bbox.max.Y()<(*drawSecondObject).bbox.max.Y()? (*drawSecondObject).bbox.max.Y(): (*drawFirstObject).bbox.max.Y();
+        minMaxXYZ[4]=(*drawFirstObject).bbox.min.Z()>(*drawSecondObject).bbox.min.Z()? (*drawSecondObject).bbox.min.Z(): (*drawFirstObject).bbox.min.Z();
+        minMaxXYZ[5]=(*drawFirstObject).bbox.max.Z()<(*drawSecondObject).bbox.max.Z()? (*drawSecondObject).bbox.max.Z(): (*drawFirstObject).bbox.max.Z();
 
+        if(minMaxXYZ[0]>minMaxXYZ[1])
+            findMinMaxForStl(drawFirstObject);
     }
 
+    double distanceX=abs((minMaxXYZ[1]-minMaxXYZ[0]))/2;
+    double distanceY=abs((minMaxXYZ[3]-minMaxXYZ[2]))/2;
+    double distanceZ=abs((minMaxXYZ[5]-minMaxXYZ[4]))/2;
 
-    maxOrigin=abs(minMaxXYZ[0]);
+//    maxOrigin=abs(minMaxXYZ[0]);
 
-    for(int i=0;i<6;++i)
-        if(maxOrigin<abs(minMaxXYZ[i]))
-            maxOrigin=abs(minMaxXYZ[i]);
+//    for(int i=0;i<6;++i)
+//        if(maxOrigin<abs(minMaxXYZ[i]))
+//            maxOrigin=abs(minMaxXYZ[i]);
+
+
+        maxOrigin=distanceX;
+
+       if(maxOrigin<distanceY)
+           maxOrigin=distanceY;
+        if(maxOrigin<distanceZ)
+            maxOrigin=distanceZ;
 
     translateSpeed=maxOrigin*orthoCoefficient*0.005;
 
     //   scaleWheel=maxOrigin*5;
-    scaleSpeed = orthoCoefficient*maxOrigin * 0.0001;
-    scaleWheel = orthoCoefficient * maxOrigin*0.1;
+       scaleSpeed = orthoCoefficient*maxOrigin * 0.0001;
+    //  scaleWheel = orthoCoefficient * maxOrigin*0.1;
+//    scaleSpeed = 0.001;
+    scaleWheel = 50;
 
     light_position[0]=-orthoCoefficient * maxOrigin;
     light_position[1]=-orthoCoefficient * maxOrigin;
@@ -449,30 +517,30 @@ void OpenGlViewer::setSecondMesh(QString path)
 
     vcg::tri::io::Importer<MyMesh>::Open(testSecondObject,path.toLocal8Bit());
 
-//    vcg::Matrix44d tempMatrix;
-//    tempMatrix.ElementAt(0,0)=1;
-//    tempMatrix.ElementAt(0,1)= -1.59913*pow(10,-6);
-//    tempMatrix.ElementAt(0,2)=-8.61265*pow(10,-5);
-//    tempMatrix.ElementAt(0,3)=0.00365834;
+    //    vcg::Matrix44d tempMatrix;
+    //    tempMatrix.ElementAt(0,0)=1;
+    //    tempMatrix.ElementAt(0,1)= -1.59913*pow(10,-6);
+    //    tempMatrix.ElementAt(0,2)=-8.61265*pow(10,-5);
+    //    tempMatrix.ElementAt(0,3)=0.00365834;
 
-//    tempMatrix.ElementAt(1,0)=1.5838*pow(10,-6);
-//    tempMatrix.ElementAt(1,1)=1;
-//    tempMatrix.ElementAt(1,2)= -0.000177923;
-//    tempMatrix.ElementAt(1,3)=0.00878626;
+    //    tempMatrix.ElementAt(1,0)=1.5838*pow(10,-6);
+    //    tempMatrix.ElementAt(1,1)=1;
+    //    tempMatrix.ElementAt(1,2)= -0.000177923;
+    //    tempMatrix.ElementAt(1,3)=0.00878626;
 
-//    tempMatrix.ElementAt(2,0)=8.61268*pow(10,-5);
-//    tempMatrix.ElementAt(2,1)=0.000177922;
-//    tempMatrix.ElementAt(2,2)=1;
-//    tempMatrix.ElementAt(2,3)=0.0207228;
+    //    tempMatrix.ElementAt(2,0)=8.61268*pow(10,-5);
+    //    tempMatrix.ElementAt(2,1)=0.000177922;
+    //    tempMatrix.ElementAt(2,2)=1;
+    //    tempMatrix.ElementAt(2,3)=0.0207228;
 
-//    tempMatrix.ElementAt(3,0)=0;
-//    tempMatrix.ElementAt(3,1)=0;
-//    tempMatrix.ElementAt(3,2)=0;
-//    tempMatrix.ElementAt(3,3)=1;
+    //    tempMatrix.ElementAt(3,0)=0;
+    //    tempMatrix.ElementAt(3,1)=0;
+    //    tempMatrix.ElementAt(3,2)=0;
+    //    tempMatrix.ElementAt(3,3)=1;
 
-//    coutMatrix(&tempMatrix);
-//    vcg::tri::UpdatePosition<MyMesh>::Matrix(*drawSecondObject, tempMatrix, true);
-//    vcg::tri::UpdateBounding<MyMesh>::Box(*drawSecondObject);
+    //    coutMatrix(&tempMatrix);
+    //    vcg::tri::UpdatePosition<MyMesh>::Matrix(*drawSecondObject, tempMatrix, true);
+    //    vcg::tri::UpdateBounding<MyMesh>::Box(*drawSecondObject);
 
 
 
@@ -638,10 +706,10 @@ void OpenGlViewer::alignSecondMesh(vcg::Matrix44d * resultTransformMatrix=nullpt
             previousError=distance.first;
             if(resultTransformMatrix!=nullptr)
             {
-                 //(*resultTransformMatrix)=previousResult.Tr;
+                //(*resultTransformMatrix)=previousResult.Tr;
                 (*resultTransformMatrix)=(*resultTransformMatrix)*result.Tr;
             }
-           //  qDebug()<<"Iteration =="<<i<<" distance second< previous";
+            //  qDebug()<<"Iteration =="<<i<<" distance second< previous";
         }
         else{
             //  qDebug()<<"new Prev Value="<<distance.second;
@@ -653,10 +721,10 @@ void OpenGlViewer::alignSecondMesh(vcg::Matrix44d * resultTransformMatrix=nullpt
             if(resultTransformMatrix!=nullptr)
                 //(*resultTransformMatrix)=previousResult.Tr;
                 (*resultTransformMatrix)=(*resultTransformMatrix)*result.Tr;
-          //   qDebug()<<"Do inversion and break. Iteration =="<<i;
+            //   qDebug()<<"Do inversion and break. Iteration =="<<i;
 
 
-           //  compareObjects();
+            //  compareObjects();
             // coutMatrix(&previousResult.Tr);
             break;
         }

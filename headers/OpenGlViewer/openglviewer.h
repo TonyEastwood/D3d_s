@@ -62,6 +62,8 @@ private:
    // void compareObjects();
    // void coutMatrix(vcg::Matrix44d * resultTransformMatrix);
 
+    void findMinMaxForStl(MyMesh * _object);
+
     QString vcgMatrixToString(const vcg::Matrix44d & resultTransformMatrix);
 
 
@@ -76,6 +78,9 @@ private:
 
     //temporary const
 private:
+    int screenWidth=0;
+    int screenHeight=0;
+
     const uint COUNT_ALIGN_CYCLES=5;
     const double ERROR_ALIGN=0.021f;
 
@@ -127,8 +132,8 @@ private:
     GLfloat light_position[4];
 
     int maxOrigin=-100000;  // max value of coords x/y/z
-    int orthoCoefficient=50;
-    int scaleWheel = 10000;
+    int orthoCoefficient=3;
+    float scaleWheel = 10000;
 
     bool isDrawGrid=false;
     bool isDrawFaces=true;
