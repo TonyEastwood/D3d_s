@@ -193,6 +193,42 @@ void OpenGlViewer::keyReleaseEvent(QKeyEvent *event)
     }
 }
 
+void OpenGlViewer::compareObjects()
+{
+    qDebug()<<"COmpare first object start";
+    for(int i=0;i<testFirstObject.vn;++i)
+    {
+        if(testFirstObject.vert[i].P().X()-(*drawFirstObject).vert[i].P().X()!=0)
+        {
+            qDebug()<<"["<<i<<"]="<<testFirstObject.vert[i].P().X()-(*drawFirstObject).vert[i].P().X();
+        }
+    }
+       qDebug()<<"COmpare first object finished";
+
+       qDebug()<<"COmpare second object start";
+       for(int i=0;i<testSecondObject.vn;++i)
+       {
+           if(testSecondObject.vert[i].P().X()-(*drawSecondObject).vert[i].P().X()!=0)
+           {
+               qDebug()<<"["<<i<<"]="<<testSecondObject.vert[i].P().X()-(*drawSecondObject).vert[i].P().X();
+           }
+       }
+          qDebug()<<"COmpare second object finished";
+}
+
+void OpenGlViewer::coutMatrix(vcg::Matrix44d *resultTransformMatrix)
+{
+    qDebug()<<"Matrix cout start:";
+    for(int i=0;i<4;++i)
+    {
+        for(int j=0;j<4;++j)
+        {
+            qDebug()<<"Element["<<i<<","<<j<<"]="<<resultTransformMatrix->ElementAt(i,j);
+        }
+    }
+    qDebug()<<"Matrix cout end:";
+}
+
 QString OpenGlViewer::vcgMatrixToString(const vcg::Matrix44d &resultTransformMatrix)
 {
     QString result;
@@ -355,7 +391,7 @@ void OpenGlViewer::setFirstMesh(QString path )
     err =  vcg::tri::io::Importer<MyMesh>::Open(*drawFirstObject,path.toLocal8Bit());
 
 
-
+    vcg::tri::io::Importer<MyMesh>::Open(testFirstObject,path.toLocal8Bit());
 
     if(err) { // all the importers return 0 in case of success
         printf("Error in reading %s: '%s'\n");
@@ -411,6 +447,32 @@ void OpenGlViewer::setSecondMesh(QString path)
 
     err =  vcg::tri::io::Importer<MyMesh>::Open(*drawSecondObject,path.toLocal8Bit());
 
+    vcg::tri::io::Importer<MyMesh>::Open(testSecondObject,path.toLocal8Bit());
+
+//    vcg::Matrix44d tempMatrix;
+//    tempMatrix.ElementAt(0,0)=1;
+//    tempMatrix.ElementAt(0,1)= -1.59913*pow(10,-6);
+//    tempMatrix.ElementAt(0,2)=-8.61265*pow(10,-5);
+//    tempMatrix.ElementAt(0,3)=0.00365834;
+
+//    tempMatrix.ElementAt(1,0)=1.5838*pow(10,-6);
+//    tempMatrix.ElementAt(1,1)=1;
+//    tempMatrix.ElementAt(1,2)= -0.000177923;
+//    tempMatrix.ElementAt(1,3)=0.00878626;
+
+//    tempMatrix.ElementAt(2,0)=8.61268*pow(10,-5);
+//    tempMatrix.ElementAt(2,1)=0.000177922;
+//    tempMatrix.ElementAt(2,2)=1;
+//    tempMatrix.ElementAt(2,3)=0.0207228;
+
+//    tempMatrix.ElementAt(3,0)=0;
+//    tempMatrix.ElementAt(3,1)=0;
+//    tempMatrix.ElementAt(3,2)=0;
+//    tempMatrix.ElementAt(3,3)=1;
+
+//    coutMatrix(&tempMatrix);
+//    vcg::tri::UpdatePosition<MyMesh>::Matrix(*drawSecondObject, tempMatrix, true);
+//    vcg::tri::UpdateBounding<MyMesh>::Box(*drawSecondObject);
 
 
 
@@ -589,6 +651,10 @@ void OpenGlViewer::alignSecondMesh(vcg::Matrix44d * resultTransformMatrix=nullpt
             if(resultTransformMatrix!=nullptr)
                 (*resultTransformMatrix)=previousResult.Tr;
              qDebug()<<"Do inversion and break. Iteration =="<<i;
+
+
+             compareObjects();
+             coutMatrix(&previousResult.Tr);
             break;
         }
         //   qDebug()<<"iteration="<<i;
