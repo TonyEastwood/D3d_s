@@ -58,6 +58,10 @@ protected:
     void keyPressEvent(QKeyEvent *event) override;
     void keyReleaseEvent(QKeyEvent *event) override;
 private:
+    //delete method
+    void compareObjects();
+    void coutMatrix(vcg::Matrix44d * resultTransformMatrix);
+
     QString vcgMatrixToString(const vcg::Matrix44d & resultTransformMatrix);
 
 
@@ -91,6 +95,9 @@ private:
 
     MyMesh *  drawFirstObject;                     // object that need to draw
     MyMesh *  drawSecondObject;                     // object that need to draw
+
+    MyMesh testFirstObject;
+    MyMesh testSecondObject;
 
     QString identityMatrix="1 0 0 0 "
                            "0 1 0 0 "
