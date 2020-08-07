@@ -59,8 +59,8 @@ protected:
     void keyReleaseEvent(QKeyEvent *event) override;
 private:
     //delete method
-    void compareObjects();
-    void coutMatrix(vcg::Matrix44d * resultTransformMatrix);
+   // void compareObjects();
+   // void coutMatrix(vcg::Matrix44d * resultTransformMatrix);
 
     QString vcgMatrixToString(const vcg::Matrix44d & resultTransformMatrix);
 
