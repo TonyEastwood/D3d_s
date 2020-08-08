@@ -137,6 +137,8 @@ private:
     GLfloat light_ambient[4];
     GLfloat light_position[4];
 
+     GLfloat light_position2[4];
+
     int maxOrigin=-100000;  // max value of coords x/y/z
     int orthoCoefficient=3;
     float scaleWheel = 10000;

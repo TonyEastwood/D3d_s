@@ -108,6 +108,10 @@ void OpenGlViewer::paintGL() {
             maxOrigin*orthoCoefficient,-maxOrigin*orthoCoefficient,
             -maxOrigin*orthoCoefficient*5,maxOrigin*orthoCoefficient*5);
 
+    //gluPerspective(20,screenWidth/screenHeight,minMaxXYZ[4],minMaxXYZ[5]);
+
+      //  gluLookAt((minMaxXYZ[0]+minMaxXYZ[1])/2-10*scaleWheel,(minMaxXYZ[2]+minMaxXYZ[3])/2,(minMaxXYZ[3]+minMaxXYZ[4])/2-20,0,0,0,0,1,0);
+
 
     //    glOrtho(orthoCoefficient * minMaxXYZ[0], orthoCoefficient * minMaxXYZ[1],
     //            orthoCoefficient * minMaxXYZ[3],orthoCoefficient * minMaxXYZ[2],
@@ -128,6 +132,16 @@ void OpenGlViewer::paintGL() {
    // qDebug()<<"Ortho:";
   //  qDebug()<<"x="<<-orthoCoefficient * maxOrigin <<" "<<orthoCoefficient * maxOrigin ;
 
+
+
+    // DRAW LINES START
+    glPushMatrix(); // save the current matrix
+
+
+    glTranslatef(translateX, translateY, 0);
+    glRotatef( rotate_x, 1.0, 0.0, 0.0);  // rotate x
+    glRotatef( rotate_y, 0.0, 1.0, 0.0);  // rotate y
+    glScalef(scaleWheel,-scaleWheel* ratioWidthHeight,scaleWheel);
     if(isLight)
     {
         glEnable(GL_LIGHTING);
@@ -138,17 +152,12 @@ void OpenGlViewer::paintGL() {
         glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
         glLightfv(GL_LIGHT0, GL_POSITION, light_position);
         glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
+
+//        glEnable(GL_LIGHT1);
+//        glLightfv(GL_LIGHT1, GL_DIFFUSE, light_diffuse);
+//        glLightfv(GL_LIGHT1, GL_POSITION, light_position2);
+//        glLightfv(GL_LIGHT1, GL_AMBIENT, light_ambient);
     }
-
-    // DRAW LINES START
-    glPushMatrix(); // save the current matrix
-
-
-    glTranslatef(translateX, translateY, 0);
-    glRotatef( rotate_x, 1.0, 0.0, 0.0);  // rotate x
-    glRotatef( rotate_y, 0.0, 1.0, 0.0);  // rotate y
-    glScalef(scaleWheel,-scaleWheel* ratioWidthHeight,scaleWheel);
-
 //    if(rotate_x || rotate_y)
 //    {
 //        QQuaternion Rotation1=QQuaternion::fromAxisAndAngle(QVector3D(-1.0f,0,0), rotate_x);
@@ -268,8 +277,13 @@ void OpenGlViewer::mouseMoveEvent(QMouseEvent *event) {
         if (event->buttons() & Qt::LeftButton) {
             x_pos = event->x();
             y_pos = event->y();
+
+             rotate_x -= (y_pos - prevRotation_y) * rotationSpeed;
+             if(abs((int)rotate_x%360)>90 && abs((int)rotate_x%360)<270)
+                 rotate_y -= (x_pos - prevRotation_x) *rotationSpeed;
+             else
             rotate_y += (x_pos - prevRotation_x) *rotationSpeed;
-            rotate_x -= (y_pos - prevRotation_y) * rotationSpeed;
+
             // rotate_y = (rotate_y > 360.0f) ? 360.0f : rotate_y - 360.0f;
             //rotate_x = (rotate_x > 360.0f) ? 360.0f : rotate_x - 360.0f;
             qDebug()<<"rotate x="<<(int)rotate_x%360;
@@ -468,6 +482,11 @@ void OpenGlViewer::InitMaxOrigin()
     light_position[1]=-orthoCoefficient * maxOrigin;
     light_position[2]=-orthoCoefficient * maxOrigin;
     light_position[3]=1;
+
+    light_position2[0]=orthoCoefficient * maxOrigin;
+    light_position2[1]=-orthoCoefficient * maxOrigin;
+    light_position2[2]=orthoCoefficient * maxOrigin;
+    light_position2[3]=1;
 
 
     glMatrixMode(GL_MODELVIEW);
