@@ -16,6 +16,8 @@
 #include <QDebug>
 #include <QFile>
 #include <GL/GLU.h>
+#include <QVector3D>
+#include <QQuaternion>
 namespace Ui {
 class OpenGlViewer;
 }
@@ -78,6 +80,9 @@ private:
 
     //temporary const
 private:
+    GLfloat  TransferMatrix[16];
+
+
     int screenWidth=0;
     int screenHeight=0;
 
