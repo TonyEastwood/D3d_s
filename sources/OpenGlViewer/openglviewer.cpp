@@ -102,9 +102,13 @@ void OpenGlViewer::paintGL() {
                 orthoCoefficient * maxOrigin,-orthoCoefficient * maxOrigin,
                 - orthoCoefficient * maxOrigin*5,
                 orthoCoefficient * maxOrigin*5); */ // set matrix scope. Need get opportunity to
+
+
     glOrtho(-maxOrigin*orthoCoefficient,maxOrigin*orthoCoefficient,
             maxOrigin*orthoCoefficient,-maxOrigin*orthoCoefficient,
             -maxOrigin*orthoCoefficient*5,maxOrigin*orthoCoefficient*5);
+
+
     //    glOrtho(orthoCoefficient * minMaxXYZ[0], orthoCoefficient * minMaxXYZ[1],
     //            orthoCoefficient * minMaxXYZ[3],orthoCoefficient * minMaxXYZ[2],
     //            orthoCoefficient * minMaxXYZ[4]*5,
@@ -121,8 +125,8 @@ void OpenGlViewer::paintGL() {
     //    qDebug()<<"y="<<orthoCoefficient * minMaxXYZ[2] <<" "<< orthoCoefficient * minMaxXYZ[3] ;
     //    qDebug()<<"z="<<orthoCoefficient * minMaxXYZ[4]*5 <<" "<< orthoCoefficient * minMaxXYZ[5]*5 ;
 
-    qDebug()<<"Ortho:";
-    qDebug()<<"x="<<-orthoCoefficient * maxOrigin <<" "<<orthoCoefficient * maxOrigin ;
+   // qDebug()<<"Ortho:";
+  //  qDebug()<<"x="<<-orthoCoefficient * maxOrigin <<" "<<orthoCoefficient * maxOrigin ;
 
     if(isLight)
     {
@@ -139,42 +143,68 @@ void OpenGlViewer::paintGL() {
     // DRAW LINES START
     glPushMatrix(); // save the current matrix
 
+
     glTranslatef(translateX, translateY, 0);
+    glRotatef( rotate_x, 1.0, 0.0, 0.0);  // rotate x
+    glRotatef( rotate_y, 0.0, 1.0, 0.0);  // rotate y
+    glScalef(scaleWheel,-scaleWheel* ratioWidthHeight,scaleWheel);
+
+//    if(rotate_x || rotate_y)
+//    {
+//        QQuaternion Rotation1=QQuaternion::fromAxisAndAngle(QVector3D(-1.0f,0,0), rotate_x);
+//        Rotation1.normalize();
+
+//        QQuaternion Rotation2=QQuaternion::fromAxisAndAngle(QVector3D(0.0f,-1.0f,0), rotate_y);
+//        Rotation2.normalize();
+
+//        auto qw=(Rotation1*Rotation2).toRotationMatrix();
 
 
-    if(rotate_x || rotate_y)
-    {
-        QQuaternion Rotation1=QQuaternion::fromAxisAndAngle(QVector3D(-1.0f,0,0), rotate_x);
-        Rotation1.normalize();
 
-        QQuaternion Rotation2=QQuaternion::fromAxisAndAngle(QVector3D(0.0f,-1.0f,0), rotate_y);
-        Rotation2.normalize();
+//         transformMatrix=transformMatrix* qw;
 
-        auto qw=(Rotation1*Rotation2).toRotationMatrix();
 
-        //    GLfloat  test[16];
 
-        TransferMatrix[0]=TransferMatrix[0]*qw.data()[0]+ TransferMatrix[1]* qw.data()[3]+ TransferMatrix[2]* qw.data()[6];
-        TransferMatrix[1]= TransferMatrix[0]*qw.data()[1]       + TransferMatrix[1]*qw.data()[4]        +  TransferMatrix[2]*qw.data()[7] ;
-        TransferMatrix[2]=TransferMatrix[0]*qw.data()[2]       + TransferMatrix[1]*qw.data()[5]        +  TransferMatrix[2]*qw.data()[8] ;
-        TransferMatrix[3]=0;
+//        //    GLfloat  test[16];
 
-        TransferMatrix[4]=TransferMatrix[4]*qw.data()[0]       + TransferMatrix[5]*qw.data()[3]        +   TransferMatrix[6]*qw.data()[6];
-        TransferMatrix[5]= TransferMatrix[4]*qw.data()[1]       + TransferMatrix[5]* qw.data()[4]       +   TransferMatrix[6]* qw.data()[7];
-        TransferMatrix[6]=TransferMatrix[4]*qw.data()[2]       + TransferMatrix[5]*qw.data()[5]        +   TransferMatrix[6]* qw.data()[8];
-        TransferMatrix[7]=0;
+////        TransferMatrix[0]=TransferMatrix[0]*qw.data()[0]+ TransferMatrix[1]* qw.data()[3]+ TransferMatrix[2]* qw.data()[6];
+////        TransferMatrix[1]= TransferMatrix[0]*qw.data()[1]       + TransferMatrix[1]*qw.data()[4]        +  TransferMatrix[2]*qw.data()[7] ;
+////        TransferMatrix[2]=TransferMatrix[0]*qw.data()[2]       + TransferMatrix[1]*qw.data()[5]        +  TransferMatrix[2]*qw.data()[8] ;
+////        TransferMatrix[3]=0;
 
-        TransferMatrix[8]=TransferMatrix[8]*qw.data()[0]       + TransferMatrix[9]*qw.data()[3]        +   TransferMatrix[10]*qw.data()[6];
-        TransferMatrix[9]=TransferMatrix[8]* qw.data()[1]      + TransferMatrix[9]*qw.data()[4]        +   TransferMatrix[10]*qw.data()[7];
-        TransferMatrix[10]= TransferMatrix[8]*qw.data()[2]       + TransferMatrix[9]* qw.data()[5]       +   TransferMatrix[10]*qw.data()[8];
-        TransferMatrix[11]=0;
+////        TransferMatrix[4]=TransferMatrix[4]*qw.data()[0]       + TransferMatrix[5]*qw.data()[3]        +   TransferMatrix[6]*qw.data()[6];
+////        TransferMatrix[5]= TransferMatrix[4]*qw.data()[1]       + TransferMatrix[5]* qw.data()[4]       +   TransferMatrix[6]* qw.data()[7];
+////        TransferMatrix[6]=TransferMatrix[4]*qw.data()[2]       + TransferMatrix[5]*qw.data()[5]        +   TransferMatrix[6]* qw.data()[8];
+////        TransferMatrix[7]=0;
 
-        TransferMatrix[12]=0;
-        TransferMatrix[13]=0;
-        TransferMatrix[14]=0;
-        TransferMatrix[15]=1;
-    }
-    glMultMatrixf(TransferMatrix);
+////        TransferMatrix[8]=TransferMatrix[8]*qw.data()[0]       + TransferMatrix[9]*qw.data()[3]        +   TransferMatrix[10]*qw.data()[6];
+////        TransferMatrix[9]=TransferMatrix[8]* qw.data()[1]      + TransferMatrix[9]*qw.data()[4]        +   TransferMatrix[10]*qw.data()[7];
+////        TransferMatrix[10]= TransferMatrix[8]*qw.data()[2]       + TransferMatrix[9]* qw.data()[5]       +   TransferMatrix[10]*qw.data()[8];
+////        TransferMatrix[11]=0;
+
+//        TransferMatrix[0]=transformMatrix.data()[0];
+//        TransferMatrix[1]= transformMatrix.data()[1];
+//        TransferMatrix[2]=   transformMatrix.data()[2];
+//        TransferMatrix[3]=0;
+
+//        TransferMatrix[4]=transformMatrix.data()[3];
+//        TransferMatrix[5]= transformMatrix.data()[4];
+//        TransferMatrix[6]= transformMatrix.data()[5];
+//        TransferMatrix[7]=0;
+
+//        TransferMatrix[8]=    transformMatrix.data()[6];
+//        TransferMatrix[9]=  transformMatrix.data()[7];
+//        TransferMatrix[10]=   transformMatrix.data()[8];
+//        TransferMatrix[11]=0;
+
+
+
+//        TransferMatrix[12]=0;
+//        TransferMatrix[13]=0;
+//        TransferMatrix[14]=0;
+//        TransferMatrix[15]=1;
+//    }
+//    glMultMatrixf(TransferMatrix);
 
 
     //    Matrix3D Mat;
@@ -189,10 +219,8 @@ void OpenGlViewer::paintGL() {
 
 
 
-    //        glRotatef( rotate_x, 1.0, 0.0, 0.0);  // rotate x
-    //       glRotatef( rotate_y, 0.0, 1.0, 0.0);  // rotate y
 
-    glScalef(scaleWheel,scaleWheel* ratioWidthHeight,scaleWheel);
+
 
     if(isDrawGrid)
     {
@@ -225,57 +253,58 @@ void OpenGlViewer::paintGL() {
 
 
 void OpenGlViewer::mouseMoveEvent(QMouseEvent *event) {
-    //    if (event->buttons() & Qt::LeftButton && cameraMove) {
-    //        x_pos = event->x();
-    //        y_pos = event->y();
-    //        translateX += (x_pos - prevRotation_x) * translateSpeed;
-    //        translateY += (y_pos - prevRotation_y) * translateSpeed;
+        if (event->buttons() & Qt::LeftButton && cameraMove) {
+            x_pos = event->x();
+            y_pos = event->y();
+            translateX += (x_pos - prevRotation_x) * translateSpeed;
+            translateY += (y_pos - prevRotation_y) * translateSpeed;
 
-    //        prevRotation_x = x_pos;
-    //        prevRotation_y = y_pos;
-    //        update();  // update Form that display Object
-    //        qDebug() << "Shift";
-    //        return;
-    //    }
-    //    if (event->buttons() & Qt::LeftButton) {
-    //        x_pos = event->x();
-    //        y_pos = event->y();
-    //        rotate_y = (x_pos - prevRotation_x) *rotationSpeed;
-    //        rotate_x = (y_pos - prevRotation_y) * rotationSpeed;
-    //        // rotate_y = (rotate_y > 360.0f) ? 360.0f : rotate_y - 360.0f;
-    //        //rotate_x = (rotate_x > 360.0f) ? 360.0f : rotate_x - 360.0f;
-
-    //        prevRotation_x = x_pos;
-    //        prevRotation_y = y_pos;
-    //        update();  // update Form that display Object
-    //    }
-    if (event->buttons() & Qt::LeftButton) {
-        if(x_pos && y_pos)
-        {
-            rotate_y = (event->x() - x_pos);  // rotate Object on x
-            rotate_x = (event->y() + y_pos);  // rotate Object on y
-            update();                       // update Form that display Object
+            prevRotation_x = x_pos;
+            prevRotation_y = y_pos;
+            update();  // update Form that display Object
+            qDebug() << "Shift";
+            return;
         }
-    }
+        if (event->buttons() & Qt::LeftButton) {
+            x_pos = event->x();
+            y_pos = event->y();
+            rotate_y += (x_pos - prevRotation_x) *rotationSpeed;
+            rotate_x -= (y_pos - prevRotation_y) * rotationSpeed;
+            // rotate_y = (rotate_y > 360.0f) ? 360.0f : rotate_y - 360.0f;
+            //rotate_x = (rotate_x > 360.0f) ? 360.0f : rotate_x - 360.0f;
+            qDebug()<<"rotate x="<<(int)rotate_x%360;
+             qDebug()<<"rotate y="<<(int)rotate_y%360;
+            prevRotation_x = x_pos;
+            prevRotation_y = y_pos;
+            update();  // update Form that display Object
+        }
+//    if (event->buttons() & Qt::LeftButton) {
+//        if(x_pos && y_pos)
+//        {
+//            rotate_y = (event->x() - x_pos)/100;  // rotate Object on x
+//            rotate_x = (event->y() + y_pos)/100;  // rotate Object on y
+//            update();                       // update Form that display Object
+//        }
+//    }
 }
 void OpenGlViewer::mousePressEvent(QMouseEvent *event) {
-    //    if (event->button() ==
-    //            Qt::LeftButton) {  // memorize coords x and y mouse when we start clicking
-    //        x_pos = event->x();
-    //        y_pos = event->y();
-    //        prevRotation_x = x_pos;
-    //        prevRotation_y = y_pos;
-    //    }
-    if (event->button() ==
-            Qt::LeftButton) {  // memorize coords x and y mouse when we start clicking
-        x_pos = event->x();
-        y_pos = event->y();
-    }
+        if (event->button() ==
+                Qt::LeftButton) {  // memorize coords x and y mouse when we start clicking
+            x_pos = event->x();
+            y_pos = event->y();
+            prevRotation_x = x_pos;
+            prevRotation_y = y_pos;
+        }
+//    if (event->button() ==
+//            Qt::LeftButton) {  // memorize coords x and y mouse when we start clicking
+//        x_pos = event->x();
+//        y_pos = event->y();
+//    }
 }
 
 void OpenGlViewer::mouseReleaseEvent(QMouseEvent *e) {
-    rotate_x=0;
-    rotate_y=0;
+//    rotate_x=0;
+//    rotate_y=0;
 
 }
 
@@ -419,7 +448,7 @@ void OpenGlViewer::InitMaxOrigin()
     //        if(maxOrigin<abs(minMaxXYZ[i]))
     //            maxOrigin=abs(minMaxXYZ[i]);
 
-
+    transformMatrix.setToIdentity();
     maxOrigin=distanceX;
 
     if(maxOrigin<distanceY)

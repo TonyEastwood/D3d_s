@@ -81,6 +81,7 @@ private:
     //temporary const
 private:
     GLfloat  TransferMatrix[16];
+     QMatrix3x3 transformMatrix;
 
 
     int screenWidth=0;
