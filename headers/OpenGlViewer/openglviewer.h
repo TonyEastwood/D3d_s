@@ -93,15 +93,12 @@ private:
      qreal angularSpeed = 0;
      QQuaternion rotation;
 
-    int screenWidth=0;
-    int screenHeight=0;
-
 
      qreal aspect;
     const uint COUNT_ALIGN_CYCLES=5;
     const double ERROR_ALIGN=0.021f;
 
-    const QColor BACKGROUND_COLOR=QColor(230,230, 255); //White background
+    const QColor BACKGROUND_COLOR=QColor(181,150, 235); //White background
 
     const std::tuple<float,float,float> MESH1_FACES_COLOR={0.5f, 0.5f, 0.5f}; //color faces mesh1
     const std::tuple<float,float,float> MESH1_GRID_COLOR={1.0f, 0.5f, 0.2f}; // color grid mesh1
@@ -131,7 +128,7 @@ private:
 
     float x_pos, y_pos, rotate_y, rotate_x;  // rotate values
     float translateX, translateY;
-    float rotationSpeed=10.0f;
+    float rotationSpeed=20.0f;
     float translateSpeed=0.3f;
 
     double ratioWidthHeight;
@@ -147,6 +144,8 @@ private:
     GLfloat light_diffuse[3];
     GLfloat light_ambient[4];
     GLfloat light_position[4];
+
+     GLfloat light_position2[4];
 
 
     int maxOrigin=-100000;  // max value of coords x/y/z

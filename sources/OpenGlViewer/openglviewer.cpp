@@ -24,14 +24,15 @@ OpenGlViewer::OpenGlViewer( QWidget *parent)
 
     setFormat(QGLFormat(QGL::DoubleBuffer));  // double buff
 
-    light_diffuse[0]=0.7;
-    light_diffuse[1]=0.7;
-    light_diffuse[2]=0.7;
+    light_diffuse[0]=0.5;
+    light_diffuse[1]=0.5;
+    light_diffuse[2]=0.5;
+    light_diffuse[2]=0.5;
 
-    light_ambient[0]=0.8;
-    light_ambient[1]=0.8;
-    light_ambient[2]=0.8;
-    light_ambient[3]=0.8;
+    light_ambient[0]=0.6;
+    light_ambient[1]=0.6;
+    light_ambient[2]=0.6;
+    light_ambient[3]=0.6;
 
     minMaxXYZ[0]=minMaxXYZ[2]=minMaxXYZ[4]=100000000;
     minMaxXYZ[1]=minMaxXYZ[3]=minMaxXYZ[5]=-100000000;
@@ -48,9 +49,8 @@ void OpenGlViewer::initializeGL() {
 
     initializeOpenGLFunctions();
     glDepthFunc(GL_LEQUAL);   // buff deep
-    //  qglClearColor(BACKGROUND_COLOR);  // set background
+    qglClearColor(BACKGROUND_COLOR);  // set background
 
-    glClearColor(1,1, 1, 1);
 
     glEnable(GL_DEPTH_TEST);  // line that we can't see - become invisible
     glEnable(GL_COLOR_MATERIAL);
@@ -65,15 +65,7 @@ void OpenGlViewer::resizeGL(int w, int h) {
     glLoadIdentity();
     qglClearColor(BACKGROUND_COLOR);
     glViewport(0, 0, (GLint)w, (GLint)h);
-    //    ratioWidthHeight = (double)w / h;
-
-    //    screenWidth=w;
-    //    screenHeight=h;
-
-    // Calculate aspect ratio
     aspect = qreal(w) / qreal(h);
-
-
 }
 
 void OpenGlViewer::paintGL() {
@@ -100,7 +92,8 @@ void OpenGlViewer::paintGL() {
     glOrtho(-maxOrigin*scaleWheel*aspect,maxOrigin*scaleWheel*aspect,
             -maxOrigin*scaleWheel,maxOrigin*scaleWheel,
             -maxOrigin*scaleWheel,maxOrigin*scaleWheel);
-
+   // gluPerspective(20, aspect, -maxOrigin*scaleWheel, maxOrigin*scaleWheel);
+    qDebug()<<"Scale wheel= "<<scaleWheel;
 
     QMatrix4x4 matrix;
     matrix.setToIdentity();
@@ -123,11 +116,18 @@ void OpenGlViewer::paintGL() {
         glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
         glLightfv(GL_LIGHT0, GL_POSITION, light_position);
         glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
-        glLightfv(GL_LIGHT0, GL_SPECULAR, light_ambient);
+       // glLightfv(GL_LIGHT0, GL_SPECULAR, light_ambient);
+
+        glEnable(GL_LIGHT1);
+        glLightfv(GL_LIGHT1, GL_DIFFUSE, light_diffuse);
+        glLightfv(GL_LIGHT1, GL_POSITION, light_position2);
+        glLightfv(GL_LIGHT1, GL_AMBIENT, light_ambient);
+        //glLightfv(GL_LIGHT1, GL_SPECULAR, light_ambient);
 
     }
     else{
         glDisable(GL_LIGHT0);
+        glDisable(GL_LIGHT1);
         glDisable(GL_LIGHTING);
     }
 
@@ -164,7 +164,7 @@ void OpenGlViewer::mouseMoveEvent(QMouseEvent *e) {
         // Rotation axis is perpendicular to the mouse position difference
         // vector
         //   QVector3D n = QVector3D(diff.y(), diff.x(), 0.0).normalized();
-        QVector3D n = QVector3D(-diff.y(), diff.x(), 0.0).normalized();
+        QVector3D n = QVector3D(diff.y(), diff.x(), 0.0).normalized();
 
         // Accelerate angular speed relative to the length of the mouse sweep
         qreal acc = diff.length() / 100.0;
@@ -202,6 +202,11 @@ void OpenGlViewer::mouseReleaseEvent(QMouseEvent *e) {
 void OpenGlViewer::wheelEvent(QWheelEvent *event) {
     scaleWheel -=
             event->angleDelta().y()*scaleSpeed;  // change scale when scroll wheel
+    if(scaleWheel<0.1)
+    {
+        scaleWheel=0.1;
+        return;
+    }
     update();
 }
 
@@ -329,18 +334,23 @@ void OpenGlViewer::InitMaxOrigin()
     scaleSpeed = 0.001;
     //  scaleWheel = orthoCoefficient * maxOrigin*0.1;
     //    scaleSpeed = 0.001;
-    scaleWheel = orthoCoefficient;
+    scaleWheel = 1;
 
-    light_position[0]=-orthoCoefficient * maxOrigin;
-    light_position[1]=-orthoCoefficient * maxOrigin;
-    light_position[2]=-orthoCoefficient * maxOrigin;
-    light_position[3]=1;
+    light_position[0]=0;
+    light_position[1]=0;
+    light_position[2]=1;
+    light_position[3]=0;
+
+
+    light_position2[0]=0;
+    light_position2[1]=0;
+    light_position2[2]=-1;
+    light_position2[3]=0;
 
 
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    //glTranslatef(-(minMaxXYZ[1] + minMaxXYZ[0])/2.0f,-(minMaxXYZ[3] + minMaxXYZ[2])/2.0f,-(minMaxXYZ[5] + minMaxXYZ[4])/2.0f);
     glTranslatef(-(minMaxXYZ[1] + minMaxXYZ[0])/2.0f,-(minMaxXYZ[3] + minMaxXYZ[2])/2.0f,-(minMaxXYZ[4] + minMaxXYZ[5])/2.0f);
 
 }
@@ -426,99 +436,62 @@ void OpenGlViewer::drawSecondMesh()
     }
 }
 
-void OpenGlViewer::drawTestCube()
-{
-    glBegin(GL_QUADS);  // START TRIANGLES DRAWING
+//void OpenGlViewer::drawTestCube()
+//{
+//    glBegin(GL_QUADS);  // START TRIANGLES DRAWING
 
-    glVertex3f(-1.0f, -1.0f,  1.0f);
-    glVertex3f( 1.0f, -1.0f,  1.0f );
-    glVertex3f(-1.0f,  1.0f,  1.0f );
-    glVertex3f( 1.0f,  1.0f,  1.0f);
+//    glVertex3f(-1.0f, -1.0f,  1.0f);
+//    glVertex3f( 1.0f, -1.0f,  1.0f );
+//    glVertex3f(-1.0f,  1.0f,  1.0f );
+//    glVertex3f( 1.0f,  1.0f,  1.0f);
 
-    glVertex3f( 1.0f, -1.0f,  1.0f);
-    glVertex3f( 1.0f, -1.0f, -1.0f);
-    glVertex3f(  1.0f,  1.0f,  1.0f);
-    glVertex3f( 1.0f,  1.0f, -1.0f);
+//    glVertex3f( 1.0f, -1.0f,  1.0f);
+//    glVertex3f( 1.0f, -1.0f, -1.0f);
+//    glVertex3f(  1.0f,  1.0f,  1.0f);
+//    glVertex3f( 1.0f,  1.0f, -1.0f);
 
-    glVertex3f(1.0f, -1.0f, -1.0f );
-    glVertex3f(-1.0f, -1.0f, -1.0f );
-    glVertex3f( 1.0f,  1.0f, -1.0f );
-    glVertex3f(-1.0f,  1.0f, -1.0f );
+//    glVertex3f(1.0f, -1.0f, -1.0f );
+//    glVertex3f(-1.0f, -1.0f, -1.0f );
+//    glVertex3f( 1.0f,  1.0f, -1.0f );
+//    glVertex3f(-1.0f,  1.0f, -1.0f );
 
-    glVertex3f(-1.0f, -1.0f, -1.0f );
-    glVertex3f( -1.0f, -1.0f,  1.0f);
-    glVertex3f( -1.0f,  1.0f, -1.0f);
-    glVertex3f(-1.0f,  1.0f,  1.0f );
+//    glVertex3f(-1.0f, -1.0f, -1.0f );
+//    glVertex3f( -1.0f, -1.0f,  1.0f);
+//    glVertex3f( -1.0f,  1.0f, -1.0f);
+//    glVertex3f(-1.0f,  1.0f,  1.0f );
 
-    glVertex3f(-1.0f, -1.0f, -1.0f );
-    glVertex3f(1.0f, -1.0f, -1.0f );
-    glVertex3f( -1.0f, -1.0f,  1.0f);
-    glVertex3f( 1.0f, -1.0f,  1.0f );
+//    glVertex3f(-1.0f, -1.0f, -1.0f );
+//    glVertex3f(1.0f, -1.0f, -1.0f );
+//    glVertex3f( -1.0f, -1.0f,  1.0f);
+//    glVertex3f( 1.0f, -1.0f,  1.0f );
 
-    glVertex3f(-1.0f,  1.0f,  1.0f );
-    glVertex3f( 1.0f,  1.0f,  1.0f);
-    glVertex3f(-1.0f,  1.0f, -1.0f );
-    glVertex3f( 1.0f,  1.0f, -1.0f);
-
-
-    glEnd();  // END TRIANGLES DRAWING
+//    glVertex3f(-1.0f,  1.0f,  1.0f );
+//    glVertex3f( 1.0f,  1.0f,  1.0f);
+//    glVertex3f(-1.0f,  1.0f, -1.0f );
+//    glVertex3f( 1.0f,  1.0f, -1.0f);
 
 
-}
+//    glEnd();  // END TRIANGLES DRAWING
+
+
+//}
 
 
 void OpenGlViewer::setFirstMesh(QString path )
 {
-    //    rotate_x=0;
-    //    rotate_y=0;
-    //    prevRotation_x=0;
-    //    prevRotation_y=0;
-
-    //    translateX=0;
-    //    translateY=0;
     int err=0;
 
     err =  vcg::tri::io::Importer<MyMesh>::Open(*drawFirstObject,path.toLocal8Bit());
-
-
-    //vcg::tri::io::Importer<MyMesh>::Open(testFirstObject,path.toLocal8Bit());
 
     if(err) { // all the importers return 0 in case of success
         printf("Error in reading %s: '%s'\n");
         exit(-1);
     }
 
-
-
     vcg::tri::UpdateNormal<MyMesh>::PerVertexNormalizedPerFace(*drawFirstObject);
 
-    // calculateNormalFirstObject();
 
     InitMaxOrigin();
-    //        minMaxXYZ[0]=(*drawFirstObject).bbox.min.X();
-    //        minMaxXYZ[1]=(*drawFirstObject).bbox.max.X();
-    //        minMaxXYZ[2]=(*drawFirstObject).bbox.min.Y();
-    //        minMaxXYZ[3]=(*drawFirstObject).bbox.max.Y();
-    //        minMaxXYZ[4]=(*drawFirstObject).bbox.min.Z();
-    //        minMaxXYZ[5]=(*drawFirstObject).bbox.max.Z();
-
-    //        int length[3];
-
-    //        length[0]=minMaxXYZ[1]-minMaxXYZ[0];
-    //        length[1]=minMaxXYZ[3]-minMaxXYZ[2];
-    //        length[2]=minMaxXYZ[5]-minMaxXYZ[4];
-
-    //        scaleSpeed=length[0];
-
-    //        for(int i=1;i<3;++i)
-    //            if(scaleSpeed<length[i])
-    //                scaleSpeed=length[i];
-
-
-
-
-
-
 
     update();
 
@@ -533,39 +506,7 @@ void OpenGlViewer::setSecondMesh(QString path)
         return;
     }
 
-    int err=0;
-
-    err =  vcg::tri::io::Importer<MyMesh>::Open(*drawSecondObject,path.toLocal8Bit());
-
-    //vcg::tri::io::Importer<MyMesh>::Open(testSecondObject,path.toLocal8Bit());
-
-    //    vcg::Matrix44d tempMatrix;
-    //    tempMatrix.ElementAt(0,0)=1;
-    //    tempMatrix.ElementAt(0,1)= -1.59913*pow(10,-6);
-    //    tempMatrix.ElementAt(0,2)=-8.61265*pow(10,-5);
-    //    tempMatrix.ElementAt(0,3)=0.00365834;
-
-    //    tempMatrix.ElementAt(1,0)=1.5838*pow(10,-6);
-    //    tempMatrix.ElementAt(1,1)=1;
-    //    tempMatrix.ElementAt(1,2)= -0.000177923;
-    //    tempMatrix.ElementAt(1,3)=0.00878626;
-
-    //    tempMatrix.ElementAt(2,0)=8.61268*pow(10,-5);
-    //    tempMatrix.ElementAt(2,1)=0.000177922;
-    //    tempMatrix.ElementAt(2,2)=1;
-    //    tempMatrix.ElementAt(2,3)=0.0207228;
-
-    //    tempMatrix.ElementAt(3,0)=0;
-    //    tempMatrix.ElementAt(3,1)=0;
-    //    tempMatrix.ElementAt(3,2)=0;
-    //    tempMatrix.ElementAt(3,3)=1;
-
-    //    coutMatrix(&tempMatrix);
-    //    vcg::tri::UpdatePosition<MyMesh>::Matrix(*drawSecondObject, tempMatrix, true);
-    //    vcg::tri::UpdateBounding<MyMesh>::Box(*drawSecondObject);
-
-
-
+    int err=vcg::tri::io::Importer<MyMesh>::Open(*drawSecondObject,path.toLocal8Bit());
 
     if(err) { // all the importers return 0 in case of success
         printf("Error in reading %s: '%s'\n");
