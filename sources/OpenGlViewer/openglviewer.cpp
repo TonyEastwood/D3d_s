@@ -9,6 +9,7 @@ OpenGlViewer::OpenGlViewer( QWidget *parent)
 
     ui->setupUi(this);
 
+    rotationAxis=QVector3D(0,0,0);
     translateX=0;
     translateY=0;
 
@@ -66,7 +67,9 @@ void OpenGlViewer::initializeGL() {
 
     initializeOpenGLFunctions();
     glDepthFunc(GL_LEQUAL);   // buff deep
-    qglClearColor(BACKGROUND_COLOR);  // set background
+  //  qglClearColor(BACKGROUND_COLOR);  // set background
+
+    glClearColor(1,1, 1, 1);
 
     glEnable(GL_DEPTH_TEST);  // line that we can't see - become invisible
     glEnable(GL_COLOR_MATERIAL);
@@ -80,23 +83,93 @@ void OpenGlViewer::resizeGL(int w, int h) {
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glViewport(0, 0, (GLint)w, (GLint)h);
-    ratioWidthHeight = (double)w / h;
+//    ratioWidthHeight = (double)w / h;
 
-    screenWidth=w;
-    screenHeight=h;
+//    screenWidth=w;
+//    screenHeight=h;
+
+    // Calculate aspect ratio
+    aspect = qreal(w) / qreal(h);
+
+
 }
 
 void OpenGlViewer::paintGL() {
-    if(drawFirstObject->fn==0)
-        return;
+//    if(drawFirstObject->fn==0)
+//    {  // clear buff image and deep
+
+//        return;
+//    }
+    glClearColor(1,1, 1, 1);
+                glClear(GL_COLOR_BUFFER_BIT |
+                       GL_DEPTH_BUFFER_BIT);
+
+        glMatrixMode(GL_PROJECTION);   // set the matrix
+        glShadeModel(GL_SMOOTH);
+        glLoadIdentity();  // load matrix
+    // Set near plane to 3.0, far plane to 7.0, field of view 45 degrees
+   const qreal fov = 100.0;
+
+    // Reset projection
+    projection.setToIdentity();
+
+    // Set perspective projection
+  //  projection.perspective(fov, aspect, minMaxXYZ[4]-(minMaxXYZ[4]+minMaxXYZ[5])/2-scaleWheel,minMaxXYZ[5]+(minMaxXYZ[4]+minMaxXYZ[5])/2);
+ projection.perspective(45,aspect,3,7);
+
+    QMatrix4x4 matrix;
+  //  matrix.translate(-(minMaxXYZ[1] + minMaxXYZ[0])/2.0f,-(minMaxXYZ[3] + minMaxXYZ[2])/2.0f,-(minMaxXYZ[5] + minMaxXYZ[4])/2.0f);
+    matrix.translate(0,0,-5);
+    matrix.scale(scaleWheel,scaleWheel,scaleWheel);
+    qDebug()<<"Scale="<<scaleWheel;
+    matrix.rotate(rotation);
+    // Set modelview-projection matrix
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+     glMultMatrixf((projection*matrix).constData());
+
+     glColor3f(0,0,0);
+     drawTestCube();
+
+     return;
+
+   // program.setUniformValue("mvp_matrix", projection * matrix);
+//! [6]
+
+    // Use texture unit 0 which contains cube.png
+
+
+    // Draw cube geometry
+    if(isDrawGrid)
+    {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+        glColor3f(std::get<0>(MESH1_GRID_COLOR),std::get<1>(MESH1_GRID_COLOR),std::get<2>(MESH1_GRID_COLOR));  // outline color (orange)
+        drawFirstMesh();
+
+        glColor3f(std::get<0>(MESH2_GRID_COLOR),std::get<1>(MESH2_GRID_COLOR),std::get<2>(MESH2_GRID_COLOR));  // outline color (red)
+        drawSecondMesh();
+    }
+    if(isDrawFaces)
+    {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+        glColor3f(std::get<0>(MESH1_FACES_COLOR),std::get<1>(MESH1_FACES_COLOR),std::get<2>(MESH1_FACES_COLOR));  // filling color (grey)
+        drawFirstMesh();
+
+        glColor3f(std::get<0>(MESH2_FACES_COLOR),std::get<1>(MESH2_FACES_COLOR),std::get<2>(MESH2_FACES_COLOR));   // filling color (grey)
+        drawSecondMesh();
+    }
+    return;
+
     //  timerForTest->restart();
 
-    glClear(GL_COLOR_BUFFER_BIT |
-            GL_DEPTH_BUFFER_BIT);  // clear buff image and deep
+//    glClear(GL_COLOR_BUFFER_BIT |
+//            GL_DEPTH_BUFFER_BIT);  // clear buff image and deep
 
-    glMatrixMode(GL_PROJECTION);   // set the matrix
-    glShadeModel(GL_SMOOTH);
-    glLoadIdentity();  // load matrix
+//    glMatrixMode(GL_PROJECTION);   // set the matrix
+//    glShadeModel(GL_SMOOTH);
+//    glLoadIdentity();  // load matrix
 
     /*   glOrtho(-orthoCoefficient * maxOrigin, orthoCoefficient * maxOrigin,
                 orthoCoefficient * maxOrigin,-orthoCoefficient * maxOrigin,
@@ -104,9 +177,9 @@ void OpenGlViewer::paintGL() {
                 orthoCoefficient * maxOrigin*5); */ // set matrix scope. Need get opportunity to
 
 
-    glOrtho(-maxOrigin*orthoCoefficient,maxOrigin*orthoCoefficient,
-            maxOrigin*orthoCoefficient,-maxOrigin*orthoCoefficient,
-            -maxOrigin*orthoCoefficient*5,maxOrigin*orthoCoefficient*5);
+//    glOrtho(-maxOrigin*orthoCoefficient,maxOrigin*orthoCoefficient,
+//            maxOrigin*orthoCoefficient,-maxOrigin*orthoCoefficient,
+//            -maxOrigin*orthoCoefficient*5,maxOrigin*orthoCoefficient*5);
 
     //gluPerspective(20,screenWidth/screenHeight,minMaxXYZ[4],minMaxXYZ[5]);
 
@@ -261,64 +334,90 @@ void OpenGlViewer::paintGL() {
 
 
 
-void OpenGlViewer::mouseMoveEvent(QMouseEvent *event) {
-        if (event->buttons() & Qt::LeftButton && cameraMove) {
-            x_pos = event->x();
-            y_pos = event->y();
-            translateX += (x_pos - prevRotation_x) * translateSpeed;
-            translateY += (y_pos - prevRotation_y) * translateSpeed;
+void OpenGlViewer::mouseMoveEvent(QMouseEvent *e) {
+    // Decrease angular speed (friction)
+ //   angularSpeed *= 0.99;
 
-            prevRotation_x = x_pos;
-            prevRotation_y = y_pos;
-            update();  // update Form that display Object
-            qDebug() << "Shift";
-            return;
-        }
-        if (event->buttons() & Qt::LeftButton) {
-            x_pos = event->x();
-            y_pos = event->y();
+    if (e->buttons() & Qt::LeftButton) {
 
-             rotate_x -= (y_pos - prevRotation_y) * rotationSpeed;
-             if(abs((int)rotate_x%360)>90 && abs((int)rotate_x%360)<270)
-                 rotate_y -= (x_pos - prevRotation_x) *rotationSpeed;
-             else
-            rotate_y += (x_pos - prevRotation_x) *rotationSpeed;
+  //            x_pos = event->x();
+  //            y_pos = event->y();
 
-            // rotate_y = (rotate_y > 360.0f) ? 360.0f : rotate_y - 360.0f;
-            //rotate_x = (rotate_x > 360.0f) ? 360.0f : rotate_x - 360.0f;
-            qDebug()<<"rotate x="<<(int)rotate_x%360;
-             qDebug()<<"rotate y="<<(int)rotate_y%360;
-            prevRotation_x = x_pos;
-            prevRotation_y = y_pos;
-            update();  // update Form that display Object
-        }
-//    if (event->buttons() & Qt::LeftButton) {
-//        if(x_pos && y_pos)
-//        {
-//            rotate_y = (event->x() - x_pos)/100;  // rotate Object on x
-//            rotate_x = (event->y() + y_pos)/100;  // rotate Object on y
-//            update();                       // update Form that display Object
+  //             rotate_x -= (y_pos - prevRotation_y) * rotationSpeed;
+  //             if(abs((int)rotate_x%360)>90 && abs((int)rotate_x%360)<270)
+  //                 rotate_y -= (x_pos - prevRotation_x) *rotationSpeed;
+  //             else
+  //            rotate_y += (x_pos - prevRotation_x) *rotationSpeed;
+        // Mouse release position - mouse press position
+        QVector2D diff = QVector2D(e->localPos()) - mousePressPosition;
+
+        // Rotation axis is perpendicular to the mouse position difference
+        // vector
+     //   QVector3D n = QVector3D(diff.y(), diff.x(), 0.0).normalized();
+         QVector3D n = QVector3D(diff.y(), diff.x(), 0.0).normalized();
+
+        // Accelerate angular speed relative to the length of the mouse sweep
+        qreal acc = diff.length() / 100.0;
+
+        // Calculate new rotation axis as weighted sum
+        rotationAxis = ( n * acc).normalized();
+
+        // Increase angular speed
+        //angularSpeed += acc;
+
+
+
+        rotation = QQuaternion::fromAxisAndAngle(rotationAxis, rotationSpeed) * rotation;
+
+        mousePressPosition=QVector2D(e->localPos());
+        // Request an update
+        update();
+    }
+//        if (event->buttons() & Qt::LeftButton && cameraMove) {
+//            x_pos = event->x();
+//            y_pos = event->y();
+//            translateX += (x_pos - prevRotation_x) * translateSpeed;
+//            translateY += (y_pos - prevRotation_y) * translateSpeed;
+
+//            prevRotation_x = x_pos;
+//            prevRotation_y = y_pos;
+//            update();  // update Form that display Object
+//            qDebug() << "Shift";
+//            return;
 //        }
-//    }
+//        if (event->buttons() & Qt::LeftButton) {
+//            x_pos = event->x();
+//            y_pos = event->y();
+
+//             rotate_x -= (y_pos - prevRotation_y) * rotationSpeed;
+//             if(abs((int)rotate_x%360)>90 && abs((int)rotate_x%360)<270)
+//                 rotate_y -= (x_pos - prevRotation_x) *rotationSpeed;
+//             else
+//            rotate_y += (x_pos - prevRotation_x) *rotationSpeed;
+
+//            // rotate_y = (rotate_y > 360.0f) ? 360.0f : rotate_y - 360.0f;
+//            //rotate_x = (rotate_x > 360.0f) ? 360.0f : rotate_x - 360.0f;
+//            qDebug()<<"rotate x="<<(int)rotate_x%360;
+//             qDebug()<<"rotate y="<<(int)rotate_y%360;
+//            prevRotation_x = x_pos;
+//            prevRotation_y = y_pos;
+//            update();  // update Form that display Object
+//        }
+////    if (event->buttons() & Qt::LeftButton) {
+////        if(x_pos && y_pos)
+////        {
+////            rotate_y = (event->x() - x_pos)/100;  // rotate Object on x
+////            rotate_x = (event->y() + y_pos)/100;  // rotate Object on y
+////            update();                       // update Form that display Object
+////        }
+////    }
 }
-void OpenGlViewer::mousePressEvent(QMouseEvent *event) {
-        if (event->button() ==
-                Qt::LeftButton) {  // memorize coords x and y mouse when we start clicking
-            x_pos = event->x();
-            y_pos = event->y();
-            prevRotation_x = x_pos;
-            prevRotation_y = y_pos;
-        }
-//    if (event->button() ==
-//            Qt::LeftButton) {  // memorize coords x and y mouse when we start clicking
-//        x_pos = event->x();
-//        y_pos = event->y();
-//    }
+void OpenGlViewer::mousePressEvent(QMouseEvent *e) {
+       mousePressPosition = QVector2D(e->localPos());
 }
 
 void OpenGlViewer::mouseReleaseEvent(QMouseEvent *e) {
-//    rotate_x=0;
-//    rotate_y=0;
+
 
 }
 
@@ -489,9 +588,9 @@ void OpenGlViewer::InitMaxOrigin()
     light_position2[3]=1;
 
 
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    glTranslatef(-(minMaxXYZ[1] + minMaxXYZ[0])/2.0f,-(minMaxXYZ[3] + minMaxXYZ[2])/2.0f,-(minMaxXYZ[5] + minMaxXYZ[4])/2.0f);
+  //  glMatrixMode(GL_MODELVIEW);
+  //  glLoadIdentity();
+  //  glTranslatef(-(minMaxXYZ[1] + minMaxXYZ[0])/2.0f,-(minMaxXYZ[3] + minMaxXYZ[2])/2.0f,-(minMaxXYZ[5] + minMaxXYZ[4])/2.0f);
 
 }
 
@@ -574,6 +673,46 @@ void OpenGlViewer::drawSecondMesh()
         }
         glEnd();  // END TRIANGLES DRAWING
     }
+}
+
+void OpenGlViewer::drawTestCube()
+{
+    glBegin(GL_QUADS);  // START TRIANGLES DRAWING
+
+        glVertex3f(-1.0f, -1.0f,  1.0f);
+        glVertex3f( 1.0f, -1.0f,  1.0f );
+        glVertex3f(-1.0f,  1.0f,  1.0f );
+        glVertex3f( 1.0f,  1.0f,  1.0f);
+
+        glVertex3f( 1.0f, -1.0f,  1.0f);
+        glVertex3f( 1.0f, -1.0f, -1.0f);
+        glVertex3f(  1.0f,  1.0f,  1.0f);
+        glVertex3f( 1.0f,  1.0f, -1.0f);
+
+        glVertex3f(1.0f, -1.0f, -1.0f );
+        glVertex3f(-1.0f, -1.0f, -1.0f );
+        glVertex3f( 1.0f,  1.0f, -1.0f );
+        glVertex3f(-1.0f,  1.0f, -1.0f );
+
+        glVertex3f(-1.0f, -1.0f, -1.0f );
+        glVertex3f( -1.0f, -1.0f,  1.0f);
+        glVertex3f( -1.0f,  1.0f, -1.0f);
+        glVertex3f(-1.0f,  1.0f,  1.0f );
+
+        glVertex3f(-1.0f, -1.0f, -1.0f );
+        glVertex3f(1.0f, -1.0f, -1.0f );
+        glVertex3f( -1.0f, -1.0f,  1.0f);
+        glVertex3f( 1.0f, -1.0f,  1.0f );
+
+        glVertex3f(-1.0f,  1.0f,  1.0f );
+        glVertex3f( 1.0f,  1.0f,  1.0f);
+        glVertex3f(-1.0f,  1.0f, -1.0f );
+        glVertex3f( 1.0f,  1.0f, -1.0f);
+
+
+    glEnd();  // END TRIANGLES DRAWING
+
+
 }
 
 

@@ -18,6 +18,7 @@
 #include <GL/GLU.h>
 #include <QVector3D>
 #include <QQuaternion>
+#include <QMatrix4x4>
 namespace Ui {
 class OpenGlViewer;
 }
@@ -78,15 +79,25 @@ private:
 
     void calcNormal(std::vector<std::tuple<float,float,float>> & normalArray, const float &Vx,const float &Vy,const float &Vz,const float &Sx,const float &Sy, const float &Sz);
 
+    void drawTestCube();
     //temporary const
 private:
     GLfloat  TransferMatrix[16];
      QMatrix3x3 transformMatrix;
 
 
+     QMatrix4x4 projection;
+
+     QVector2D mousePressPosition;
+     QVector3D rotationAxis;
+     qreal angularSpeed = 0;
+     QQuaternion rotation;
+
     int screenWidth=0;
     int screenHeight=0;
 
+
+     qreal aspect;
     const uint COUNT_ALIGN_CYCLES=5;
     const double ERROR_ALIGN=0.021f;
 
@@ -120,14 +131,14 @@ private:
 
     float x_pos, y_pos, rotate_y, rotate_x;  // rotate values
     float translateX, translateY;
-    float rotationSpeed=0.3f;
+    float rotationSpeed=1.0f;
     float translateSpeed=0.3f;
 
     double ratioWidthHeight;
 
     float prevRotation_x=0;
     float prevRotation_y=0;
-    float scaleSpeed=10;// current scale (zoom in\zoom out)
+    float scaleSpeed=0.001;// current scale (zoom in\zoom out)
 
     bool cameraMove=false;
 
@@ -141,7 +152,7 @@ private:
 
     int maxOrigin=-100000;  // max value of coords x/y/z
     int orthoCoefficient=3;
-    float scaleWheel = 10000;
+    float scaleWheel = 1;
 
     bool isDrawGrid=false;
     bool isDrawFaces=true;
