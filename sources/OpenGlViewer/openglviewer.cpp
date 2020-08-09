@@ -9,6 +9,7 @@ OpenGlViewer::OpenGlViewer( QWidget *parent)
 
     ui->setupUi(this);
 
+    rotation.setVector(0,0,0);
     rotationAxis=QVector3D(0,0,0);
     translateX=0;
     translateY=0;
@@ -27,33 +28,13 @@ OpenGlViewer::OpenGlViewer( QWidget *parent)
     light_diffuse[1]=0.7;
     light_diffuse[2]=0.7;
 
-    light_ambient[0]=0.5;
-    light_ambient[1]=0.5;
-    light_ambient[2]=0.5;
-    light_ambient[3]=0.4;
+    light_ambient[0]=0.8;
+    light_ambient[1]=0.8;
+    light_ambient[2]=0.8;
+    light_ambient[3]=0.8;
 
     minMaxXYZ[0]=minMaxXYZ[2]=minMaxXYZ[4]=100000000;
     minMaxXYZ[1]=minMaxXYZ[3]=minMaxXYZ[5]=-100000000;
-
-    TransferMatrix[0]=1;
-    TransferMatrix[1]=0;
-    TransferMatrix[2]=0;
-    TransferMatrix[3]=0;
-
-    TransferMatrix[4]=0;
-    TransferMatrix[5]=1;
-    TransferMatrix[6]=0;
-    TransferMatrix[7]=0;
-
-    TransferMatrix[8]=0;
-    TransferMatrix[9]=0;
-    TransferMatrix[10]=1;
-    TransferMatrix[11]=0;
-
-    TransferMatrix[12]=0;
-    TransferMatrix[13]=0;
-    TransferMatrix[14]=0;
-    TransferMatrix[15]=1;
 
 }
 
@@ -67,7 +48,7 @@ void OpenGlViewer::initializeGL() {
 
     initializeOpenGLFunctions();
     glDepthFunc(GL_LEQUAL);   // buff deep
-  //  qglClearColor(BACKGROUND_COLOR);  // set background
+    //  qglClearColor(BACKGROUND_COLOR);  // set background
 
     glClearColor(1,1, 1, 1);
 
@@ -82,11 +63,12 @@ void OpenGlViewer::initializeGL() {
 void OpenGlViewer::resizeGL(int w, int h) {
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
+    qglClearColor(BACKGROUND_COLOR);
     glViewport(0, 0, (GLint)w, (GLint)h);
-//    ratioWidthHeight = (double)w / h;
+    //    ratioWidthHeight = (double)w / h;
 
-//    screenWidth=w;
-//    screenHeight=h;
+    //    screenWidth=w;
+    //    screenHeight=h;
 
     // Calculate aspect ratio
     aspect = qreal(w) / qreal(h);
@@ -95,247 +77,59 @@ void OpenGlViewer::resizeGL(int w, int h) {
 }
 
 void OpenGlViewer::paintGL() {
-//    if(drawFirstObject->fn==0)
-//    {  // clear buff image and deep
+    if(drawFirstObject->fn==0)
+    {  // clear buff image and deep
+        glClear(GL_COLOR_BUFFER_BIT);
+        return;
+    }
 
-//        return;
-//    }
-    glClearColor(1,1, 1, 1);
-                glClear(GL_COLOR_BUFFER_BIT |
-                       GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT |
+            GL_DEPTH_BUFFER_BIT);
 
-        glMatrixMode(GL_PROJECTION);   // set the matrix
-        glShadeModel(GL_SMOOTH);
-        glLoadIdentity();  // load matrix
-    // Set near plane to 3.0, far plane to 7.0, field of view 45 degrees
-//   const qreal fov = 45.0;
-
-//    // Reset projection
-//    projection.setToIdentity();
-
-//    int perspectiveScale=100;
-//    // Set perspective projection
-//    projection.perspective(fov, aspect, minMaxXYZ[4]-perspectiveScale*abs((minMaxXYZ[4]+minMaxXYZ[5])),minMaxXYZ[5]+perspectiveScale*abs((minMaxXYZ[4]+minMaxXYZ[5])));
-//// projection.perspective(45,aspect,3,7);
+    glMatrixMode(GL_PROJECTION);   // set the matrix
+    glShadeModel(GL_SMOOTH);
+    glLoadIdentity();  // load matrix
 
 
-            glOrtho(-maxOrigin*orthoCoefficient,maxOrigin*orthoCoefficient,
-                    maxOrigin*orthoCoefficient,-maxOrigin*orthoCoefficient,
-                    -maxOrigin*orthoCoefficient*5,maxOrigin*orthoCoefficient*5);
+    projection.setToIdentity();
+
+
+    //    projection.perspective(fov, aspect, minMaxXYZ[4]-perspectiveScale*abs((minMaxXYZ[4]+minMaxXYZ[5])),minMaxXYZ[5]+perspectiveScale*abs((minMaxXYZ[4]+minMaxXYZ[5])));
+
+
+    glOrtho(-maxOrigin*scaleWheel*aspect,maxOrigin*scaleWheel*aspect,
+            -maxOrigin*scaleWheel,maxOrigin*scaleWheel,
+            -maxOrigin*scaleWheel,maxOrigin*scaleWheel);
+
+
     QMatrix4x4 matrix;
+    matrix.setToIdentity();
+    matrix.rotate(rotation);
+
+    // matrix.scale(scaleWheel,-scaleWheel,scaleWheel);
+    // glMatrixMode(GL_MODELVIEW);
+    // glLoadIdentity();
+
+    glMultMatrixf((projection*matrix).constData());
 
 
-     matrix.rotate(rotation);
-      matrix.scale(scaleWheel,scaleWheel,scaleWheel);
-  //  matrix.translate(-(minMaxXYZ[1] + minMaxXYZ[0])/2.0f,-(minMaxXYZ[3] + minMaxXYZ[2])/2.0f,0);
-    //matrix.translate(0,0,-5);
-
-    qDebug()<<"Scale="<<scaleWheel;
-
-    // Set modelview-projection matrix
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-     glMultMatrixf((projection*matrix).constData());
-
-     if(isLight)
-     {
-         glEnable(GL_LIGHTING);
-         glLightModelf(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
-         // двухсторонний расчет освещения
-
-         glEnable(GL_LIGHT0);
-         glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
-         glLightfv(GL_LIGHT0, GL_POSITION, light_position);
-         glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
-
- //        glEnable(GL_LIGHT1);
- //        glLightfv(GL_LIGHT1, GL_DIFFUSE, light_diffuse);
- //        glLightfv(GL_LIGHT1, GL_POSITION, light_position2);
- //        glLightfv(GL_LIGHT1, GL_AMBIENT, light_ambient);
-     }
-
-
-   //  glColor3f(0,0,0);
-   //  drawTestCube();
-
-    // return;
-
-   // program.setUniformValue("mvp_matrix", projection * matrix);
-//! [6]
-
-    // Use texture unit 0 which contains cube.png
-
-
-    // Draw cube geometry
-    if(isDrawGrid)
-    {
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-        glColor3f(std::get<0>(MESH1_GRID_COLOR),std::get<1>(MESH1_GRID_COLOR),std::get<2>(MESH1_GRID_COLOR));  // outline color (orange)
-        drawFirstMesh();
-
-        glColor3f(std::get<0>(MESH2_GRID_COLOR),std::get<1>(MESH2_GRID_COLOR),std::get<2>(MESH2_GRID_COLOR));  // outline color (red)
-        drawSecondMesh();
-    }
-    if(isDrawFaces)
-    {
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-        glColor3f(std::get<0>(MESH1_FACES_COLOR),std::get<1>(MESH1_FACES_COLOR),std::get<2>(MESH1_FACES_COLOR));  // filling color (grey)
-        drawFirstMesh();
-
-        glColor3f(std::get<0>(MESH2_FACES_COLOR),std::get<1>(MESH2_FACES_COLOR),std::get<2>(MESH2_FACES_COLOR));   // filling color (grey)
-        drawSecondMesh();
-    }
-
-    glDisable(GL_LIGHT0);
-    glDisable(GL_LIGHTING);
-    doubleBuffer();
-    return;
-
-    //  timerForTest->restart();
-
-//    glClear(GL_COLOR_BUFFER_BIT |
-//            GL_DEPTH_BUFFER_BIT);  // clear buff image and deep
-
-//    glMatrixMode(GL_PROJECTION);   // set the matrix
-//    glShadeModel(GL_SMOOTH);
-//    glLoadIdentity();  // load matrix
-
-    /*   glOrtho(-orthoCoefficient * maxOrigin, orthoCoefficient * maxOrigin,
-                orthoCoefficient * maxOrigin,-orthoCoefficient * maxOrigin,
-                - orthoCoefficient * maxOrigin*5,
-                orthoCoefficient * maxOrigin*5); */ // set matrix scope. Need get opportunity to
-
-
-//    glOrtho(-maxOrigin*orthoCoefficient,maxOrigin*orthoCoefficient,
-//            maxOrigin*orthoCoefficient,-maxOrigin*orthoCoefficient,
-//            -maxOrigin*orthoCoefficient*5,maxOrigin*orthoCoefficient*5);
-
-    //gluPerspective(20,screenWidth/screenHeight,minMaxXYZ[4],minMaxXYZ[5]);
-
-      //  gluLookAt((minMaxXYZ[0]+minMaxXYZ[1])/2-10*scaleWheel,(minMaxXYZ[2]+minMaxXYZ[3])/2,(minMaxXYZ[3]+minMaxXYZ[4])/2-20,0,0,0,0,1,0);
-
-
-    //    glOrtho(orthoCoefficient * minMaxXYZ[0], orthoCoefficient * minMaxXYZ[1],
-    //            orthoCoefficient * minMaxXYZ[3],orthoCoefficient * minMaxXYZ[2],
-    //            orthoCoefficient * minMaxXYZ[4]*5,
-    //            orthoCoefficient * minMaxXYZ[5]*5);  // set matrix scope. Need get opportunity to
-    //  double centerX=(orthoCoefficient * minMaxXYZ[0]+orthoCoefficient * minMaxXYZ[1])/2;
-    // double centerY=(orthoCoefficient * minMaxXYZ[2]+orthoCoefficient * minMaxXYZ[3])/2;
-    // double centerZ=(orthoCoefficient * minMaxXYZ[4]+orthoCoefficient * minMaxXYZ[5])/2;
-    //    gluLookAt(orthoCoefficient * minMaxXYZ[0],orthoCoefficient * minMaxXYZ[2],orthoCoefficient * minMaxXYZ[4]*5,
-    //           centerX,centerY,centerZ,
-    //            0,1,0);
-
-    //    qDebug()<<"Ortho:";
-    //    qDebug()<<"x="<<orthoCoefficient * minMaxXYZ[0] <<" "<< orthoCoefficient * minMaxXYZ[1] ;
-    //    qDebug()<<"y="<<orthoCoefficient * minMaxXYZ[2] <<" "<< orthoCoefficient * minMaxXYZ[3] ;
-    //    qDebug()<<"z="<<orthoCoefficient * minMaxXYZ[4]*5 <<" "<< orthoCoefficient * minMaxXYZ[5]*5 ;
-
-   // qDebug()<<"Ortho:";
-  //  qDebug()<<"x="<<-orthoCoefficient * maxOrigin <<" "<<orthoCoefficient * maxOrigin ;
-
-
-
-    // DRAW LINES START
-    glPushMatrix(); // save the current matrix
-
-
-    glTranslatef(translateX, translateY, 0);
-    glRotatef( rotate_x, 1.0, 0.0, 0.0);  // rotate x
-    glRotatef( rotate_y, 0.0, 1.0, 0.0);  // rotate y
-    glScalef(scaleWheel,-scaleWheel* ratioWidthHeight,scaleWheel);
     if(isLight)
     {
+
         glEnable(GL_LIGHTING);
         glLightModelf(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
-        // двухсторонний расчет освещения
 
         glEnable(GL_LIGHT0);
         glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
         glLightfv(GL_LIGHT0, GL_POSITION, light_position);
         glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
+        glLightfv(GL_LIGHT0, GL_SPECULAR, light_ambient);
 
-//        glEnable(GL_LIGHT1);
-//        glLightfv(GL_LIGHT1, GL_DIFFUSE, light_diffuse);
-//        glLightfv(GL_LIGHT1, GL_POSITION, light_position2);
-//        glLightfv(GL_LIGHT1, GL_AMBIENT, light_ambient);
     }
-
-
-//    if(rotate_x || rotate_y)
-//    {
-//        QQuaternion Rotation1=QQuaternion::fromAxisAndAngle(QVector3D(-1.0f,0,0), rotate_x);
-//        Rotation1.normalize();
-
-//        QQuaternion Rotation2=QQuaternion::fromAxisAndAngle(QVector3D(0.0f,-1.0f,0), rotate_y);
-//        Rotation2.normalize();
-
-//        auto qw=(Rotation1*Rotation2).toRotationMatrix();
-
-
-
-//         transformMatrix=transformMatrix* qw;
-
-
-
-//        //    GLfloat  test[16];
-
-////        TransferMatrix[0]=TransferMatrix[0]*qw.data()[0]+ TransferMatrix[1]* qw.data()[3]+ TransferMatrix[2]* qw.data()[6];
-////        TransferMatrix[1]= TransferMatrix[0]*qw.data()[1]       + TransferMatrix[1]*qw.data()[4]        +  TransferMatrix[2]*qw.data()[7] ;
-////        TransferMatrix[2]=TransferMatrix[0]*qw.data()[2]       + TransferMatrix[1]*qw.data()[5]        +  TransferMatrix[2]*qw.data()[8] ;
-////        TransferMatrix[3]=0;
-
-////        TransferMatrix[4]=TransferMatrix[4]*qw.data()[0]       + TransferMatrix[5]*qw.data()[3]        +   TransferMatrix[6]*qw.data()[6];
-////        TransferMatrix[5]= TransferMatrix[4]*qw.data()[1]       + TransferMatrix[5]* qw.data()[4]       +   TransferMatrix[6]* qw.data()[7];
-////        TransferMatrix[6]=TransferMatrix[4]*qw.data()[2]       + TransferMatrix[5]*qw.data()[5]        +   TransferMatrix[6]* qw.data()[8];
-////        TransferMatrix[7]=0;
-
-////        TransferMatrix[8]=TransferMatrix[8]*qw.data()[0]       + TransferMatrix[9]*qw.data()[3]        +   TransferMatrix[10]*qw.data()[6];
-////        TransferMatrix[9]=TransferMatrix[8]* qw.data()[1]      + TransferMatrix[9]*qw.data()[4]        +   TransferMatrix[10]*qw.data()[7];
-////        TransferMatrix[10]= TransferMatrix[8]*qw.data()[2]       + TransferMatrix[9]* qw.data()[5]       +   TransferMatrix[10]*qw.data()[8];
-////        TransferMatrix[11]=0;
-
-//        TransferMatrix[0]=transformMatrix.data()[0];
-//        TransferMatrix[1]= transformMatrix.data()[1];
-//        TransferMatrix[2]=   transformMatrix.data()[2];
-//        TransferMatrix[3]=0;
-
-//        TransferMatrix[4]=transformMatrix.data()[3];
-//        TransferMatrix[5]= transformMatrix.data()[4];
-//        TransferMatrix[6]= transformMatrix.data()[5];
-//        TransferMatrix[7]=0;
-
-//        TransferMatrix[8]=    transformMatrix.data()[6];
-//        TransferMatrix[9]=  transformMatrix.data()[7];
-//        TransferMatrix[10]=   transformMatrix.data()[8];
-//        TransferMatrix[11]=0;
-
-
-
-//        TransferMatrix[12]=0;
-//        TransferMatrix[13]=0;
-//        TransferMatrix[14]=0;
-//        TransferMatrix[15]=1;
-//    }
-//    glMultMatrixf(TransferMatrix);
-
-
-    //    Matrix3D Mat;
-    //    Matrix3DSetIdentity(Mat);
-    //    Quaternion3DMultiply(&QAccum, &Rotation1);
-
-    //    Quaternion3DMultiply(&QAccum, &Rotation2);
-
-    //    Matrix3DSetUsingQuaternion3D(Mat, QAccum);
-    //    globalRotateX=0;
-    //    globalRotateY=0;
-
-
-
-
-
+    else{
+        glDisable(GL_LIGHT0);
+        glDisable(GL_LIGHTING);
+    }
 
     if(isDrawGrid)
     {
@@ -357,37 +151,20 @@ void OpenGlViewer::paintGL() {
         glColor3f(std::get<0>(MESH2_FACES_COLOR),std::get<1>(MESH2_FACES_COLOR),std::get<2>(MESH2_FACES_COLOR));   // filling color (grey)
         drawSecondMesh();
     }
-    glPopMatrix(); // load the unscaled matrix
 
-
-    glDisable(GL_LIGHT0);
-    glDisable(GL_LIGHTING);
     doubleBuffer();
 }
 
 
 
 void OpenGlViewer::mouseMoveEvent(QMouseEvent *e) {
-    // Decrease angular speed (friction)
- //   angularSpeed *= 0.99;
-
     if (e->buttons() & Qt::LeftButton) {
-
-  //            x_pos = event->x();
-  //            y_pos = event->y();
-
-  //             rotate_x -= (y_pos - prevRotation_y) * rotationSpeed;
-  //             if(abs((int)rotate_x%360)>90 && abs((int)rotate_x%360)<270)
-  //                 rotate_y -= (x_pos - prevRotation_x) *rotationSpeed;
-  //             else
-  //            rotate_y += (x_pos - prevRotation_x) *rotationSpeed;
-        // Mouse release position - mouse press position
         QVector2D diff = QVector2D(e->localPos()) - mousePressPosition;
 
         // Rotation axis is perpendicular to the mouse position difference
         // vector
-     //   QVector3D n = QVector3D(diff.y(), diff.x(), 0.0).normalized();
-         QVector3D n = QVector3D(-diff.y(), diff.x(), 0.0).normalized();
+        //   QVector3D n = QVector3D(diff.y(), diff.x(), 0.0).normalized();
+        QVector3D n = QVector3D(-diff.y(), diff.x(), 0.0).normalized();
 
         // Accelerate angular speed relative to the length of the mouse sweep
         qreal acc = diff.length() / 100.0;
@@ -395,69 +172,36 @@ void OpenGlViewer::mouseMoveEvent(QMouseEvent *e) {
         // Calculate new rotation axis as weighted sum
         rotationAxis = ( n * acc).normalized();
 
-        // Increase angular speed
-        //angularSpeed += acc;
-
-
-
         rotation = QQuaternion::fromAxisAndAngle(rotationAxis, rotationSpeed) * rotation;
 
         mousePressPosition=QVector2D(e->localPos());
         // Request an update
         update();
     }
-//        if (event->buttons() & Qt::LeftButton && cameraMove) {
-//            x_pos = event->x();
-//            y_pos = event->y();
-//            translateX += (x_pos - prevRotation_x) * translateSpeed;
-//            translateY += (y_pos - prevRotation_y) * translateSpeed;
+    //        if (event->buttons() & Qt::LeftButton && cameraMove) {
+    //            x_pos = event->x();
+    //            y_pos = event->y();
+    //            translateX += (x_pos - prevRotation_x) * translateSpeed;
+    //            translateY += (y_pos - prevRotation_y) * translateSpeed;
 
-//            prevRotation_x = x_pos;
-//            prevRotation_y = y_pos;
-//            update();  // update Form that display Object
-//            qDebug() << "Shift";
-//            return;
-//        }
-//        if (event->buttons() & Qt::LeftButton) {
-//            x_pos = event->x();
-//            y_pos = event->y();
-
-//             rotate_x -= (y_pos - prevRotation_y) * rotationSpeed;
-//             if(abs((int)rotate_x%360)>90 && abs((int)rotate_x%360)<270)
-//                 rotate_y -= (x_pos - prevRotation_x) *rotationSpeed;
-//             else
-//            rotate_y += (x_pos - prevRotation_x) *rotationSpeed;
-
-//            // rotate_y = (rotate_y > 360.0f) ? 360.0f : rotate_y - 360.0f;
-//            //rotate_x = (rotate_x > 360.0f) ? 360.0f : rotate_x - 360.0f;
-//            qDebug()<<"rotate x="<<(int)rotate_x%360;
-//             qDebug()<<"rotate y="<<(int)rotate_y%360;
-//            prevRotation_x = x_pos;
-//            prevRotation_y = y_pos;
-//            update();  // update Form that display Object
-//        }
-////    if (event->buttons() & Qt::LeftButton) {
-////        if(x_pos && y_pos)
-////        {
-////            rotate_y = (event->x() - x_pos)/100;  // rotate Object on x
-////            rotate_x = (event->y() + y_pos)/100;  // rotate Object on y
-////            update();                       // update Form that display Object
-////        }
-////    }
+    //            prevRotation_x = x_pos;
+    //            prevRotation_y = y_pos;
+    //            update();  // update Form that display Object
+    //            qDebug() << "Shift";
+    //            return;
+    //        }
 }
 void OpenGlViewer::mousePressEvent(QMouseEvent *e) {
-       mousePressPosition = QVector2D(e->localPos());
+    mousePressPosition = QVector2D(e->localPos());
 }
 
 void OpenGlViewer::mouseReleaseEvent(QMouseEvent *e) {
-
 
 }
 
 void OpenGlViewer::wheelEvent(QWheelEvent *event) {
     scaleWheel -=
             event->angleDelta().y()*scaleSpeed;  // change scale when scroll wheel
-    qDebug()<<"ScaleWhhel="<<scaleWheel;
     update();
 }
 
@@ -465,7 +209,6 @@ void OpenGlViewer::keyPressEvent(QKeyEvent *event)
 {
     if (event->key() == Qt::Key_Shift) {
         cameraMove = true;
-        qDebug() << "Pressed shift";
     }
 }
 
@@ -473,7 +216,7 @@ void OpenGlViewer::keyReleaseEvent(QKeyEvent *event)
 {
     if (event->key() == Qt::Key_Shift) {
         cameraMove = false;
-        qDebug() << "Pressed shift";
+
     }
 }
 
@@ -558,43 +301,21 @@ void OpenGlViewer::InitMaxOrigin()
 
     if((*drawSecondObject).fn==0)
     {
-        minMaxXYZ[0]=(*drawFirstObject).bbox.min.X();
-        minMaxXYZ[1]=(*drawFirstObject).bbox.max.X();
-        minMaxXYZ[2]=(*drawFirstObject).bbox.min.Y();
-        minMaxXYZ[3]=(*drawFirstObject).bbox.max.Y();
-        minMaxXYZ[4]=(*drawFirstObject).bbox.min.Z();
-        minMaxXYZ[5]=(*drawFirstObject).bbox.max.Z();
+        minMaxXYZ[0]=minMaxXYZ[2]=minMaxXYZ[4]=100000000;
+        minMaxXYZ[1]=minMaxXYZ[3]=minMaxXYZ[5]=-100000000;
 
-        if(minMaxXYZ[0]>minMaxXYZ[1])
-            findMinMaxForStl(drawFirstObject);
-
-        qDebug()<<"First object box:\n x["+QString::number(minMaxXYZ[0],'f',6)+","+QString::number(minMaxXYZ[1],'f',6)+"]\n";
-        qDebug()<<"y["+QString::number(minMaxXYZ[2],'f',6)+","+QString::number(minMaxXYZ[3],'f',6)+"]\n";
-        qDebug()<<"z["+QString::number(minMaxXYZ[4],'f',6)+","+QString::number(minMaxXYZ[5],'f',6)+"]\n";
+        findMinMaxForStl(drawFirstObject);
     }
-    else{
-        minMaxXYZ[0]=(*drawFirstObject).bbox.min.X()>(*drawSecondObject).bbox.min.X()? (*drawSecondObject).bbox.min.X(): (*drawFirstObject).bbox.min.X();
-        minMaxXYZ[1]=(*drawFirstObject).bbox.max.X()<(*drawSecondObject).bbox.max.X()? (*drawSecondObject).bbox.max.X(): (*drawFirstObject).bbox.max.X();
-        minMaxXYZ[2]=(*drawFirstObject).bbox.min.Y()>(*drawSecondObject).bbox.min.Y()? (*drawSecondObject).bbox.min.Y(): (*drawFirstObject).bbox.min.Y();
-        minMaxXYZ[3]=(*drawFirstObject).bbox.max.Y()<(*drawSecondObject).bbox.max.Y()? (*drawSecondObject).bbox.max.Y(): (*drawFirstObject).bbox.max.Y();
-        minMaxXYZ[4]=(*drawFirstObject).bbox.min.Z()>(*drawSecondObject).bbox.min.Z()? (*drawSecondObject).bbox.min.Z(): (*drawFirstObject).bbox.min.Z();
-        minMaxXYZ[5]=(*drawFirstObject).bbox.max.Z()<(*drawSecondObject).bbox.max.Z()? (*drawSecondObject).bbox.max.Z(): (*drawFirstObject).bbox.max.Z();
+    else
+        findMinMaxForStl(drawSecondObject);
 
-        if(minMaxXYZ[0]>minMaxXYZ[1])
-            findMinMaxForStl(drawFirstObject);
-    }
 
-    double distanceX=abs((minMaxXYZ[1]-minMaxXYZ[0]))/2;
-    double distanceY=abs((minMaxXYZ[3]-minMaxXYZ[2]))/2;
-    double distanceZ=abs((minMaxXYZ[5]-minMaxXYZ[4]))/2;
+    double distanceX=abs((minMaxXYZ[1]-minMaxXYZ[0]));
+    double distanceY=abs((minMaxXYZ[3]-minMaxXYZ[2]));
+    double distanceZ=abs((minMaxXYZ[5]-minMaxXYZ[4]));
 
-    //    maxOrigin=abs(minMaxXYZ[0]);
 
-    //    for(int i=0;i<6;++i)
-    //        if(maxOrigin<abs(minMaxXYZ[i]))
-    //            maxOrigin=abs(minMaxXYZ[i]);
-
-    transformMatrix.setToIdentity();
+    //transformMatrix.setToIdentity();
     maxOrigin=distanceX;
 
     if(maxOrigin<distanceY)
@@ -605,26 +326,22 @@ void OpenGlViewer::InitMaxOrigin()
     translateSpeed=maxOrigin*orthoCoefficient*0.005;
 
     //   scaleWheel=maxOrigin*5;
-    scaleSpeed = orthoCoefficient*maxOrigin * 0.0001;
+    scaleSpeed = 0.001;
     //  scaleWheel = orthoCoefficient * maxOrigin*0.1;
     //    scaleSpeed = 0.001;
-    scaleWheel = 1;
+    scaleWheel = orthoCoefficient;
 
     light_position[0]=-orthoCoefficient * maxOrigin;
     light_position[1]=-orthoCoefficient * maxOrigin;
     light_position[2]=-orthoCoefficient * maxOrigin;
     light_position[3]=1;
 
-    light_position2[0]=orthoCoefficient * maxOrigin;
-    light_position2[1]=-orthoCoefficient * maxOrigin;
-    light_position2[2]=orthoCoefficient * maxOrigin;
-    light_position2[3]=1;
 
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     //glTranslatef(-(minMaxXYZ[1] + minMaxXYZ[0])/2.0f,-(minMaxXYZ[3] + minMaxXYZ[2])/2.0f,-(minMaxXYZ[5] + minMaxXYZ[4])/2.0f);
-    glTranslatef(-(minMaxXYZ[1] + minMaxXYZ[0])/2.0f,-(minMaxXYZ[3] + minMaxXYZ[2])/2.0f,0);
+    glTranslatef(-(minMaxXYZ[1] + minMaxXYZ[0])/2.0f,-(minMaxXYZ[3] + minMaxXYZ[2])/2.0f,-(minMaxXYZ[4] + minMaxXYZ[5])/2.0f);
 
 }
 
@@ -713,35 +430,35 @@ void OpenGlViewer::drawTestCube()
 {
     glBegin(GL_QUADS);  // START TRIANGLES DRAWING
 
-        glVertex3f(-1.0f, -1.0f,  1.0f);
-        glVertex3f( 1.0f, -1.0f,  1.0f );
-        glVertex3f(-1.0f,  1.0f,  1.0f );
-        glVertex3f( 1.0f,  1.0f,  1.0f);
+    glVertex3f(-1.0f, -1.0f,  1.0f);
+    glVertex3f( 1.0f, -1.0f,  1.0f );
+    glVertex3f(-1.0f,  1.0f,  1.0f );
+    glVertex3f( 1.0f,  1.0f,  1.0f);
 
-        glVertex3f( 1.0f, -1.0f,  1.0f);
-        glVertex3f( 1.0f, -1.0f, -1.0f);
-        glVertex3f(  1.0f,  1.0f,  1.0f);
-        glVertex3f( 1.0f,  1.0f, -1.0f);
+    glVertex3f( 1.0f, -1.0f,  1.0f);
+    glVertex3f( 1.0f, -1.0f, -1.0f);
+    glVertex3f(  1.0f,  1.0f,  1.0f);
+    glVertex3f( 1.0f,  1.0f, -1.0f);
 
-        glVertex3f(1.0f, -1.0f, -1.0f );
-        glVertex3f(-1.0f, -1.0f, -1.0f );
-        glVertex3f( 1.0f,  1.0f, -1.0f );
-        glVertex3f(-1.0f,  1.0f, -1.0f );
+    glVertex3f(1.0f, -1.0f, -1.0f );
+    glVertex3f(-1.0f, -1.0f, -1.0f );
+    glVertex3f( 1.0f,  1.0f, -1.0f );
+    glVertex3f(-1.0f,  1.0f, -1.0f );
 
-        glVertex3f(-1.0f, -1.0f, -1.0f );
-        glVertex3f( -1.0f, -1.0f,  1.0f);
-        glVertex3f( -1.0f,  1.0f, -1.0f);
-        glVertex3f(-1.0f,  1.0f,  1.0f );
+    glVertex3f(-1.0f, -1.0f, -1.0f );
+    glVertex3f( -1.0f, -1.0f,  1.0f);
+    glVertex3f( -1.0f,  1.0f, -1.0f);
+    glVertex3f(-1.0f,  1.0f,  1.0f );
 
-        glVertex3f(-1.0f, -1.0f, -1.0f );
-        glVertex3f(1.0f, -1.0f, -1.0f );
-        glVertex3f( -1.0f, -1.0f,  1.0f);
-        glVertex3f( 1.0f, -1.0f,  1.0f );
+    glVertex3f(-1.0f, -1.0f, -1.0f );
+    glVertex3f(1.0f, -1.0f, -1.0f );
+    glVertex3f( -1.0f, -1.0f,  1.0f);
+    glVertex3f( 1.0f, -1.0f,  1.0f );
 
-        glVertex3f(-1.0f,  1.0f,  1.0f );
-        glVertex3f( 1.0f,  1.0f,  1.0f);
-        glVertex3f(-1.0f,  1.0f, -1.0f );
-        glVertex3f( 1.0f,  1.0f, -1.0f);
+    glVertex3f(-1.0f,  1.0f,  1.0f );
+    glVertex3f( 1.0f,  1.0f,  1.0f);
+    glVertex3f(-1.0f,  1.0f, -1.0f );
+    glVertex3f( 1.0f,  1.0f, -1.0f);
 
 
     glEnd();  // END TRIANGLES DRAWING
@@ -764,7 +481,7 @@ void OpenGlViewer::setFirstMesh(QString path )
     err =  vcg::tri::io::Importer<MyMesh>::Open(*drawFirstObject,path.toLocal8Bit());
 
 
-    vcg::tri::io::Importer<MyMesh>::Open(testFirstObject,path.toLocal8Bit());
+    //vcg::tri::io::Importer<MyMesh>::Open(testFirstObject,path.toLocal8Bit());
 
     if(err) { // all the importers return 0 in case of success
         printf("Error in reading %s: '%s'\n");
@@ -820,7 +537,7 @@ void OpenGlViewer::setSecondMesh(QString path)
 
     err =  vcg::tri::io::Importer<MyMesh>::Open(*drawSecondObject,path.toLocal8Bit());
 
-    vcg::tri::io::Importer<MyMesh>::Open(testSecondObject,path.toLocal8Bit());
+    //vcg::tri::io::Importer<MyMesh>::Open(testSecondObject,path.toLocal8Bit());
 
     //    vcg::Matrix44d tempMatrix;
     //    tempMatrix.ElementAt(0,0)=1;

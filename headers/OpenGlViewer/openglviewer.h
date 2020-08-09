@@ -82,8 +82,8 @@ private:
     void drawTestCube();
     //temporary const
 private:
-    GLfloat  TransferMatrix[16];
-     QMatrix3x3 transformMatrix;
+  //  GLfloat  TransferMatrix[16];
+   //  QMatrix3x3 transformMatrix;
 
 
      QMatrix4x4 projection;
@@ -101,7 +101,7 @@ private:
     const uint COUNT_ALIGN_CYCLES=5;
     const double ERROR_ALIGN=0.021f;
 
-    const QColor BACKGROUND_COLOR=QColor(255,255,255); //White background
+    const QColor BACKGROUND_COLOR=QColor(230,230, 255); //White background
 
     const std::tuple<float,float,float> MESH1_FACES_COLOR={0.5f, 0.5f, 0.5f}; //color faces mesh1
     const std::tuple<float,float,float> MESH1_GRID_COLOR={1.0f, 0.5f, 0.2f}; // color grid mesh1
@@ -118,8 +118,8 @@ private:
     MyMesh *  drawFirstObject;                     // object that need to draw
     MyMesh *  drawSecondObject;                     // object that need to draw
 
-    MyMesh testFirstObject;
-    MyMesh testSecondObject;
+//    MyMesh testFirstObject;
+//    MyMesh testSecondObject;
 
     QString identityMatrix="1 0 0 0 "
                            "0 1 0 0 "
@@ -148,11 +148,10 @@ private:
     GLfloat light_ambient[4];
     GLfloat light_position[4];
 
-     GLfloat light_position2[4];
 
     int maxOrigin=-100000;  // max value of coords x/y/z
     int orthoCoefficient=3;
-    float scaleWheel = 1;
+    float scaleWheel = 25;
 
     bool isDrawGrid=false;
     bool isDrawFaces=true;
