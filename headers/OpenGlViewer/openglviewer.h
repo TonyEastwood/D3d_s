@@ -131,7 +131,7 @@ private:
 
     float x_pos, y_pos, rotate_y, rotate_x;  // rotate values
     float translateX, translateY;
-    float rotationSpeed=1.0f;
+    float rotationSpeed=10.0f;
     float translateSpeed=0.3f;
 
     double ratioWidthHeight;

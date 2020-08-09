@@ -108,30 +108,57 @@ void OpenGlViewer::paintGL() {
         glShadeModel(GL_SMOOTH);
         glLoadIdentity();  // load matrix
     // Set near plane to 3.0, far plane to 7.0, field of view 45 degrees
-   const qreal fov = 100.0;
+//   const qreal fov = 45.0;
 
-    // Reset projection
-    projection.setToIdentity();
+//    // Reset projection
+//    projection.setToIdentity();
 
-    // Set perspective projection
-  //  projection.perspective(fov, aspect, minMaxXYZ[4]-(minMaxXYZ[4]+minMaxXYZ[5])/2-scaleWheel,minMaxXYZ[5]+(minMaxXYZ[4]+minMaxXYZ[5])/2);
- projection.perspective(45,aspect,3,7);
+//    int perspectiveScale=100;
+//    // Set perspective projection
+//    projection.perspective(fov, aspect, minMaxXYZ[4]-perspectiveScale*abs((minMaxXYZ[4]+minMaxXYZ[5])),minMaxXYZ[5]+perspectiveScale*abs((minMaxXYZ[4]+minMaxXYZ[5])));
+//// projection.perspective(45,aspect,3,7);
 
+
+            glOrtho(-maxOrigin*orthoCoefficient,maxOrigin*orthoCoefficient,
+                    maxOrigin*orthoCoefficient,-maxOrigin*orthoCoefficient,
+                    -maxOrigin*orthoCoefficient*5,maxOrigin*orthoCoefficient*5);
     QMatrix4x4 matrix;
-  //  matrix.translate(-(minMaxXYZ[1] + minMaxXYZ[0])/2.0f,-(minMaxXYZ[3] + minMaxXYZ[2])/2.0f,-(minMaxXYZ[5] + minMaxXYZ[4])/2.0f);
-    matrix.translate(0,0,-5);
-    matrix.scale(scaleWheel,scaleWheel,scaleWheel);
+
+
+     matrix.rotate(rotation);
+      matrix.scale(scaleWheel,scaleWheel,scaleWheel);
+  //  matrix.translate(-(minMaxXYZ[1] + minMaxXYZ[0])/2.0f,-(minMaxXYZ[3] + minMaxXYZ[2])/2.0f,0);
+    //matrix.translate(0,0,-5);
+
     qDebug()<<"Scale="<<scaleWheel;
-    matrix.rotate(rotation);
+
     // Set modelview-projection matrix
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
      glMultMatrixf((projection*matrix).constData());
 
-     glColor3f(0,0,0);
-     drawTestCube();
+     if(isLight)
+     {
+         glEnable(GL_LIGHTING);
+         glLightModelf(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
+         // двухсторонний расчет освещения
 
-     return;
+         glEnable(GL_LIGHT0);
+         glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
+         glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+         glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
+
+ //        glEnable(GL_LIGHT1);
+ //        glLightfv(GL_LIGHT1, GL_DIFFUSE, light_diffuse);
+ //        glLightfv(GL_LIGHT1, GL_POSITION, light_position2);
+ //        glLightfv(GL_LIGHT1, GL_AMBIENT, light_ambient);
+     }
+
+
+   //  glColor3f(0,0,0);
+   //  drawTestCube();
+
+    // return;
 
    // program.setUniformValue("mvp_matrix", projection * matrix);
 //! [6]
@@ -160,6 +187,10 @@ void OpenGlViewer::paintGL() {
         glColor3f(std::get<0>(MESH2_FACES_COLOR),std::get<1>(MESH2_FACES_COLOR),std::get<2>(MESH2_FACES_COLOR));   // filling color (grey)
         drawSecondMesh();
     }
+
+    glDisable(GL_LIGHT0);
+    glDisable(GL_LIGHTING);
+    doubleBuffer();
     return;
 
     //  timerForTest->restart();
@@ -231,6 +262,8 @@ void OpenGlViewer::paintGL() {
 //        glLightfv(GL_LIGHT1, GL_POSITION, light_position2);
 //        glLightfv(GL_LIGHT1, GL_AMBIENT, light_ambient);
     }
+
+
 //    if(rotate_x || rotate_y)
 //    {
 //        QQuaternion Rotation1=QQuaternion::fromAxisAndAngle(QVector3D(-1.0f,0,0), rotate_x);
@@ -354,7 +387,7 @@ void OpenGlViewer::mouseMoveEvent(QMouseEvent *e) {
         // Rotation axis is perpendicular to the mouse position difference
         // vector
      //   QVector3D n = QVector3D(diff.y(), diff.x(), 0.0).normalized();
-         QVector3D n = QVector3D(diff.y(), diff.x(), 0.0).normalized();
+         QVector3D n = QVector3D(-diff.y(), diff.x(), 0.0).normalized();
 
         // Accelerate angular speed relative to the length of the mouse sweep
         qreal acc = diff.length() / 100.0;
@@ -588,9 +621,10 @@ void OpenGlViewer::InitMaxOrigin()
     light_position2[3]=1;
 
 
-  //  glMatrixMode(GL_MODELVIEW);
-  //  glLoadIdentity();
-  //  glTranslatef(-(minMaxXYZ[1] + minMaxXYZ[0])/2.0f,-(minMaxXYZ[3] + minMaxXYZ[2])/2.0f,-(minMaxXYZ[5] + minMaxXYZ[4])/2.0f);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    //glTranslatef(-(minMaxXYZ[1] + minMaxXYZ[0])/2.0f,-(minMaxXYZ[3] + minMaxXYZ[2])/2.0f,-(minMaxXYZ[5] + minMaxXYZ[4])/2.0f);
+    glTranslatef(-(minMaxXYZ[1] + minMaxXYZ[0])/2.0f,-(minMaxXYZ[3] + minMaxXYZ[2])/2.0f,0);
 
 }
 
