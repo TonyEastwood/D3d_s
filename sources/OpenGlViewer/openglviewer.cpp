@@ -9,6 +9,15 @@ OpenGlViewer::OpenGlViewer( QWidget *parent)
 
     ui->setupUi(this);
 
+activeDefaultTrackball=true;
+
+fov = 60.f;
+clipRatioFar = 5;
+clipRatioNear = 0.1f;
+nearPlane = .2f;
+farPlane = 5.f;
+
+
     translateX=0;
     translateY=0;
 
@@ -65,233 +74,363 @@ OpenGlViewer::~OpenGlViewer() {
 void OpenGlViewer::initializeGL() {
 
     initializeOpenGLFunctions();
-    glDepthFunc(GL_LEQUAL);   // buff deep
-    qglClearColor(BACKGROUND_COLOR);  // set background
-
-    glEnable(GL_DEPTH_TEST);  // line that we can't see - become invisible
-    glEnable(GL_COLOR_MATERIAL);
+    makeCurrent();
+    glShadeModel(GL_SMOOTH);
+    glPixelStorei(GL_PACK_ROW_LENGTH, 0);
+    glPixelStorei(GL_PACK_ALIGNMENT, 1);
+    glEnable(GL_DEPTH_TEST);
     glEnable(GL_NORMALIZE);
-    //    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);    //to enable
+    static float diffuseColor[]={1.0,1.0,1.0,1.0};
+    glEnable(GL_LIGHT0);
+    glDisable(GL_LIGHT1);
+    glLightfv(GL_LIGHT1,GL_DIFFUSE,diffuseColor);
+    trackball.center=vcg::Point3f(0, 0, 0);
+    trackball.radius= 1;
+
+    trackball_light.center=vcg::Point3f(0, 0, 0);
+    trackball_light.radius= 1;
+    // GLExtensionsManager::initializeGLextensions();
+
+
+
+
+
+
+
+
+
+    // MY CODE
+    //    initializeOpenGLFunctions();
+    //    glDepthFunc(GL_LEQUAL);   // buff deep
+    //    qglClearColor(BACKGROUND_COLOR);  // set background
+
+    //    glEnable(GL_DEPTH_TEST);  // line that we can't see - become invisible
+    //    glEnable(GL_COLOR_MATERIAL);
+    //    glEnable(GL_NORMALIZE);
+
+
+    //  //    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);    //to enable
 
 
 
 }
 void OpenGlViewer::resizeGL(int w, int h) {
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glViewport(0, 0, (GLint)w, (GLint)h);
-    ratioWidthHeight = (double)w / h;
+    //    glMatrixMode(GL_PROJECTION);
+    //    glLoadIdentity();
+    //    glViewport(0, 0, (GLint)w, (GLint)h);
+    //    ratioWidthHeight = (double)w / h;
 
-    screenWidth=w;
-    screenHeight=h;
+    //    screenWidth=w;
+    //    screenHeight=h;
+    makeCurrent();
+    glClearColor(1.0,1.0,1.0,0.0);
+    glEnable(GL_DEPTH_TEST);
+    glDepthMask(GL_TRUE);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    setView();
+
+    drawLight();
+
+    glPushMatrix();
+
+    trackball.GetView();
+    trackball.Apply();
+
+
+
+    trackball.DrawPostApply();
+
+    glPopMatrix();
+
+    // The picking of the surface position has to be done in object space,
+    // so after trackball transformation (and before the matrix associated to each mesh);
+
+    drawTarget();
+
+
+
+
+    // we want to write scene-space the point picked with double-click in the log
+    // we have to do it now, before leaving this transformation space
+    // we hook to the same mechanism double-click will be managed later on to move trackball
+
+
+  update();
 }
 
 void OpenGlViewer::paintGL() {
     if(drawFirstObject->fn==0)
         return;
-    //  timerForTest->restart();
-
-    glClear(GL_COLOR_BUFFER_BIT |
-            GL_DEPTH_BUFFER_BIT);  // clear buff image and deep
-
-    glMatrixMode(GL_PROJECTION);   // set the matrix
-    glShadeModel(GL_SMOOTH);
-    glLoadIdentity();  // load matrix
-
-    /*   glOrtho(-orthoCoefficient * maxOrigin, orthoCoefficient * maxOrigin,
-                orthoCoefficient * maxOrigin,-orthoCoefficient * maxOrigin,
-                - orthoCoefficient * maxOrigin*5,
-                orthoCoefficient * maxOrigin*5); */ // set matrix scope. Need get opportunity to
+    makeCurrent();
 
 
-    glOrtho(-maxOrigin*orthoCoefficient,maxOrigin*orthoCoefficient,
-            maxOrigin*orthoCoefficient,-maxOrigin*orthoCoefficient,
-            -maxOrigin*orthoCoefficient*5,maxOrigin*orthoCoefficient*5);
-
-    //gluPerspective(20,screenWidth/screenHeight,minMaxXYZ[4],minMaxXYZ[5]);
-
-      //  gluLookAt((minMaxXYZ[0]+minMaxXYZ[1])/2-10*scaleWheel,(minMaxXYZ[2]+minMaxXYZ[3])/2,(minMaxXYZ[3]+minMaxXYZ[4])/2-20,0,0,0,0,1,0);
-
-
-    //    glOrtho(orthoCoefficient * minMaxXYZ[0], orthoCoefficient * minMaxXYZ[1],
-    //            orthoCoefficient * minMaxXYZ[3],orthoCoefficient * minMaxXYZ[2],
-    //            orthoCoefficient * minMaxXYZ[4]*5,
-    //            orthoCoefficient * minMaxXYZ[5]*5);  // set matrix scope. Need get opportunity to
-    //  double centerX=(orthoCoefficient * minMaxXYZ[0]+orthoCoefficient * minMaxXYZ[1])/2;
-    // double centerY=(orthoCoefficient * minMaxXYZ[2]+orthoCoefficient * minMaxXYZ[3])/2;
-    // double centerZ=(orthoCoefficient * minMaxXYZ[4]+orthoCoefficient * minMaxXYZ[5])/2;
-    //    gluLookAt(orthoCoefficient * minMaxXYZ[0],orthoCoefficient * minMaxXYZ[2],orthoCoefficient * minMaxXYZ[4]*5,
-    //           centerX,centerY,centerZ,
-    //            0,1,0);
-
-    //    qDebug()<<"Ortho:";
-    //    qDebug()<<"x="<<orthoCoefficient * minMaxXYZ[0] <<" "<< orthoCoefficient * minMaxXYZ[1] ;
-    //    qDebug()<<"y="<<orthoCoefficient * minMaxXYZ[2] <<" "<< orthoCoefficient * minMaxXYZ[3] ;
-    //    qDebug()<<"z="<<orthoCoefficient * minMaxXYZ[4]*5 <<" "<< orthoCoefficient * minMaxXYZ[5]*5 ;
-
-   // qDebug()<<"Ortho:";
-  //  qDebug()<<"x="<<-orthoCoefficient * maxOrigin <<" "<<orthoCoefficient * maxOrigin ;
+    float screenRatio = float(this->width())/float(this->height());
+    //set orthogonal view
+    glPushMatrix();
+    glLoadIdentity();
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    gluOrtho2D(-1.0f*screenRatio, 1.0f*screenRatio, -1, 1);
 
 
-
-    // DRAW LINES START
-    glPushMatrix(); // save the current matrix
-
-
-    glTranslatef(translateX, translateY, 0);
-    glRotatef( rotate_x, 1.0, 0.0, 0.0);  // rotate x
-    glRotatef( rotate_y, 0.0, 1.0, 0.0);  // rotate y
-    glScalef(scaleWheel,-scaleWheel* ratioWidthHeight,scaleWheel);
-    if(isLight)
-    {
-        glEnable(GL_LIGHTING);
-        glLightModelf(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
-        // двухсторонний расчет освещения
-
-        glEnable(GL_LIGHT0);
-        glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
-        glLightfv(GL_LIGHT0, GL_POSITION, light_position);
-        glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
-
-//        glEnable(GL_LIGHT1);
-//        glLightfv(GL_LIGHT1, GL_DIFFUSE, light_diffuse);
-//        glLightfv(GL_LIGHT1, GL_POSITION, light_position2);
-//        glLightfv(GL_LIGHT1, GL_AMBIENT, light_ambient);
-    }
-//    if(rotate_x || rotate_y)
-//    {
-//        QQuaternion Rotation1=QQuaternion::fromAxisAndAngle(QVector3D(-1.0f,0,0), rotate_x);
-//        Rotation1.normalize();
-
-//        QQuaternion Rotation2=QQuaternion::fromAxisAndAngle(QVector3D(0.0f,-1.0f,0), rotate_y);
-//        Rotation2.normalize();
-
-//        auto qw=(Rotation1*Rotation2).toRotationMatrix();
-
-
-
-//         transformMatrix=transformMatrix* qw;
-
-
-
-//        //    GLfloat  test[16];
-
-////        TransferMatrix[0]=TransferMatrix[0]*qw.data()[0]+ TransferMatrix[1]* qw.data()[3]+ TransferMatrix[2]* qw.data()[6];
-////        TransferMatrix[1]= TransferMatrix[0]*qw.data()[1]       + TransferMatrix[1]*qw.data()[4]        +  TransferMatrix[2]*qw.data()[7] ;
-////        TransferMatrix[2]=TransferMatrix[0]*qw.data()[2]       + TransferMatrix[1]*qw.data()[5]        +  TransferMatrix[2]*qw.data()[8] ;
-////        TransferMatrix[3]=0;
-
-////        TransferMatrix[4]=TransferMatrix[4]*qw.data()[0]       + TransferMatrix[5]*qw.data()[3]        +   TransferMatrix[6]*qw.data()[6];
-////        TransferMatrix[5]= TransferMatrix[4]*qw.data()[1]       + TransferMatrix[5]* qw.data()[4]       +   TransferMatrix[6]* qw.data()[7];
-////        TransferMatrix[6]=TransferMatrix[4]*qw.data()[2]       + TransferMatrix[5]*qw.data()[5]        +   TransferMatrix[6]* qw.data()[8];
-////        TransferMatrix[7]=0;
-
-////        TransferMatrix[8]=TransferMatrix[8]*qw.data()[0]       + TransferMatrix[9]*qw.data()[3]        +   TransferMatrix[10]*qw.data()[6];
-////        TransferMatrix[9]=TransferMatrix[8]* qw.data()[1]      + TransferMatrix[9]*qw.data()[4]        +   TransferMatrix[10]*qw.data()[7];
-////        TransferMatrix[10]= TransferMatrix[8]*qw.data()[2]       + TransferMatrix[9]* qw.data()[5]       +   TransferMatrix[10]*qw.data()[8];
-////        TransferMatrix[11]=0;
-
-//        TransferMatrix[0]=transformMatrix.data()[0];
-//        TransferMatrix[1]= transformMatrix.data()[1];
-//        TransferMatrix[2]=   transformMatrix.data()[2];
-//        TransferMatrix[3]=0;
-
-//        TransferMatrix[4]=transformMatrix.data()[3];
-//        TransferMatrix[5]= transformMatrix.data()[4];
-//        TransferMatrix[6]= transformMatrix.data()[5];
-//        TransferMatrix[7]=0;
-
-//        TransferMatrix[8]=    transformMatrix.data()[6];
-//        TransferMatrix[9]=  transformMatrix.data()[7];
-//        TransferMatrix[10]=   transformMatrix.data()[8];
-//        TransferMatrix[11]=0;
-
-
-
-//        TransferMatrix[12]=0;
-//        TransferMatrix[13]=0;
-//        TransferMatrix[14]=0;
-//        TransferMatrix[15]=1;
-//    }
-//    glMultMatrixf(TransferMatrix);
-
-
-    //    Matrix3D Mat;
-    //    Matrix3DSetIdentity(Mat);
-    //    Quaternion3DMultiply(&QAccum, &Rotation1);
-
-    //    Quaternion3DMultiply(&QAccum, &Rotation2);
-
-    //    Matrix3DSetUsingQuaternion3D(Mat, QAccum);
-    //    globalRotateX=0;
-    //    globalRotateY=0;
-
-
-
-
-
-
-    if(isDrawGrid)
-    {
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-        glColor3f(std::get<0>(MESH1_GRID_COLOR),std::get<1>(MESH1_GRID_COLOR),std::get<2>(MESH1_GRID_COLOR));  // outline color (orange)
-        drawFirstMesh();
-
-        glColor3f(std::get<0>(MESH2_GRID_COLOR),std::get<1>(MESH2_GRID_COLOR),std::get<2>(MESH2_GRID_COLOR));  // outline color (red)
-        drawSecondMesh();
-    }
-    if(isDrawFaces)
-    {
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-        glColor3f(std::get<0>(MESH1_FACES_COLOR),std::get<1>(MESH1_FACES_COLOR),std::get<2>(MESH1_FACES_COLOR));  // filling color (grey)
-        drawFirstMesh();
-
-        glColor3f(std::get<0>(MESH2_FACES_COLOR),std::get<1>(MESH2_FACES_COLOR),std::get<2>(MESH2_FACES_COLOR));   // filling color (grey)
-        drawSecondMesh();
-    }
-    glPopMatrix(); // load the unscaled matrix
-
-
-    glDisable(GL_LIGHT0);
     glDisable(GL_LIGHTING);
-    doubleBuffer();
+    glDisable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_TEXTURE_2D);
+
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+
+
+
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_LIGHTING);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glDisable(GL_TEXTURE_2D);
+
+    //restore view
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();
+
+    glPushMatrix();
+        if(isDrawGrid)
+        {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+            glColor3f(std::get<0>(MESH1_GRID_COLOR),std::get<1>(MESH1_GRID_COLOR),std::get<2>(MESH1_GRID_COLOR));  // outline color (orange)
+            drawFirstMesh();
+
+            glColor3f(std::get<0>(MESH2_GRID_COLOR),std::get<1>(MESH2_GRID_COLOR),std::get<2>(MESH2_GRID_COLOR));  // outline color (red)
+            drawSecondMesh();
+        }
+        if(isDrawFaces)
+        {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+            glColor3f(std::get<0>(MESH1_FACES_COLOR),std::get<1>(MESH1_FACES_COLOR),std::get<2>(MESH1_FACES_COLOR));  // filling color (grey)
+            drawFirstMesh();
+
+            glColor3f(std::get<0>(MESH2_FACES_COLOR),std::get<1>(MESH2_FACES_COLOR),std::get<2>(MESH2_FACES_COLOR));   // filling color (grey)
+            drawSecondMesh();
+        }
+        glPopMatrix(); // load the unscaled matrix
+
+
+    //    //  timerForTest->restart();
+
+    //    glClear(GL_COLOR_BUFFER_BIT |
+    //            GL_DEPTH_BUFFER_BIT);  // clear buff image and deep
+
+    //    glMatrixMode(GL_PROJECTION);   // set the matrix
+    //    glShadeModel(GL_SMOOTH);
+    //    glLoadIdentity();  // load matrix
+
+    //    /*   glOrtho(-orthoCoefficient * maxOrigin, orthoCoefficient * maxOrigin,
+    //                orthoCoefficient * maxOrigin,-orthoCoefficient * maxOrigin,
+    //                - orthoCoefficient * maxOrigin*5,
+    //                orthoCoefficient * maxOrigin*5); */ // set matrix scope. Need get opportunity to
+
+
+    //    glOrtho(-maxOrigin*orthoCoefficient,maxOrigin*orthoCoefficient,
+    //            maxOrigin*orthoCoefficient,-maxOrigin*orthoCoefficient,
+    //            -maxOrigin*orthoCoefficient*5,maxOrigin*orthoCoefficient*5);
+
+    //    //gluPerspective(20,screenWidth/screenHeight,minMaxXYZ[4],minMaxXYZ[5]);
+
+    //    //  gluLookAt((minMaxXYZ[0]+minMaxXYZ[1])/2-10*scaleWheel,(minMaxXYZ[2]+minMaxXYZ[3])/2,(minMaxXYZ[3]+minMaxXYZ[4])/2-20,0,0,0,0,1,0);
+
+
+    //    //    glOrtho(orthoCoefficient * minMaxXYZ[0], orthoCoefficient * minMaxXYZ[1],
+    //    //            orthoCoefficient * minMaxXYZ[3],orthoCoefficient * minMaxXYZ[2],
+    //    //            orthoCoefficient * minMaxXYZ[4]*5,
+    //    //            orthoCoefficient * minMaxXYZ[5]*5);  // set matrix scope. Need get opportunity to
+    //    //  double centerX=(orthoCoefficient * minMaxXYZ[0]+orthoCoefficient * minMaxXYZ[1])/2;
+    //    // double centerY=(orthoCoefficient * minMaxXYZ[2]+orthoCoefficient * minMaxXYZ[3])/2;
+    //    // double centerZ=(orthoCoefficient * minMaxXYZ[4]+orthoCoefficient * minMaxXYZ[5])/2;
+    //    //    gluLookAt(orthoCoefficient * minMaxXYZ[0],orthoCoefficient * minMaxXYZ[2],orthoCoefficient * minMaxXYZ[4]*5,
+    //    //           centerX,centerY,centerZ,
+    //    //            0,1,0);
+
+    //    //    qDebug()<<"Ortho:";
+    //    //    qDebug()<<"x="<<orthoCoefficient * minMaxXYZ[0] <<" "<< orthoCoefficient * minMaxXYZ[1] ;
+    //    //    qDebug()<<"y="<<orthoCoefficient * minMaxXYZ[2] <<" "<< orthoCoefficient * minMaxXYZ[3] ;
+    //    //    qDebug()<<"z="<<orthoCoefficient * minMaxXYZ[4]*5 <<" "<< orthoCoefficient * minMaxXYZ[5]*5 ;
+
+    //    // qDebug()<<"Ortho:";
+    //    //  qDebug()<<"x="<<-orthoCoefficient * maxOrigin <<" "<<orthoCoefficient * maxOrigin ;
+
+
+
+    //    // DRAW LINES START
+    //    glPushMatrix(); // save the current matrix
+
+
+    //    glTranslatef(translateX, translateY, 0);
+    //    glRotatef( rotate_x, 1.0, 0.0, 0.0);  // rotate x
+    //    glRotatef( rotate_y, 0.0, 1.0, 0.0);  // rotate y
+    //    glScalef(scaleWheel,-scaleWheel* ratioWidthHeight,scaleWheel);
+    //    if(isLight)
+    //    {
+    //        glEnable(GL_LIGHTING);
+    //        glLightModelf(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
+    //        // двухсторонний расчет освещения
+
+    //        glEnable(GL_LIGHT0);
+    //        glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
+    //        glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+    //        glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
+
+    //        //        glEnable(GL_LIGHT1);
+    //        //        glLightfv(GL_LIGHT1, GL_DIFFUSE, light_diffuse);
+    //        //        glLightfv(GL_LIGHT1, GL_POSITION, light_position2);
+    //        //        glLightfv(GL_LIGHT1, GL_AMBIENT, light_ambient);
+    //    }
+    //    //    if(rotate_x || rotate_y)
+    //    //    {
+    //    //        QQuaternion Rotation1=QQuaternion::fromAxisAndAngle(QVector3D(-1.0f,0,0), rotate_x);
+    //    //        Rotation1.normalize();
+
+    //    //        QQuaternion Rotation2=QQuaternion::fromAxisAndAngle(QVector3D(0.0f,-1.0f,0), rotate_y);
+    //    //        Rotation2.normalize();
+
+    //    //        auto qw=(Rotation1*Rotation2).toRotationMatrix();
+
+
+
+    //    //         transformMatrix=transformMatrix* qw;
+
+
+
+    //    //        //    GLfloat  test[16];
+
+    //    ////        TransferMatrix[0]=TransferMatrix[0]*qw.data()[0]+ TransferMatrix[1]* qw.data()[3]+ TransferMatrix[2]* qw.data()[6];
+    //    ////        TransferMatrix[1]= TransferMatrix[0]*qw.data()[1]       + TransferMatrix[1]*qw.data()[4]        +  TransferMatrix[2]*qw.data()[7] ;
+    //    ////        TransferMatrix[2]=TransferMatrix[0]*qw.data()[2]       + TransferMatrix[1]*qw.data()[5]        +  TransferMatrix[2]*qw.data()[8] ;
+    //    ////        TransferMatrix[3]=0;
+
+    //    ////        TransferMatrix[4]=TransferMatrix[4]*qw.data()[0]       + TransferMatrix[5]*qw.data()[3]        +   TransferMatrix[6]*qw.data()[6];
+    //    ////        TransferMatrix[5]= TransferMatrix[4]*qw.data()[1]       + TransferMatrix[5]* qw.data()[4]       +   TransferMatrix[6]* qw.data()[7];
+    //    ////        TransferMatrix[6]=TransferMatrix[4]*qw.data()[2]       + TransferMatrix[5]*qw.data()[5]        +   TransferMatrix[6]* qw.data()[8];
+    //    ////        TransferMatrix[7]=0;
+
+    //    ////        TransferMatrix[8]=TransferMatrix[8]*qw.data()[0]       + TransferMatrix[9]*qw.data()[3]        +   TransferMatrix[10]*qw.data()[6];
+    //    ////        TransferMatrix[9]=TransferMatrix[8]* qw.data()[1]      + TransferMatrix[9]*qw.data()[4]        +   TransferMatrix[10]*qw.data()[7];
+    //    ////        TransferMatrix[10]= TransferMatrix[8]*qw.data()[2]       + TransferMatrix[9]* qw.data()[5]       +   TransferMatrix[10]*qw.data()[8];
+    //    ////        TransferMatrix[11]=0;
+
+    //    //        TransferMatrix[0]=transformMatrix.data()[0];
+    //    //        TransferMatrix[1]= transformMatrix.data()[1];
+    //    //        TransferMatrix[2]=   transformMatrix.data()[2];
+    //    //        TransferMatrix[3]=0;
+
+    //    //        TransferMatrix[4]=transformMatrix.data()[3];
+    //    //        TransferMatrix[5]= transformMatrix.data()[4];
+    //    //        TransferMatrix[6]= transformMatrix.data()[5];
+    //    //        TransferMatrix[7]=0;
+
+    //    //        TransferMatrix[8]=    transformMatrix.data()[6];
+    //    //        TransferMatrix[9]=  transformMatrix.data()[7];
+    //    //        TransferMatrix[10]=   transformMatrix.data()[8];
+    //    //        TransferMatrix[11]=0;
+
+
+
+    //    //        TransferMatrix[12]=0;
+    //    //        TransferMatrix[13]=0;
+    //    //        TransferMatrix[14]=0;
+    //    //        TransferMatrix[15]=1;
+    //    //    }
+    //    //    glMultMatrixf(TransferMatrix);
+
+
+    //    //    Matrix3D Mat;
+    //    //    Matrix3DSetIdentity(Mat);
+    //    //    Quaternion3DMultiply(&QAccum, &Rotation1);
+
+    //    //    Quaternion3DMultiply(&QAccum, &Rotation2);
+
+    //    //    Matrix3DSetUsingQuaternion3D(Mat, QAccum);
+    //    //    globalRotateX=0;
+    //    //    globalRotateY=0;
+
+
+
+
+
+
+    //    if(isDrawGrid)
+    //    {
+    //        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+    //        glColor3f(std::get<0>(MESH1_GRID_COLOR),std::get<1>(MESH1_GRID_COLOR),std::get<2>(MESH1_GRID_COLOR));  // outline color (orange)
+    //        drawFirstMesh();
+
+    //        glColor3f(std::get<0>(MESH2_GRID_COLOR),std::get<1>(MESH2_GRID_COLOR),std::get<2>(MESH2_GRID_COLOR));  // outline color (red)
+    //        drawSecondMesh();
+    //    }
+    //    if(isDrawFaces)
+    //    {
+    //        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+    //        glColor3f(std::get<0>(MESH1_FACES_COLOR),std::get<1>(MESH1_FACES_COLOR),std::get<2>(MESH1_FACES_COLOR));  // filling color (grey)
+    //        drawFirstMesh();
+
+    //        glColor3f(std::get<0>(MESH2_FACES_COLOR),std::get<1>(MESH2_FACES_COLOR),std::get<2>(MESH2_FACES_COLOR));   // filling color (grey)
+    //        drawSecondMesh();
+    //    }
+    //    glPopMatrix(); // load the unscaled matrix
+
+
+    //    glDisable(GL_LIGHT0);
+    //    glDisable(GL_LIGHTING);
+    //    doubleBuffer();
 }
 
 
 
-void OpenGlViewer::mouseMoveEvent(QMouseEvent *event) {
-        if (event->buttons() & Qt::LeftButton && cameraMove) {
-            x_pos = event->x();
-            y_pos = event->y();
-            translateX += (x_pos - prevRotation_x) * translateSpeed;
-            translateY += (y_pos - prevRotation_y) * translateSpeed;
+void OpenGlViewer::mouseMoveEvent(QMouseEvent *e) {
+    makeCurrent();
 
-            prevRotation_x = x_pos;
-            prevRotation_y = y_pos;
-            update();  // update Form that display Object
-            qDebug() << "Shift";
-            return;
-        }
-        if (event->buttons() & Qt::LeftButton) {
-            x_pos = event->x();
-            y_pos = event->y();
+    if (activeDefaultTrackball)
+    {
+        trackball.MouseMove(QT2VCG_X(this,e), QT2VCG_Y(this,e));
+    }
+    else trackball_light.MouseMove(QT2VCG_X(this,e), QT2VCG_Y(this,e));
 
-             rotate_x -= (y_pos - prevRotation_y) * rotationSpeed;
-             if(abs((int)rotate_x%360)>90 && abs((int)rotate_x%360)<270)
-                 rotate_y -= (x_pos - prevRotation_x) *rotationSpeed;
-             else
-            rotate_y += (x_pos - prevRotation_x) *rotationSpeed;
+    update();
+    //    if (event->buttons() & Qt::LeftButton && cameraMove) {
+    //        x_pos = event->x();
+    //        y_pos = event->y();
+    //        translateX += (x_pos - prevRotation_x) * translateSpeed;
+    //        translateY += (y_pos - prevRotation_y) * translateSpeed;
 
-            // rotate_y = (rotate_y > 360.0f) ? 360.0f : rotate_y - 360.0f;
-            //rotate_x = (rotate_x > 360.0f) ? 360.0f : rotate_x - 360.0f;
-            qDebug()<<"rotate x="<<(int)rotate_x%360;
-             qDebug()<<"rotate y="<<(int)rotate_y%360;
-            prevRotation_x = x_pos;
-            prevRotation_y = y_pos;
-            update();  // update Form that display Object
-        }
+    //        prevRotation_x = x_pos;
+    //        prevRotation_y = y_pos;
+    //        update();  // update Form that display Object
+    //        qDebug() << "Shift";
+    //        return;
+    //    }
+    //    if (event->buttons() & Qt::LeftButton) {
+    //        x_pos = event->x();
+    //        y_pos = event->y();
+
+    //        rotate_x -= (y_pos - prevRotation_y) * rotationSpeed;
+    //        if(abs((int)rotate_x%360)>90 && abs((int)rotate_x%360)<270)
+    //            rotate_y -= (x_pos - prevRotation_x) *rotationSpeed;
+    //        else
+    //            rotate_y += (x_pos - prevRotation_x) *rotationSpeed;
+
+    //        // rotate_y = (rotate_y > 360.0f) ? 360.0f : rotate_y - 360.0f;
+    //        //rotate_x = (rotate_x > 360.0f) ? 360.0f : rotate_x - 360.0f;
+    //        qDebug()<<"rotate x="<<(int)rotate_x%360;
+    //        qDebug()<<"rotate y="<<(int)rotate_y%360;
+    //        prevRotation_x = x_pos;
+    //        prevRotation_y = y_pos;
+    //        update();  // update Form that display Object
+
 //    if (event->buttons() & Qt::LeftButton) {
 //        if(x_pos && y_pos)
 //        {
@@ -301,48 +440,115 @@ void OpenGlViewer::mouseMoveEvent(QMouseEvent *event) {
 //        }
 //    }
 }
-void OpenGlViewer::mousePressEvent(QMouseEvent *event) {
-        if (event->button() ==
-                Qt::LeftButton) {  // memorize coords x and y mouse when we start clicking
-            x_pos = event->x();
-            y_pos = event->y();
-            prevRotation_x = x_pos;
-            prevRotation_y = y_pos;
+void OpenGlViewer::mousePressEvent(QMouseEvent *e) {
+    makeCurrent();
+    e->accept();
+    if (!this->hasFocus())
+    {
+        this->setFocus();
+    }
+
+    {
+
+
+
+        if ((e->modifiers() & Qt::ShiftModifier) &&
+                (e->modifiers() & Qt::ControlModifier) &&
+                (e->button() == Qt::LeftButton))
+            activeDefaultTrackball = false;
+        else activeDefaultTrackball = true;
+
+        if (activeDefaultTrackball)
+        {
+            if (QApplication::keyboardModifiers() & Qt::Key_Control) trackball.ButtonDown(QT2VCG(Qt::NoButton, Qt::ControlModifier));
+            else trackball.ButtonUp(QT2VCG(Qt::NoButton, Qt::ControlModifier));
+            if (QApplication::keyboardModifiers() & Qt::Key_Shift) trackball.ButtonDown(QT2VCG(Qt::NoButton, Qt::ShiftModifier));
+            else trackball.ButtonUp(QT2VCG(Qt::NoButton, Qt::ShiftModifier));
+            if (QApplication::keyboardModifiers() & Qt::Key_Alt) trackball.ButtonDown(QT2VCG(Qt::NoButton, Qt::AltModifier));
+            else trackball.ButtonUp(QT2VCG(Qt::NoButton, Qt::AltModifier));
+
+            trackball.MouseDown(QT2VCG_X(this, e), QT2VCG_Y(this, e), QT2VCG(e->button(), e->modifiers()));
         }
-//    if (event->button() ==
-//            Qt::LeftButton) {  // memorize coords x and y mouse when we start clicking
-//        x_pos = event->x();
-//        y_pos = event->y();
-//    }
+        else trackball_light.MouseDown(QT2VCG_X(this, e), QT2VCG_Y(this, e), QT2VCG(e->button(), Qt::NoModifier));
+
+
+    }
+    update();
+    //    if (event->button() ==
+    //            Qt::LeftButton) {  // memorize coords x and y mouse when we start clicking
+    //        x_pos = event->x();
+    //        y_pos = event->y();
+    //        prevRotation_x = x_pos;
+    //        prevRotation_y = y_pos;
+    //    }
+    //    //    if (event->button() ==
+    //    //            Qt::LeftButton) {  // memorize coords x and y mouse when we start clicking
+    //    //        x_pos = event->x();
+    //    //        y_pos = event->y();
+    //    //    }
 }
 
 void OpenGlViewer::mouseReleaseEvent(QMouseEvent *e) {
-//    rotate_x=0;
-//    rotate_y=0;
+    makeCurrent();
+    //clearFocus();
+    activeDefaultTrackball=true;
 
-}
+    if (activeDefaultTrackball) trackball.MouseUp(QT2VCG_X(this,e), QT2VCG_Y(this,e), QT2VCG(e->button(), e->modifiers() ) );
+    else trackball_light.MouseUp(QT2VCG_X(this,e), QT2VCG_Y(this,e), QT2VCG(e->button(),e->modifiers()) );
 
-void OpenGlViewer::wheelEvent(QWheelEvent *event) {
-    scaleWheel -=
-            event->angleDelta().y()*scaleSpeed;  // change scale when scroll wheel
-    qDebug()<<"ScaleWhhel="<<scaleWheel;
+
     update();
+    //    rotate_x=0;
+    //    rotate_y=0;
+
 }
 
-void OpenGlViewer::keyPressEvent(QKeyEvent *event)
-{
-    if (event->key() == Qt::Key_Shift) {
-        cameraMove = true;
-        qDebug() << "Pressed shift";
-    }
+void OpenGlViewer::wheelEvent(QWheelEvent *e) {
+    makeCurrent();
+    setFocus();
+
+    const int WHEEL_STEP = 120;
+    float notch = e->angleDelta().y()/ float(WHEEL_STEP);
+    trackball.MouseWheel(notch);
+
+
+
+    update();
+    //    scaleWheel -=
+    //            event->angleDelta().y()*scaleSpeed;  // change scale when scroll wheel
+    //    qDebug()<<"ScaleWhhel="<<scaleWheel;
+    //    update();
 }
 
-void OpenGlViewer::keyReleaseEvent(QKeyEvent *event)
+void OpenGlViewer::keyPressEvent(QKeyEvent *e)
 {
-    if (event->key() == Qt::Key_Shift) {
-        cameraMove = false;
-        qDebug() << "Pressed shift";
-    }
+    makeCurrent();
+
+    if(e->key()==Qt::Key_Control) trackball.ButtonDown(QT2VCG(Qt::NoButton, Qt::ControlModifier ) );
+    if(e->key()==Qt::Key_Shift) trackball.ButtonDown(QT2VCG(Qt::NoButton, Qt::ShiftModifier ) );
+    if(e->key()==Qt::Key_Alt) trackball.ButtonDown(QT2VCG(Qt::NoButton, Qt::AltModifier ) );
+
+
+    //    if (event->key() == Qt::Key_Shift) {
+    //        cameraMove = true;
+    //        qDebug() << "Pressed shift";
+    //    }
+}
+
+void OpenGlViewer::keyReleaseEvent(QKeyEvent *e)
+{
+    makeCurrent();
+    e->ignore();
+    if(e->key()==Qt::Key_Control) trackball.ButtonUp(QT2VCG(Qt::NoButton, Qt::ControlModifier ) );
+    if(e->key()==Qt::Key_Shift) trackball.ButtonUp(QT2VCG(Qt::NoButton, Qt::ShiftModifier ) );
+    if(e->key()==Qt::Key_Alt) trackball.ButtonUp(QT2VCG(Qt::NoButton, Qt::AltModifier ) );
+
+
+    //
+    //    if (event->key() == Qt::Key_Shift) {
+    //        cameraMove = false;
+    //        qDebug() << "Pressed shift";
+    //    }
 }
 
 void OpenGlViewer::findMinMaxForStl(MyMesh *_object)
@@ -574,6 +780,86 @@ void OpenGlViewer::drawSecondMesh()
         }
         glEnd();  // END TRIANGLES DRAWING
     }
+}
+
+void OpenGlViewer::setView()
+{
+    makeCurrent();
+    glViewport(0,0, (GLsizei) QTLogicalToDevice(this,width()),(GLsizei) QTLogicalToDevice(this,height()));
+
+    GLfloat fAspect = (GLfloat)width()/height();
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    vcg::Matrix44f mtTr; mtTr.SetTranslate( trackball.center);
+    vcg::Matrix44f mtSc; mtSc.SetScale(4.0f,4.0f,4.0f);
+    vcg::Matrix44f mt = mtSc * mtTr * trackball.Matrix() *(-mtTr);
+    //    Matrix44f mt =  trackball.Matrix();
+
+
+    float cameraDist = this->getCameraDistance();
+
+    if(fov<=5) cameraDist = 8.0f; // small hack for orthographic projection where camera distance is rather meaningless...
+
+    nearPlane = cameraDist*clipRatioNear;
+    farPlane = cameraDist + max(1.75f,float(-minMaxXYZ[5]));
+
+    //    qDebug("tbcenter %f %f %f",trackball.center[0],trackball.center[1],trackball.center[2]);
+    //    qDebug("camera dist %f far  %f",cameraDist, farPlane);
+    //    qDebug("Bb %f %f %f - %f %f %f", bb.min[0], bb.min[1], bb.min[2], bb.max[0], bb.max[1], bb.max[2]);
+
+
+        if(fov==5)	glOrtho( -1.75f*fAspect, 1.75f*fAspect, -1.75f, 1.75f,  nearPlane, farPlane);
+        else		gluPerspective(fov, fAspect, nearPlane, farPlane);
+
+
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    gluLookAt(0, 0, cameraDist, 0, 0, 0, 0, 1, 0);
+}
+
+void OpenGlViewer::drawLight()
+{
+    makeCurrent();
+    // ============== LIGHT TRACKBALL ==============
+    // Apply the trackball for the light direction
+    glPushMatrix();
+    trackball_light.GetView();
+    trackball_light.Apply();
+
+    static float lightPosF[]={0.0,0.0,1.0,0.0};
+    glLightfv(GL_LIGHT0,GL_POSITION,lightPosF);
+    static float lightPosB[]={0.0,0.0,-1.0,0.0};
+    glLightfv(GL_LIGHT1,GL_POSITION,lightPosB);
+
+    if (!activeDefaultTrackball)
+    {
+        glPushAttrib(GL_ENABLE_BIT | GL_CURRENT_BIT);
+        glColor3f(1,1,0);
+        glDisable(GL_LIGHTING);
+        const unsigned int lineNum=3;
+        glBegin(GL_LINES);
+        for(unsigned int i=0;i<=lineNum;++i)
+            for(unsigned int j=0;j<=lineNum;++j) {
+                glVertex3f(-1.0f+i*2.0/lineNum,-1.0f+j*2.0/lineNum,-2);
+                glVertex3f(-1.0f+i*2.0/lineNum,-1.0f+j*2.0/lineNum, 2);
+            }
+        glEnd();
+        glPopAttrib();
+    }
+    glPopMatrix();
+    if(!activeDefaultTrackball) trackball_light.DrawPostApply();
+
+}
+
+void OpenGlViewer::drawTarget()
+{
+   update();
+}
+
+float OpenGlViewer::getCameraDistance()
+{
+    float cameraDist =  1.75f / tanf(vcg::math::ToRad(fov*.5f));
+    return cameraDist;
 }
 
 

@@ -18,6 +18,9 @@
 #include <GL/GLU.h>
 #include <QVector3D>
 #include <QQuaternion>
+
+#include <wrap/gui/trackball.h>
+#include <wrap/qt/trackball.h>
 namespace Ui {
 class OpenGlViewer;
 }
@@ -78,8 +81,25 @@ private:
 
     void calcNormal(std::vector<std::tuple<float,float,float>> & normalArray, const float &Vx,const float &Vy,const float &Vz,const float &Sx,const float &Sy, const float &Sz);
 
+    void setView();
+    void drawLight();
+    void drawTarget();
+    float getCameraDistance();
+
     //temporary const
 private:
+    bool trackBallVisible;		// Draws the trackball ?
+    bool activeDefaultTrackball;
+
+    vcg::Trackball trackball;
+    vcg::Trackball trackball_light;
+
+    float fov;
+    float clipRatioFar;
+    float clipRatioNear;
+    float nearPlane;
+    float farPlane;
+
     GLfloat  TransferMatrix[16];
      QMatrix3x3 transformMatrix;
 

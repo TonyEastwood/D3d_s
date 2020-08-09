@@ -22,6 +22,8 @@ SOURCES += \
     sources/mainappwindow.cpp \
     sources/mainwindow.cpp \
     sources/OpenGlViewer/openglviewer.cpp \
+    wrap/gui/trackball.cpp \
+    wrap/gui/trackmode.cpp \
     wrap/ply/plylib.cpp
 
 HEADERS += \
@@ -563,6 +565,14 @@ HEADERS += \
     vcg/space/triangle2.h \
     vcg/space/triangle3.h \
     wrap/callback.h \
+    wrap/gl/deprecated_math.h \
+    wrap/gl/deprecated_space.h \
+    wrap/gl/math.h \
+    wrap/gl/space.h \
+    wrap/gui/trackball.h \
+    wrap/gui/trackmode.h \
+    wrap/gui/trackutils.h \
+    wrap/gui/view.h \
     wrap/io_edgemesh/export_dxf.h \
     wrap/io_edgemesh/export_svg.h \
     wrap/io_tetramesh/export_ply.h \
@@ -620,6 +630,8 @@ HEADERS += \
     wrap/newuoa/include/newuoa.h \
     wrap/ply/plylib.h \
     wrap/ply/plystuff.h \
+    wrap/qt/device_to_logical.h \
+    wrap/qt/trackball.h \
     wrap/utils.h
 
 FORMS += \
