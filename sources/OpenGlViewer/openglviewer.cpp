@@ -29,10 +29,10 @@ OpenGlViewer::OpenGlViewer( QWidget *parent)
     light_diffuse[2]=0.5;
     light_diffuse[2]=0.5;
 
-    light_ambient[0]=0.6;
-    light_ambient[1]=0.6;
-    light_ambient[2]=0.6;
-    light_ambient[3]=0.6;
+    light_ambient[0]=0.4;
+    light_ambient[1]=0.4;
+    light_ambient[2]=0.4;
+    light_ambient[3]=0.4;
 
     minMaxXYZ[0]=minMaxXYZ[2]=minMaxXYZ[4]=100000000;
     minMaxXYZ[1]=minMaxXYZ[3]=minMaxXYZ[5]=-100000000;
@@ -54,7 +54,7 @@ void OpenGlViewer::initializeGL() {
 
     glEnable(GL_DEPTH_TEST);  // line that we can't see - become invisible
     glEnable(GL_COLOR_MATERIAL);
-    glEnable(GL_NORMALIZE);
+      glEnable(GL_NORMALIZE);
     //    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);    //to enable
 
 
@@ -92,10 +92,10 @@ void OpenGlViewer::paintGL() {
     glOrtho(-maxOrigin*scaleWheel*aspect,maxOrigin*scaleWheel*aspect,
             -maxOrigin*scaleWheel,maxOrigin*scaleWheel,
             -maxOrigin*scaleWheel,maxOrigin*scaleWheel);
-   // gluPerspective(20, aspect, -maxOrigin*scaleWheel, maxOrigin*scaleWheel);
-    qDebug()<<"Scale wheel= "<<scaleWheel;
+    // gluPerspective(20, aspect, -maxOrigin*scaleWheel, maxOrigin*scaleWheel);
+    //  qDebug()<<"Scale wheel= "<<scaleWheel;
 
-    QMatrix4x4 matrix;
+
     matrix.setToIdentity();
     matrix.rotate(rotation);
 
@@ -106,23 +106,25 @@ void OpenGlViewer::paintGL() {
     glMultMatrixf((projection*matrix).constData());
 
 
+    // glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
+    glLightModelf(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
     if(isLight)
     {
 
         glEnable(GL_LIGHTING);
-        glLightModelf(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
+        // glLightModelf(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
 
         glEnable(GL_LIGHT0);
         glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
         glLightfv(GL_LIGHT0, GL_POSITION, light_position);
         glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
-       // glLightfv(GL_LIGHT0, GL_SPECULAR, light_ambient);
+        // glLightfv(GL_LIGHT0, GL_SPECULAR, light_ambient);
 
         glEnable(GL_LIGHT1);
         glLightfv(GL_LIGHT1, GL_DIFFUSE, light_diffuse);
         glLightfv(GL_LIGHT1, GL_POSITION, light_position2);
         glLightfv(GL_LIGHT1, GL_AMBIENT, light_ambient);
-        //glLightfv(GL_LIGHT1, GL_SPECULAR, light_ambient);
+        glLightfv(GL_LIGHT1, GL_SPECULAR, light_ambient);
 
     }
     else{
@@ -200,13 +202,14 @@ void OpenGlViewer::mouseReleaseEvent(QMouseEvent *e) {
 }
 
 void OpenGlViewer::wheelEvent(QWheelEvent *event) {
-    scaleWheel -=
+    scaleWheel +=
             event->angleDelta().y()*scaleSpeed;  // change scale when scroll wheel
     if(scaleWheel<0.1)
     {
         scaleWheel=0.1;
         return;
     }
+  //  qDebug()<<"scale="<<scaleWheel;
     update();
 }
 
@@ -355,17 +358,17 @@ void OpenGlViewer::InitMaxOrigin()
 
 }
 
-void OpenGlViewer::exportAsMLP()
+void OpenGlViewer::exportAsMLP(QString filename)
 {
-    if(vectorContentMLP.empty())
+    if(vectorContentMLP.empty() || filename.isEmpty())
     {
         QMessageBox::warning(this,"Warning", "Load align meshes");
         qDebug()<<"Vector exportMLP empty";
         return;
     }
-    QString exportPath=QFileDialog::getSaveFileName(this,"Save object","C://",tr("MLP (*.mlp)"));
-    if(exportPath.isEmpty())
-        return;
+   // QString exportPath=QFileDialog::getSaveFileName(this,"Save object","C://",tr("MLP (*.mlp)"));
+   // if(exportPath.isEmpty())
+    //    return;
 
 
     QByteArray mlpFileContent="<!DOCTYPE MeshLabDocument>\n"
@@ -394,7 +397,7 @@ void OpenGlViewer::exportAsMLP()
                           "<RasterGroup/>\n"
                           "</MeshLabProject>\n");
 
-    QFile file(exportPath);
+    QFile file(filename);
     if(file.open(QIODevice::WriteOnly))
         file.write(mlpFileContent);
     file.close();
@@ -435,6 +438,41 @@ void OpenGlViewer::drawSecondMesh()
         glEnd();  // END TRIANGLES DRAWING
     }
 }
+
+//void OpenGlViewer::calcNormal()
+//{
+//    for(int i=0;i<drawFirstObject->fn;++i)
+//    {
+//        float ax=(*drawFirstObject).face[i].P0(0).X();
+//        float ay=(*drawFirstObject).face[i].P0(0).Y();
+//        float az=(*drawFirstObject).face[i].P0(0).Z();
+
+//        float bx=(*drawFirstObject).face[i].P0(1).X();
+//        float by=(*drawFirstObject).face[i].P0(1).Y();
+//        float bz=(*drawFirstObject).face[i].P0(1).Z();
+
+//        float cx=(*drawFirstObject).face[i].P0(2).X();
+//        float cy=(*drawFirstObject).face[i].P0(2).Y();
+//        float cz=(*drawFirstObject).face[i].P0(2).Z();
+
+//        float v1x=ax-bx;
+//        float v1y=ay-by;
+//        float v1z=az-bz;
+
+//        float v2x=bx-cx;
+//        float v2y=by-cy;
+//        float v2z=bz-cz;
+
+//      //  glNormal3f((*drawSecondObject).face[i].N().X(),(*drawSecondObject).face[i].N().Y(),(*drawSecondObject).face[i].N().Z());
+
+//        float wrki = sqrt((v1y*v2z - v1z * v2y)*(v1y*v2z - v1z * v2y) + (v1z * v2x - v1x * v2z)*(v1z * v2x - v1x * v2z) + (v1x * v2y - v1y * v2x)* (v1x * v2y - v1y * v2x));
+
+//        (*drawFirstObject).face[i].N().X() = (v1y * v2z - v1z * v2y) / wrki;
+//        (*drawFirstObject).face[i].N().Y() = (v1z * v2x - v1x * v2z) / wrki;
+//        (*drawFirstObject).face[i].N().Z() = (v1x * v2y - v1y * v2x) / wrki;
+//    }
+
+//}
 
 //void OpenGlViewer::drawTestCube()
 //{
@@ -488,7 +526,8 @@ void OpenGlViewer::setFirstMesh(QString path )
         exit(-1);
     }
 
-    vcg::tri::UpdateNormal<MyMesh>::PerVertexNormalizedPerFace(*drawFirstObject);
+//calcNormal();
+      vcg::tri::UpdateNormal<MyMesh>::PerVertexNormalizedPerFace(*drawFirstObject);
 
 
     InitMaxOrigin();
@@ -681,9 +720,9 @@ void OpenGlViewer::alignSecondMesh(vcg::Matrix44d * resultTransformMatrix=nullpt
             vcg::tri::UpdateBounding<MyMesh>::Box(*drawSecondObject);
             //  qDebug()<<"new x="<<(*drawSecondObject).face[10523].P(0).X();
             distance=previousResult.computeAvgErr();
-            if(resultTransformMatrix!=nullptr)
+           // if(resultTransformMatrix!=nullptr)
                 //(*resultTransformMatrix)=previousResult.Tr;
-                (*resultTransformMatrix)=(*resultTransformMatrix)*result.Tr;
+            //    (*resultTransformMatrix)=(*resultTransformMatrix)*previousResult.Tr;
             //   qDebug()<<"Do inversion and break. Iteration =="<<i;
 
 
@@ -749,7 +788,7 @@ void OpenGlViewer::openAlignFile()
 
     //path to file with meshes that need to align
     QString pathAlignMeshes=QFileDialog::getOpenFileName(this,"Open file with collect of meshes" );
-
+    QString exportPath=pathAlignMeshes.split(".")[0]+".mlp";
 
     QFileInfo fileInfo(pathAlignMeshes);
 
@@ -791,6 +830,7 @@ void OpenGlViewer::openAlignFile()
     }
     update();
     fileWithAlignMeshes.close();
+    exportAsMLP(exportPath);
 
 }
 

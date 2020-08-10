@@ -43,7 +43,7 @@ public:
 
      void openAlignFile();
 
-     void exportAsMLP();
+     void exportAsMLP(QString path);
 
  signals:
     void setDistanceInLabel(QString textDistance);
@@ -77,7 +77,9 @@ private:
     void drawFirstMesh();
     void drawSecondMesh();
 
-    void calcNormal(std::vector<std::tuple<float,float,float>> & normalArray, const float &Vx,const float &Vy,const float &Vz,const float &Sx,const float &Sy, const float &Sz);
+//    void calcNormal(std::vector<std::tuple<float,float,float>> & normalArray, const float &Vx,const float &Vy,const float &Vz,const float &Sx,const float &Sy, const float &Sz);
+
+   // void calcNormal();
 
     void drawTestCube();
     //temporary const
@@ -110,6 +112,8 @@ private:
 private:
     std::vector<QStringList> vectorContentMLP;
 
+    QMatrix4x4 matrix;
+
     float minMaxXYZ[6];//minX maxX minY maxY minZ maxZ
 
     MyMesh *  drawFirstObject;                     // object that need to draw
@@ -128,7 +132,7 @@ private:
 
     float x_pos, y_pos, rotate_y, rotate_x;  // rotate values
     float translateX, translateY;
-    float rotationSpeed=20.0f;
+    float rotationSpeed=3.0f;
     float translateSpeed=0.3f;
 
     double ratioWidthHeight;
