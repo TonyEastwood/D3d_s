@@ -31,8 +31,8 @@ MainAppWindow::MainAppWindow(  QWidget *parent)
     fileMenu->addSeparator();
     QAction *  openAlignFile = fileMenu->addAction(tr("Load mesh file to align"));
     fileMenu->addSeparator();
-    QAction *  exportMlp = fileMenu->addAction(tr("Export mlp file"));
-    fileMenu->addSeparator();
+   // QAction *  exportMlp = fileMenu->addAction(tr("Export mlp file"));
+   // fileMenu->addSeparator();
     QAction *  exitAction = fileMenu->addAction(tr("E&xit"));
 
     QFont font;
@@ -153,7 +153,7 @@ MainAppWindow::MainAppWindow(  QWidget *parent)
     connect(saveFirstMesh, &QAction::triggered, this, &MainAppWindow::saveFirstMesh);
     connect(exitAction, &QAction::triggered, this, &QWidget::close);
     connect(openGlViewer, &OpenGlViewer::setDistanceInLabel, distanceLabel, &QLabel::setText);
-    connect(exportMlp, &QAction::triggered, this, &MainAppWindow::exportMlpFile);
+    //connect(exportMlp, &QAction::triggered, this, &MainAppWindow::exportMlpFile);
 
 }
 
@@ -242,7 +242,7 @@ void MainAppWindow::openAlignFile()
 
 void MainAppWindow::exportMlpFile()
 {
-    openGlViewer->exportAsMLP();
+    //openGlViewer->exportAsMLP();
 }
 
 

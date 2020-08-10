@@ -16,6 +16,9 @@
 #include <QDebug>
 #include <QFile>
 #include <GL/GLU.h>
+#include <QVector3D>
+#include <QQuaternion>
+#include <QMatrix4x4>
 namespace Ui {
 class OpenGlViewer;
 }
@@ -40,7 +43,7 @@ public:
 
      void openAlignFile();
 
-     void exportAsMLP();
+     void exportAsMLP(QString path);
 
  signals:
     void setDistanceInLabel(QString textDistance);
@@ -62,6 +65,8 @@ private:
    // void compareObjects();
    // void coutMatrix(vcg::Matrix44d * resultTransformMatrix);
 
+    void findMinMaxForStl(MyMesh * _object);
+
     QString vcgMatrixToString(const vcg::Matrix44d & resultTransformMatrix);
 
 
@@ -72,14 +77,30 @@ private:
     void drawFirstMesh();
     void drawSecondMesh();
 
-    void calcNormal(std::vector<std::tuple<float,float,float>> & normalArray, const float &Vx,const float &Vy,const float &Vz,const float &Sx,const float &Sy, const float &Sz);
+//    void calcNormal(std::vector<std::tuple<float,float,float>> & normalArray, const float &Vx,const float &Vy,const float &Vz,const float &Sx,const float &Sy, const float &Sz);
 
+   // void calcNormal();
+
+    void drawTestCube();
     //temporary const
 private:
+  //  GLfloat  TransferMatrix[16];
+   //  QMatrix3x3 transformMatrix;
+
+
+     QMatrix4x4 projection;
+
+     QVector2D mousePressPosition;
+     QVector3D rotationAxis;
+     qreal angularSpeed = 0;
+     QQuaternion rotation;
+
+
+     qreal aspect;
     const uint COUNT_ALIGN_CYCLES=5;
     const double ERROR_ALIGN=0.021f;
 
-    const QColor BACKGROUND_COLOR=QColor(255,255,255); //White background
+    const QColor BACKGROUND_COLOR=QColor(181,150, 235); //White background
 
     const std::tuple<float,float,float> MESH1_FACES_COLOR={0.5f, 0.5f, 0.5f}; //color faces mesh1
     const std::tuple<float,float,float> MESH1_GRID_COLOR={1.0f, 0.5f, 0.2f}; // color grid mesh1
@@ -91,13 +112,15 @@ private:
 private:
     std::vector<QStringList> vectorContentMLP;
 
+    QMatrix4x4 matrix;
+
     float minMaxXYZ[6];//minX maxX minY maxY minZ maxZ
 
     MyMesh *  drawFirstObject;                     // object that need to draw
     MyMesh *  drawSecondObject;                     // object that need to draw
 
-    MyMesh testFirstObject;
-    MyMesh testSecondObject;
+//    MyMesh testFirstObject;
+//    MyMesh testSecondObject;
 
     QString identityMatrix="1 0 0 0 "
                            "0 1 0 0 "
@@ -109,14 +132,14 @@ private:
 
     float x_pos, y_pos, rotate_y, rotate_x;  // rotate values
     float translateX, translateY;
-    float rotationSpeed=0.3f;
+    float rotationSpeed=3.0f;
     float translateSpeed=0.3f;
 
     double ratioWidthHeight;
 
     float prevRotation_x=0;
     float prevRotation_y=0;
-    float scaleSpeed=10;// current scale (zoom in\zoom out)
+    float scaleSpeed=0.001;// current scale (zoom in\zoom out)
 
     bool cameraMove=false;
 
@@ -126,9 +149,12 @@ private:
     GLfloat light_ambient[4];
     GLfloat light_position[4];
 
+     GLfloat light_position2[4];
+
+
     int maxOrigin=-100000;  // max value of coords x/y/z
-    int orthoCoefficient=50;
-    int scaleWheel = 10000;
+    int orthoCoefficient=3;
+    float scaleWheel = 25;
 
     bool isDrawGrid=false;
     bool isDrawFaces=true;
