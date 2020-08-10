@@ -166,7 +166,7 @@ MainAppWindow::~MainAppWindow()
 
 void MainAppWindow::setFirstOpenglMesh()
 {
-    QString path=QFileDialog::getOpenFileName(this,"Open object","C://",tr("STL (*.stl);;PLY (*.ply)" ));
+    QString path=QFileDialog::getOpenFileName(this,"Open object",QString(),tr("STL (*.stl);;PLY (*.ply)" ));
 
     if(path.isEmpty())
         return;
@@ -186,7 +186,7 @@ void MainAppWindow::setFirstOpenglMesh()
 
 void MainAppWindow::setSecondOpenglMesh()
 {
-    QString path=QFileDialog::getOpenFileName(this,"Open object","C://",tr("STL (*.stl);;PLY (*.ply)" ));
+    QString path=QFileDialog::getOpenFileName(this,"Open object",QString(),tr("STL (*.stl);;PLY (*.ply)" ));
     if(path.isEmpty())
         return;
     QFileInfo file1(path);

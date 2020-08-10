@@ -307,14 +307,13 @@ void OpenGlViewer::InitMaxOrigin()
     translateX=0;
     translateY=0;
 
-    if((*drawSecondObject).fn==0)
+    if((*drawFirstObject).fn!=0)
     {
         minMaxXYZ[0]=minMaxXYZ[2]=minMaxXYZ[4]=100000000;
         minMaxXYZ[1]=minMaxXYZ[3]=minMaxXYZ[5]=-100000000;
-
         findMinMaxForStl(drawFirstObject);
     }
-    else
+    if((*drawSecondObject).fn!=0)
         findMinMaxForStl(drawSecondObject);
 
 
