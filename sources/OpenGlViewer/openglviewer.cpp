@@ -109,7 +109,7 @@ void OpenGlViewer::paintGL() {
     glLoadIdentity();  // load matrix
 
 
-    projection.setToIdentity();
+  //  projection.setToIdentity();
 
 
     //    projection.perspective(fov, aspect, minMaxXYZ[4]-perspectiveScale*abs((minMaxXYZ[4]+minMaxXYZ[5])),minMaxXYZ[5]+perspectiveScale*abs((minMaxXYZ[4]+minMaxXYZ[5])));
@@ -130,7 +130,7 @@ void OpenGlViewer::paintGL() {
     // glMatrixMode(GL_MODELVIEW);
     // glLoadIdentity();
 
-    glMultMatrixf((projection*matrix).constData());
+    glMultMatrixf(matrix.constData());
 
 
     // glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);

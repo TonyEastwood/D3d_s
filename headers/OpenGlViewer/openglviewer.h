@@ -91,7 +91,7 @@ private:
 
 
 private:
-    QMatrix4x4 projection;      //matrix that save all mesh transformations
+   // QMatrix4x4 projection;      //matrix that save all mesh transformations
 
     QVector2D mousePressPosition;       //save mouse position
    // QVector3D rotationAxis;
