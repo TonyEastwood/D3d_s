@@ -303,8 +303,6 @@ void OpenGlViewer::InitMaxOrigin()
 {
     rotate_x=0;
     rotate_y=0;
-    prevRotation_x=0;
-    prevRotation_y=0;
 
     translateX=0;
     translateY=0;
@@ -561,7 +559,7 @@ bool OpenGlViewer::setSecondMesh(QString path,bool isNeedToDraw)
         // QMessageBox::warning(this,"Error", "Can't open file "+path);
         return false;
     }
-     vcg::tri::UpdateNormal<MyMesh>::PerVertexNormalizedPerFace(*drawSecondObject);
+    vcg::tri::UpdateNormal<MyMesh>::PerVertexNormalizedPerFace(*drawSecondObject);
     if(isNeedToDraw)
     {
         InitMaxOrigin();
@@ -807,7 +805,7 @@ void OpenGlViewer::openAlignFile()
     QFileInfo fileInfo(pathAlignMeshes);
 
     //get path to dir where file with meshes located
-    QString pathToDir=pathAlignMeshes.mid(0,pathAlignMeshes.size()-fileInfo.fileName().size());
+   const QString pathToDir=pathAlignMeshes.mid(0,pathAlignMeshes.size()-fileInfo.fileName().size());
 
     if(pathAlignMeshes.isEmpty())
         return;
@@ -815,29 +813,18 @@ void OpenGlViewer::openAlignFile()
     QFile fileWithAlignMeshes(pathAlignMeshes);
     if(fileWithAlignMeshes.open(QIODevice::ReadOnly))
     {
-
         QString fileName;
         QByteArray isEmpty;
         do{
             isEmpty=fileWithAlignMeshes.readLine();
             if(isEmpty.isEmpty() || isEmpty=="\r\n" || isEmpty=="\n")
-            {
-                //  QMessageBox::warning(this,"Warning", "File non exist. Check correctness file list that need to align");
-                return;
-            }
-
+                continue;
 
             fileName=QString::fromStdString(isEmpty.toStdString()).split(QRegExp("[\r\n]"),QString::SkipEmptyParts)[0];
 
             if(!QFileInfo(pathToDir+fileName).exists())
-            {
-                //  QMessageBox::warning(this,"Error[2]", "File "+pathToDir+fileName+" non exist. Check correctness file list that need to align");
-                return;
-            }
-
-            // if(!setFirstMesh(pathToDir+fileName))
-            //  return;
-        }while(!setFirstMesh(pathToDir+fileName,false));
+                continue;
+        }while(!setFirstMesh(pathToDir+fileName,false) && !fileWithAlignMeshes.atEnd());
 
         vectorContentMLP.push_back({fileName,identityMatrix,"1"}); //add First mesh to MPL vector with Identity matrix
 
@@ -845,26 +832,17 @@ void OpenGlViewer::openAlignFile()
         vcg::Matrix44d tempMatrix;
         bool isVisible=false;
 
-
         while(!fileWithAlignMeshes.atEnd())
         {
             isEmpty=fileWithAlignMeshes.readLine();
             if(isEmpty.isEmpty() || isEmpty=="\r\n" || isEmpty=="\n")
-            {
-                // QMessageBox::warning(this,"Warning", "File non exist. Check correctness file list that need to align.");
                 continue;
-            }
-
 
             fileName=QString::fromStdString(isEmpty.toStdString()).split(QRegExp("[\r\n]"),QString::SkipEmptyParts)[0];
 
-            if(!QFileInfo(pathToDir+fileName).exists())
-            {
-                // QMessageBox::warning(this,"Error[2]", "File "+pathToDir+fileName+" non exist. Check correctness file list that need to align");
+            if(!QFileInfo(pathToDir+fileName).exists() || !setSecondMesh(pathToDir+fileName,false))
                 continue;
-            }
-            if(!setSecondMesh(pathToDir+fileName,false))
-                continue;
+
             alignSecondMesh(&tempMatrix,&isVisible);
 
             if(isVisible)
@@ -872,10 +850,8 @@ void OpenGlViewer::openAlignFile()
                 vectorContentMLP.push_back({fileName,vcgMatrixToString(tempMatrix),"1"});  //if visible push actual matrix data with visible ==1
                 appendSecondMeshToFirst();
             }
-            else{
+            else
                 vectorContentMLP.push_back({fileName,identityMatrix,"0"}); //if non visible, - push Matrix Identity with visible ==0
-            }
-
         }
     }
     fileWithAlignMeshes.close();
@@ -883,7 +859,5 @@ void OpenGlViewer::openAlignFile()
 
     InitMaxOrigin();
     update();
-
 }
-
 
