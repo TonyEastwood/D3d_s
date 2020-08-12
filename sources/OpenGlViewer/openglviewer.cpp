@@ -10,9 +10,12 @@ OpenGlViewer::OpenGlViewer( QWidget *parent)
     ui->setupUi(this);
 
     rotation.setVector(0,0,0);
-    rotationAxis=QVector3D(0,0,0);
+    // rotationAxis=QVector3D(0,0,0);
+
     translateX=0;
     translateY=0;
+
+    translateSpeed=5;
 
     drawFirstObject=new MyMesh();
     drawFirstObject->fn=0;
@@ -36,6 +39,29 @@ OpenGlViewer::OpenGlViewer( QWidget *parent)
 
     minMaxXYZ[0]=minMaxXYZ[2]=minMaxXYZ[4]=100000000;
     minMaxXYZ[1]=minMaxXYZ[3]=minMaxXYZ[5]=-100000000;
+
+    scaleSpeed = 0.001;
+    //  scaleWheel = orthoCoefficient * maxOrigin*0.1;
+    //    scaleSpeed = 0.001;
+    scaleWheel = 1;
+
+    light_position[0]=0;
+    light_position[1]=0;
+    light_position[2]=1;
+    light_position[3]=0;
+
+
+    light_position2[0]=0;
+    light_position2[1]=0;
+    light_position2[2]=-1;
+    light_position2[3]=0;
+
+    rotate_x=0;
+    rotate_y=0;
+
+    translateX=0;
+    translateY=0;
+
 
 }
 
@@ -98,6 +124,7 @@ void OpenGlViewer::paintGL() {
 
     matrix.setToIdentity();
     matrix.rotate(rotation);
+    // matrix.translate(translateX,translateY,0);
 
     // matrix.scale(scaleWheel,-scaleWheel,scaleWheel);
     // glMatrixMode(GL_MODELVIEW);
@@ -107,9 +134,10 @@ void OpenGlViewer::paintGL() {
 
 
     // glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
-    glLightModelf(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
+
     if(isLight)
     {
+        glLightModelf(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
 
         glEnable(GL_LIGHTING);
         // glLightModelf(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
@@ -160,38 +188,41 @@ void OpenGlViewer::paintGL() {
 
 
 void OpenGlViewer::mouseMoveEvent(QMouseEvent *e) {
+
+    //    if (e->buttons() & Qt::LeftButton && cameraMove) {
+
+    //        QVector2D diff = QVector2D(e->localPos()) - mousePressPosition;
+    //        QVector2D n = QVector2D(diff.x(),diff.y()).normalized();
+
+    //       // x_pos = e->x();
+    //      //  y_pos = e->y();
+    //        translateX -= n.x()* translateSpeed;
+    //        translateY -= n.y() * translateSpeed;
+    //        qDebug()<<"transX="<<translateX<<" transY="<<translateY;
+
+    //        mousePressPosition=QVector2D(e->localPos());
+    //       // prevRotation_x = x_pos;
+    //       // prevRotation_y = y_pos;
+    //        update();  // update Form that display Object
+    //        qDebug() << "Shift";
+    //        return;
+    //    }
+    //    else
     if (e->buttons() & Qt::LeftButton) {
         QVector2D diff = QVector2D(e->localPos()) - mousePressPosition;
 
-        // Rotation axis is perpendicular to the mouse position difference
-        // vector
-        //   QVector3D n = QVector3D(diff.y(), diff.x(), 0.0).normalized();
-        QVector3D n = QVector3D(diff.y(), diff.x(), 0.0).normalized();
-
-        // Accelerate angular speed relative to the length of the mouse sweep
-        qreal acc = diff.length() / 100.0;
+        //QVector3D n = QVector3D(diff.y(), diff.x(), 0.0).normalized();
+        // qreal acc = diff.length() / 100.0;
 
         // Calculate new rotation axis as weighted sum
-        rotationAxis = ( n * acc).normalized();
+        //rotationAxis = ( QVector3D(diff.y(), diff.x(), 0.0).normalized() * diff.length() / 100.0).normalized();
 
-        rotation = QQuaternion::fromAxisAndAngle(rotationAxis, rotationSpeed) * rotation;
+        rotation = QQuaternion::fromAxisAndAngle((QVector3D(diff.y(), diff.x(), 0.0).normalized() * diff.length() / 100.0).normalized(), rotationSpeed) * rotation;
 
         mousePressPosition=QVector2D(e->localPos());
         // Request an update
         update();
     }
-    //        if (event->buttons() & Qt::LeftButton && cameraMove) {
-    //            x_pos = event->x();
-    //            y_pos = event->y();
-    //            translateX += (x_pos - prevRotation_x) * translateSpeed;
-    //            translateY += (y_pos - prevRotation_y) * translateSpeed;
-
-    //            prevRotation_x = x_pos;
-    //            prevRotation_y = y_pos;
-    //            update();  // update Form that display Object
-    //            qDebug() << "Shift";
-    //            return;
-    //        }
 }
 void OpenGlViewer::mousePressEvent(QMouseEvent *e) {
     mousePressPosition = QVector2D(e->localPos());
@@ -202,30 +233,30 @@ void OpenGlViewer::mouseReleaseEvent(QMouseEvent *e) {
 }
 
 void OpenGlViewer::wheelEvent(QWheelEvent *event) {
-    scaleWheel +=
-            event->angleDelta().y()*scaleSpeed;  // change scale when scroll wheel
     if(scaleWheel<0.1)
     {
         scaleWheel=0.1;
         return;
     }
+    scaleWheel +=
+            event->angleDelta().y()*scaleSpeed;  // change scale when scroll wheel
+
     //  qDebug()<<"scale="<<scaleWheel;
     update();
 }
 
 void OpenGlViewer::keyPressEvent(QKeyEvent *event)
 {
-    if (event->key() == Qt::Key_Shift) {
-        cameraMove = true;
-    }
+    //    if (event->key() == Qt::Key_Shift) {
+    //        cameraMove = true;
+    //    }
 }
 
 void OpenGlViewer::keyReleaseEvent(QKeyEvent *event)
 {
-    if (event->key() == Qt::Key_Shift) {
-        cameraMove = false;
-
-    }
+    //    if (event->key() == Qt::Key_Shift) {
+    //        cameraMove = false;
+    //    }
 }
 
 void OpenGlViewer::findMinMaxForStl(MyMesh *_object)
@@ -301,18 +332,13 @@ QString OpenGlViewer::vcgMatrixToString(const vcg::Matrix44d &resultTransformMat
 
 void OpenGlViewer::InitMaxOrigin()
 {
-    rotate_x=0;
-    rotate_y=0;
-
-    translateX=0;
-    translateY=0;
-
     if((*drawFirstObject).fn!=0)
     {
         minMaxXYZ[0]=minMaxXYZ[2]=minMaxXYZ[4]=100000000;
         minMaxXYZ[1]=minMaxXYZ[3]=minMaxXYZ[5]=-100000000;
         findMinMaxForStl(drawFirstObject);
     }
+
     if((*drawSecondObject).fn!=0)
         findMinMaxForStl(drawSecondObject);
 
@@ -329,27 +355,6 @@ void OpenGlViewer::InitMaxOrigin()
         maxOrigin=distanceY;
     if(maxOrigin<distanceZ)
         maxOrigin=distanceZ;
-
-    translateSpeed=maxOrigin*orthoCoefficient*0.005;
-
-    //   scaleWheel=maxOrigin*5;
-    scaleSpeed = 0.001;
-    //  scaleWheel = orthoCoefficient * maxOrigin*0.1;
-    //    scaleSpeed = 0.001;
-    scaleWheel = 1;
-
-    light_position[0]=0;
-    light_position[1]=0;
-    light_position[2]=1;
-    light_position[3]=0;
-
-
-    light_position2[0]=0;
-    light_position2[1]=0;
-    light_position2[2]=-1;
-    light_position2[3]=0;
-
-
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
@@ -375,7 +380,9 @@ void OpenGlViewer::exportAsMLP(QString filename)
                               "<MeshGroup>\n";
 
     QStringList matrixElements;
-    for(int i=0;i<vectorContentMLP.size();++i)
+    int mlpSize=vectorContentMLP.size();
+
+    for(int i=0;i<mlpSize;++i)
     {
         matrixElements = vectorContentMLP[i][1].split(QRegExp("\\s+"), QString::SkipEmptyParts);
 
@@ -400,147 +407,52 @@ void OpenGlViewer::exportAsMLP(QString filename)
     if(file.open(QIODevice::WriteOnly))
         file.write(mlpFileContent);
     file.close();
-
 }
 
 
 void OpenGlViewer::drawFirstMesh()
 {
-    if(drawFirstObject)
-    {
-        uint size=drawFirstObject->face.size();
-        glBegin(GL_TRIANGLES);  // START TRIANGLES DRAWING
-        for (uint i = 0; i < size; ++i) {
-            glNormal3f((*drawFirstObject).face[i].N().X(),(*drawFirstObject).face[i].N().Y(),(*drawFirstObject).face[i].N().Z());
-            glVertex3f((*drawFirstObject).face[i].P0(0).X(),(*drawFirstObject).face[i].P0(0).Y(),(*drawFirstObject).face[i].P0(0).Z());
-            glVertex3f((*drawFirstObject).face[i].P0(1).X(),(*drawFirstObject).face[i].P0(1).Y(),(*drawFirstObject).face[i].P0(1).Z());
-            glVertex3f((*drawFirstObject).face[i].P0(2).X(),(*drawFirstObject).face[i].P0(2).Y(),(*drawFirstObject).face[i].P0(2).Z());
-
-        }
-        glEnd();  // END TRIANGLES DRAWING
+    uint size=drawFirstObject->face.size();
+    glBegin(GL_TRIANGLES);  // START TRIANGLES DRAWING
+    for (uint i = 0; i < size; ++i) {
+        glNormal3f((*drawFirstObject).face[i].N().X(),(*drawFirstObject).face[i].N().Y(),(*drawFirstObject).face[i].N().Z());
+        glVertex3f((*drawFirstObject).face[i].P0(0).X(),(*drawFirstObject).face[i].P0(0).Y(),(*drawFirstObject).face[i].P0(0).Z());
+        glVertex3f((*drawFirstObject).face[i].P0(1).X(),(*drawFirstObject).face[i].P0(1).Y(),(*drawFirstObject).face[i].P0(1).Z());
+        glVertex3f((*drawFirstObject).face[i].P0(2).X(),(*drawFirstObject).face[i].P0(2).Y(),(*drawFirstObject).face[i].P0(2).Z());
     }
-
+    glEnd();  // END TRIANGLES DRAWING
 }
 
 void OpenGlViewer::drawSecondMesh()
 {
-    if(drawSecondObject)
-    {
-        uint size=drawSecondObject->face.size();
-        glBegin(GL_TRIANGLES);  // START TRIANGLES DRAWING
-        for (uint i = 0; i < size; ++i) {
-            glNormal3f((*drawSecondObject).face[i].N().X(),(*drawSecondObject).face[i].N().Y(),(*drawSecondObject).face[i].N().Z());
-            glVertex3f((*drawSecondObject).face[i].P0(0).X(),(*drawSecondObject).face[i].P0(0).Y(),(*drawSecondObject).face[i].P0(0).Z());
-            glVertex3f((*drawSecondObject).face[i].P0(1).X(),(*drawSecondObject).face[i].P0(1).Y(),(*drawSecondObject).face[i].P0(1).Z());
-            glVertex3f((*drawSecondObject).face[i].P0(2).X(),(*drawSecondObject).face[i].P0(2).Y(),(*drawSecondObject).face[i].P0(2).Z());
-        }
-        glEnd();  // END TRIANGLES DRAWING
+    uint size=drawSecondObject->face.size();
+    glBegin(GL_TRIANGLES);  // START TRIANGLES DRAWING
+    for (uint i = 0; i < size; ++i) {
+        glNormal3f((*drawSecondObject).face[i].N().X(),(*drawSecondObject).face[i].N().Y(),(*drawSecondObject).face[i].N().Z());
+        glVertex3f((*drawSecondObject).face[i].P0(0).X(),(*drawSecondObject).face[i].P0(0).Y(),(*drawSecondObject).face[i].P0(0).Z());
+        glVertex3f((*drawSecondObject).face[i].P0(1).X(),(*drawSecondObject).face[i].P0(1).Y(),(*drawSecondObject).face[i].P0(1).Z());
+        glVertex3f((*drawSecondObject).face[i].P0(2).X(),(*drawSecondObject).face[i].P0(2).Y(),(*drawSecondObject).face[i].P0(2).Z());
     }
+    glEnd();  // END TRIANGLES DRAWING
 }
-
-//void OpenGlViewer::calcNormal()
-//{
-//    for(int i=0;i<drawFirstObject->fn;++i)
-//    {
-//        float ax=(*drawFirstObject).face[i].P0(0).X();
-//        float ay=(*drawFirstObject).face[i].P0(0).Y();
-//        float az=(*drawFirstObject).face[i].P0(0).Z();
-
-//        float bx=(*drawFirstObject).face[i].P0(1).X();
-//        float by=(*drawFirstObject).face[i].P0(1).Y();
-//        float bz=(*drawFirstObject).face[i].P0(1).Z();
-
-//        float cx=(*drawFirstObject).face[i].P0(2).X();
-//        float cy=(*drawFirstObject).face[i].P0(2).Y();
-//        float cz=(*drawFirstObject).face[i].P0(2).Z();
-
-//        float v1x=ax-bx;
-//        float v1y=ay-by;
-//        float v1z=az-bz;
-
-//        float v2x=bx-cx;
-//        float v2y=by-cy;
-//        float v2z=bz-cz;
-
-//      //  glNormal3f((*drawSecondObject).face[i].N().X(),(*drawSecondObject).face[i].N().Y(),(*drawSecondObject).face[i].N().Z());
-
-//        float wrki = sqrt((v1y*v2z - v1z * v2y)*(v1y*v2z - v1z * v2y) + (v1z * v2x - v1x * v2z)*(v1z * v2x - v1x * v2z) + (v1x * v2y - v1y * v2x)* (v1x * v2y - v1y * v2x));
-
-//        (*drawFirstObject).face[i].N().X() = (v1y * v2z - v1z * v2y) / wrki;
-//        (*drawFirstObject).face[i].N().Y() = (v1z * v2x - v1x * v2z) / wrki;
-//        (*drawFirstObject).face[i].N().Z() = (v1x * v2y - v1y * v2x) / wrki;
-//    }
-
-//}
-
-//void OpenGlViewer::drawTestCube()
-//{
-//    glBegin(GL_QUADS);  // START TRIANGLES DRAWING
-
-//    glVertex3f(-1.0f, -1.0f,  1.0f);
-//    glVertex3f( 1.0f, -1.0f,  1.0f );
-//    glVertex3f(-1.0f,  1.0f,  1.0f );
-//    glVertex3f( 1.0f,  1.0f,  1.0f);
-
-//    glVertex3f( 1.0f, -1.0f,  1.0f);
-//    glVertex3f( 1.0f, -1.0f, -1.0f);
-//    glVertex3f(  1.0f,  1.0f,  1.0f);
-//    glVertex3f( 1.0f,  1.0f, -1.0f);
-
-//    glVertex3f(1.0f, -1.0f, -1.0f );
-//    glVertex3f(-1.0f, -1.0f, -1.0f );
-//    glVertex3f( 1.0f,  1.0f, -1.0f );
-//    glVertex3f(-1.0f,  1.0f, -1.0f );
-
-//    glVertex3f(-1.0f, -1.0f, -1.0f );
-//    glVertex3f( -1.0f, -1.0f,  1.0f);
-//    glVertex3f( -1.0f,  1.0f, -1.0f);
-//    glVertex3f(-1.0f,  1.0f,  1.0f );
-
-//    glVertex3f(-1.0f, -1.0f, -1.0f );
-//    glVertex3f(1.0f, -1.0f, -1.0f );
-//    glVertex3f( -1.0f, -1.0f,  1.0f);
-//    glVertex3f( 1.0f, -1.0f,  1.0f );
-
-//    glVertex3f(-1.0f,  1.0f,  1.0f );
-//    glVertex3f( 1.0f,  1.0f,  1.0f);
-//    glVertex3f(-1.0f,  1.0f, -1.0f );
-//    glVertex3f( 1.0f,  1.0f, -1.0f);
-
-
-//    glEnd();  // END TRIANGLES DRAWING
-
-
-//}
-
 
 bool OpenGlViewer::setFirstMesh(QString path, bool isNeedToDraw)
 {
-    int err=0;
-
-    err =  vcg::tri::io::Importer<MyMesh>::Open(*drawFirstObject,path.toLocal8Bit());
-
-    if(err) { // all the importers return 0 in case of success
+    if(vcg::tri::io::Importer<MyMesh>::Open(*drawFirstObject,path.toLocal8Bit())) { // all the importers return 0 in case of success
         printf("Error in reading %s: '%s'\n");
+        // QMessageBox::warning(this,"Error", "Can't open file "+path);
         drawFirstObject->Clear();
-        QFileInfo fileInfo(path);
-        // QMessageBox::warning(this,"Error", "Can't open file "+fileInfo.fileName());
         return false;
-        // exit(-1);
     }
 
     vcg::tri::UpdateNormal<MyMesh>::PerVertexNormalizedPerFace(*drawFirstObject);
+
     if(isNeedToDraw)
     {
         InitMaxOrigin();
         update();
     }
-
-
-
     return true;
-
-
 }
 
 bool OpenGlViewer::setSecondMesh(QString path,bool isNeedToDraw)
@@ -551,22 +463,19 @@ bool OpenGlViewer::setSecondMesh(QString path,bool isNeedToDraw)
         return false;
     }
 
-    int err=vcg::tri::io::Importer<MyMesh>::Open(*drawSecondObject,path.toLocal8Bit());
-
-    if(err) { // all the importers return 0 in case of success
+    if(vcg::tri::io::Importer<MyMesh>::Open(*drawSecondObject,path.toLocal8Bit())) { // all the importers return 0 in case of success
         drawSecondObject->Clear();
         printf("Error in reading %s: '%s'\n");
         // QMessageBox::warning(this,"Error", "Can't open file "+path);
         return false;
     }
     vcg::tri::UpdateNormal<MyMesh>::PerVertexNormalizedPerFace(*drawSecondObject);
+
     if(isNeedToDraw)
     {
         InitMaxOrigin();
         update();
     }
-
-
     return true;
 }
 
@@ -653,14 +562,7 @@ void OpenGlViewer::alignSecondMesh(vcg::Matrix44d * resultTransformMatrix=nullpt
 
 
     // 1) Convert fixed mesh and put it into the grid.
-
-
-
-
-
     aa.convertMesh<MyMesh>(*drawFirstObject,fix);
-
-
 
     if((*drawFirstObject).fn==0 || ap.UseVertexOnly) {
         fix.initVert(vcg::Matrix44d::Identity());
@@ -672,14 +574,11 @@ void OpenGlViewer::alignSecondMesh(vcg::Matrix44d * resultTransformMatrix=nullpt
     }
 
 
-
     // 2) Convert the second mesh and sample a <ap.SampleNum> points on it.
     float previousError=100000;
     std::pair<double,double> distance={10000,10000};
     for(uint i=0;i<COUNT_ALIGN_CYCLES;++i)
     {
-
-
         aa.convertVertex((*drawSecondObject).vert,tmpmv);
         aa.sampleMovVert(tmpmv, ap.SampleNum, ap.SampleMode);
 
@@ -687,11 +586,9 @@ void OpenGlViewer::alignSecondMesh(vcg::Matrix44d * resultTransformMatrix=nullpt
         aa.fix=&fix;
         aa.ap = ap;
 
-
         //use identity as first matrix
         vcg::Matrix44d In;
         In.SetIdentity();
-
 
         // Perform the ICP algorithm
         aa.align(In,UG,VG,result);
@@ -699,8 +596,6 @@ void OpenGlViewer::alignSecondMesh(vcg::Matrix44d * resultTransformMatrix=nullpt
         //rotate m2 using the resulting transformation
         vcg::tri::UpdatePosition<MyMesh>::Matrix(*drawSecondObject, result.Tr, true);
         vcg::tri::UpdateBounding<MyMesh>::Box(*drawSecondObject);
-
-
 
         distance=result.computeAvgErr();
 
@@ -715,34 +610,18 @@ void OpenGlViewer::alignSecondMesh(vcg::Matrix44d * resultTransformMatrix=nullpt
 
         if(distance.first<previousError)
         {
-            //  qDebug()<<"prev x="<<(*drawSecondObject).face[10523].P(0).X();
             previousResult=result;
             previousError=distance.first;
             if(resultTransformMatrix!=nullptr)
-            {
-                //(*resultTransformMatrix)=previousResult.Tr;
                 (*resultTransformMatrix)=(*resultTransformMatrix)*result.Tr;
-            }
-            //  qDebug()<<"Iteration =="<<i<<" distance second< previous";
         }
         else{
-            //  qDebug()<<"new Prev Value="<<distance.second;
             vcg::tri::UpdatePosition<MyMesh>::Matrix(*drawSecondObject,vcg::Inverse(result.Tr), true);
             vcg::tri::UpdatePosition<MyMesh>::Matrix(*drawSecondObject, previousResult.Tr, true);
             vcg::tri::UpdateBounding<MyMesh>::Box(*drawSecondObject);
-            //  qDebug()<<"new x="<<(*drawSecondObject).face[10523].P(0).X();
             distance=previousResult.computeAvgErr();
-            // if(resultTransformMatrix!=nullptr)
-            //(*resultTransformMatrix)=previousResult.Tr;
-            //    (*resultTransformMatrix)=(*resultTransformMatrix)*previousResult.Tr;
-            //   qDebug()<<"Do inversion and break. Iteration =="<<i;
-
-
-            //  compareObjects();
-            // coutMatrix(&previousResult.Tr);
             break;
         }
-        //   qDebug()<<"iteration="<<i;
 
     }
     if(distance.first>ERROR_ALIGN)
@@ -796,7 +675,6 @@ void OpenGlViewer::setShowFaces(bool value)
 void OpenGlViewer::openAlignFile()
 {
     vectorContentMLP.clear();
-    //exportAsMLP({{"FileName.ply","0 61 3 53 2 3 6 3 223 2 1 3 2 4 21 32","1"},{"FileName2.ply","0 61 3 53 2 3 6 3 223 2 1 3 2 4 21 32","0"},{"FileName.ply","0 61 3 53 2 3 6 3 223 2 1 3 2 4 21 32","1"}});
 
     //path to file with meshes that need to align
     QString pathAlignMeshes=QFileDialog::getOpenFileName(this,"Open file with collect of meshes" );
@@ -805,7 +683,7 @@ void OpenGlViewer::openAlignFile()
     QFileInfo fileInfo(pathAlignMeshes);
 
     //get path to dir where file with meshes located
-   const QString pathToDir=pathAlignMeshes.mid(0,pathAlignMeshes.size()-fileInfo.fileName().size());
+    const QString pathToDir=pathAlignMeshes.mid(0,pathAlignMeshes.size()-fileInfo.fileName().size());
 
     if(pathAlignMeshes.isEmpty())
         return;
