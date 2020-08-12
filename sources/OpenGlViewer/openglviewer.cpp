@@ -552,10 +552,9 @@ bool OpenGlViewer::setSecondMesh(QString path)
     int err=vcg::tri::io::Importer<MyMesh>::Open(*drawSecondObject,path.toLocal8Bit());
 
     if(err) { // all the importers return 0 in case of success
-       QFileInfo fileInfo(path);
        drawSecondObject->Clear();
         printf("Error in reading %s: '%s'\n");
-       QMessageBox::warning(this,"Error", "Can't open file "+fileInfo.fileName());
+       QMessageBox::warning(this,"Error", "Can't open file "+path);
         return false;
     }
 
