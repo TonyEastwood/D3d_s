@@ -297,6 +297,8 @@ QString OpenGlViewer::vcgMatrixToString(const vcg::Matrix44d &resultTransformMat
     return result;
 }
 
+
+
 void OpenGlViewer::InitMaxOrigin()
 {
     rotate_x=0;
@@ -514,7 +516,7 @@ void OpenGlViewer::drawSecondMesh()
 //}
 
 
-bool OpenGlViewer::setFirstMesh(QString path )
+bool OpenGlViewer::setFirstMesh(QString path, bool isNeedToDraw)
 {
     int err=0;
 
@@ -524,24 +526,26 @@ bool OpenGlViewer::setFirstMesh(QString path )
         printf("Error in reading %s: '%s'\n");
         drawFirstObject->Clear();
         QFileInfo fileInfo(path);
-       // QMessageBox::warning(this,"Error", "Can't open file "+fileInfo.fileName());
+        // QMessageBox::warning(this,"Error", "Can't open file "+fileInfo.fileName());
         return false;
         // exit(-1);
     }
 
-    //calcNormal();
     vcg::tri::UpdateNormal<MyMesh>::PerVertexNormalizedPerFace(*drawFirstObject);
+    if(isNeedToDraw)
+    {
+        InitMaxOrigin();
+        update();
+    }
 
 
-    InitMaxOrigin();
 
-    update();
     return true;
 
 
 }
 
-bool OpenGlViewer::setSecondMesh(QString path)
+bool OpenGlViewer::setSecondMesh(QString path,bool isNeedToDraw)
 {
     if(drawFirstObject->fn==0)
     {
@@ -554,14 +558,17 @@ bool OpenGlViewer::setSecondMesh(QString path)
     if(err) { // all the importers return 0 in case of success
         drawSecondObject->Clear();
         printf("Error in reading %s: '%s'\n");
-       // QMessageBox::warning(this,"Error", "Can't open file "+path);
+        // QMessageBox::warning(this,"Error", "Can't open file "+path);
         return false;
     }
+     vcg::tri::UpdateNormal<MyMesh>::PerVertexNormalizedPerFace(*drawSecondObject);
+    if(isNeedToDraw)
+    {
+        InitMaxOrigin();
+        update();
+    }
 
-    InitMaxOrigin( );
 
-    vcg::tri::UpdateNormal<MyMesh>::PerVertexNormalizedPerFace(*drawSecondObject);
-    update();
     return true;
 }
 
@@ -815,7 +822,7 @@ void OpenGlViewer::openAlignFile()
             isEmpty=fileWithAlignMeshes.readLine();
             if(isEmpty.isEmpty() || isEmpty=="\r\n" || isEmpty=="\n")
             {
-              //  QMessageBox::warning(this,"Warning", "File non exist. Check correctness file list that need to align");
+                //  QMessageBox::warning(this,"Warning", "File non exist. Check correctness file list that need to align");
                 return;
             }
 
@@ -824,13 +831,13 @@ void OpenGlViewer::openAlignFile()
 
             if(!QFileInfo(pathToDir+fileName).exists())
             {
-              //  QMessageBox::warning(this,"Error[2]", "File "+pathToDir+fileName+" non exist. Check correctness file list that need to align");
+                //  QMessageBox::warning(this,"Error[2]", "File "+pathToDir+fileName+" non exist. Check correctness file list that need to align");
                 return;
             }
 
             // if(!setFirstMesh(pathToDir+fileName))
             //  return;
-        }while(!setFirstMesh(pathToDir+fileName));
+        }while(!setFirstMesh(pathToDir+fileName,false));
 
         vectorContentMLP.push_back({fileName,identityMatrix,"1"}); //add First mesh to MPL vector with Identity matrix
 
@@ -844,7 +851,7 @@ void OpenGlViewer::openAlignFile()
             isEmpty=fileWithAlignMeshes.readLine();
             if(isEmpty.isEmpty() || isEmpty=="\r\n" || isEmpty=="\n")
             {
-               // QMessageBox::warning(this,"Warning", "File non exist. Check correctness file list that need to align.");
+                // QMessageBox::warning(this,"Warning", "File non exist. Check correctness file list that need to align.");
                 continue;
             }
 
@@ -853,10 +860,10 @@ void OpenGlViewer::openAlignFile()
 
             if(!QFileInfo(pathToDir+fileName).exists())
             {
-               // QMessageBox::warning(this,"Error[2]", "File "+pathToDir+fileName+" non exist. Check correctness file list that need to align");
+                // QMessageBox::warning(this,"Error[2]", "File "+pathToDir+fileName+" non exist. Check correctness file list that need to align");
                 continue;
             }
-            if(!setSecondMesh(pathToDir+fileName))
+            if(!setSecondMesh(pathToDir+fileName,false))
                 continue;
             alignSecondMesh(&tempMatrix,&isVisible);
 
@@ -871,9 +878,11 @@ void OpenGlViewer::openAlignFile()
 
         }
     }
-    update();
     fileWithAlignMeshes.close();
     exportAsMLP(exportPath);
+
+    InitMaxOrigin();
+    update();
 
 }
 

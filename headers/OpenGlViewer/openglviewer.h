@@ -30,8 +30,8 @@ public:
     explicit OpenGlViewer(  QWidget *parent = nullptr);
     ~OpenGlViewer() override;
 
-    bool setFirstMesh(QString path);
-    bool setSecondMesh(QString path);
+    bool setFirstMesh(QString path,bool isNeedToDraw=true);
+    bool setSecondMesh(QString path,bool isNeedToDraw=true);
 
     void setLight(bool value);
 
