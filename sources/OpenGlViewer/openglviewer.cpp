@@ -4,6 +4,23 @@ std::vector<vcg::Point3d>* vcg::PointMatchingScale::fix;
 std::vector<vcg::Point3d>* vcg::PointMatchingScale::mov;
 vcg::Box3d vcg::PointMatchingScale::b;
 
+const GLchar* vertexShaderSource = "#version 330 core\n"
+                                   "layout (location = 0) in vec3 position;\n"
+                                   "layout (location = 1) in vec3 color;\n"
+                                   "out vec3 ourColor;\n"
+                                   "void main()\n"
+                                   "{\n"
+                                   "gl_Position = vec4(position, 1.0);\n"
+                                   "ourColor = color;\n"
+                                   "}\0";
+const GLchar* fragmentShaderSource = "#version 330 core\n"
+                                     "out vec4 color;\n"
+                                     "uniform vec4 ourColor;\n"
+                                     "void main()\n"
+                                     "{\n"
+                                     "color = ourColor;\n"
+                                     "}\n\0";
+
 OpenGlViewer::OpenGlViewer( QWidget *parent)
     : QGLWidget(parent) {
 
@@ -73,6 +90,79 @@ OpenGlViewer::~OpenGlViewer() {
 
 void OpenGlViewer::initializeGL() {
 
+initializeOpenGLFunctions();
+
+    QOpenGLExtraFunctions *f = QOpenGLContext::currentContext()->extraFunctions();
+
+    GLuint vertexShader=f->glCreateShader(GL_VERTEX_SHADER);
+    f->glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
+    f->glCompileShader(vertexShader);
+    // Check for compile time errors
+    GLint success;
+    GLchar infoLog[512];
+    f->glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
+    if (!success)
+    {
+        f->glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
+        std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
+    }
+    // Fragment shader
+    GLuint fragmentShader = f->glCreateShader(GL_FRAGMENT_SHADER);
+    f->glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
+    f->glCompileShader(fragmentShader);
+    // Check for compile time errors
+    f->glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
+    if (!success)
+    {
+        f->glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
+        std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
+    }
+    // Link shaders
+    shaderProgram = f->glCreateProgram();
+    f->glAttachShader(shaderProgram, vertexShader);
+    f->glAttachShader(shaderProgram, fragmentShader);
+    f->glLinkProgram(shaderProgram);
+    // Check for linking errors
+    f->glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+    if (!success) {
+        f->glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
+        std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
+    }
+    f->glDeleteShader(vertexShader);
+    f->glDeleteShader(fragmentShader);
+
+
+    // Set up vertex data (and buffer(s)) and attribute pointers
+    GLfloat vertices[] = {
+        // Positions
+        0.5f, -0.5f, 0.0f,  // Bottom Right
+        -0.5f, -0.5f, 0.0f,  // Bottom Left
+        0.0f,  0.5f, 0.0f   // Top
+    };
+
+    f->glGenVertexArrays(1, &VAO);
+
+
+    f->glGenBuffers(1, &VBO);
+    // Bind the Vertex Array Object first, then bind and set vertex buffer(s) and attribute pointer(s).
+    f->glBindVertexArray(VAO);
+
+    f->glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    f->glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    // Position attribute
+    f->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+    f->glEnableVertexAttribArray(0);
+
+    f->glBindVertexArray(0); // Unbind VAO
+
+
+    // Game loop
+
+    // Check if any events have been activiated (key pressed, mouse moved etc.) and call corresponding response functions
+
+
+    return;
     initializeOpenGLFunctions();
     glDepthFunc(GL_LEQUAL);   // buff deep
     qglClearColor(BACKGROUND_COLOR);  // set background
@@ -82,6 +172,8 @@ void OpenGlViewer::initializeGL() {
     glEnable(GL_COLOR_MATERIAL);
     glEnable(GL_NORMALIZE);
     //    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);    //to enable
+
+
 
 
 
@@ -95,21 +187,54 @@ void OpenGlViewer::resizeGL(int w, int h) {
 }
 
 void OpenGlViewer::paintGL() {
-    if(drawFirstObject->fn==0)
-    {  // clear buff image and deep
-        glClear(GL_COLOR_BUFFER_BIT);
-        return;
-    }
 
-    glClear(GL_COLOR_BUFFER_BIT |
-            GL_DEPTH_BUFFER_BIT);
+    // Now use QOpenGLExtraFunctions instead of QOpenGLFunctions as we want to
+    // do more than what GL(ES) 2.0 offers.
+     QOpenGLExtraFunctions *f  = QOpenGLContext::currentContext()->extraFunctions();
 
-    glMatrixMode(GL_PROJECTION);   // set the matrix
-    glShadeModel(GL_SMOOTH);
-    glLoadIdentity();  // load matrix
+    f->glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+          f->glClear(GL_COLOR_BUFFER_BIT);
+
+          // Be sure to activate the shader
+           f->glUseProgram(shaderProgram);
+
+          // Update the uniform color
+
+          GLfloat greenValue = 150;
+          GLint vertexColorLocation =  f->glGetUniformLocation(shaderProgram, "ourColor");
+           f->glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
+
+          // Draw the triangle
+           f->glBindVertexArray(VAO);
+           f->glDrawArrays(GL_TRIANGLES, 0, 3);
+           f->glBindVertexArray(0);
+
+          // Swap the screen buffers
+        //  f-> doubleBuffer();
 
 
-  //  projection.setToIdentity();
+
+
+
+    return;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    return ;
+    //  projection.setToIdentity();
 
 
     //    projection.perspective(fov, aspect, minMaxXYZ[4]-perspectiveScale*abs((minMaxXYZ[4]+minMaxXYZ[5])),minMaxXYZ[5]+perspectiveScale*abs((minMaxXYZ[4]+minMaxXYZ[5])));
