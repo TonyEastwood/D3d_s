@@ -51,12 +51,7 @@ const GLchar* fragmentShaderSource = "#version 330 core\n"
         "}\n\0";
 
 //   "color = ourColor;\n"
-//GLfloat vertices[] = {
-//    // Positions
-//    0.5f, -0.5f, 0.0f,  // Bottom Right
-//    -0.5f, -0.5f, 0.0f,  // Bottom Left
-//    0.0f,  0.5f, 0.0f   // Top
-//};
+
 OpenGlViewer::OpenGlViewer( QWidget *parent)
     : QGLWidget(parent) {
 
@@ -207,8 +202,8 @@ void OpenGlViewer::initializeGL() {
     f->glUseProgram(shaderProgram);
     // Check if any events have been activiated (key pressed, mouse moved etc.) and call corresponding response functions
 
-      GPUobjectColor =  f->glGetUniformLocation(shaderProgram, "ourColor");
-      GPUtransformMatrix=f->glGetUniformLocation(shaderProgram, "transMatrix");
+    GPUobjectColor =  f->glGetUniformLocation(shaderProgram, "ourColor");
+    GPUtransformMatrix=f->glGetUniformLocation(shaderProgram, "transMatrix");
     GPUprojectionMatrix=f->glGetUniformLocation(shaderProgram, "projMatrix");
     GPUlightPosition=f->glGetUniformLocation(shaderProgram, "LightPosition");
     GPUlightColor=f->glGetUniformLocation(shaderProgram, "lightColor");
@@ -222,189 +217,57 @@ void OpenGlViewer::resizeGL(int w, int h) {
 }
 
 void OpenGlViewer::paintGL() {
-
-    // Now use QOpenGLExtraFunctions instead of QOpenGLFunctions as we want to
-    // do more than what GL(ES) 2.0 offers.
-   // f  = QOpenGLContext::currentContext()->extraFunctions();
-
     f->glClearColor(BACKGROUND_COLOR[0],BACKGROUND_COLOR[1],BACKGROUND_COLOR[2],1.0f);
     f->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-
-
-    // Be sure to activate the shader
-   // f->glUseProgram(shaderProgram);
-
-    // Update the uniform color
-
-  //  GLint vertexColorLocation =  f->glGetUniformLocation(shaderProgram, "ourColor");
-    // f->glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
-
     m_transform.setToIdentity();
+    m_projection.setToIdentity();
+
     m_transform.rotate(rotation);
     m_transform.translate(-(minMaxXYZ[1] + minMaxXYZ[0])/2.0f,-(minMaxXYZ[3] + minMaxXYZ[2])/2.0f,-(minMaxXYZ[4] + minMaxXYZ[5])/2.0f);
 
-
-    m_projection.setToIdentity();
-
-    //   m_projection.translate(-1,0,0);
     m_projection.ortho(-maxOrigin*scaleWheel*aspect,maxOrigin*scaleWheel*aspect,
                        -maxOrigin*scaleWheel,maxOrigin*scaleWheel,
                        -maxOrigin*scaleWheel*3,maxOrigin*scaleWheel*3);
 
-
-
-//    GLint transformMatrix =  f->glGetUniformLocation(shaderProgram, "transMatrix");
-//    // f->glUniform4f(projMatrix, &m_proj);
+    //set transform matrix in geometry shader
     f->glUniformMatrix4fv(GPUtransformMatrix,1,GL_FALSE,m_transform.constData());
-
-  //  GLint projMatrix =  f->glGetUniformLocation(shaderProgram, "projMatrix");
-    // f->glUniform4f(projMatrix, &m_proj);
+    //set projection matrix in geometry shader
     f->glUniformMatrix4fv(GPUprojectionMatrix,1,GL_FALSE,m_projection.constData());
-
-
-
-   // GLint lightColorPos =  f->glGetUniformLocation(shaderProgram, "lightColor");
-
+    //set light position in geometry shader
     f->glUniform3f(GPUlightPosition,light_position[0],light_position[1],light_position[2]);
+    //set color light in geometry shader (white)
     f->glUniform3f(GPUlightColor,1,1,1);
 
-
-
-    // Draw the triangle
     f->glBindVertexArray(VAO);
 
-
-
     if(isDrawFaces)
     {
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-        f->glUniform3f(GPUobjectColor, 0.5f, 0.5f, 0.5f);
+
+        //draw faces first mesh
+        f->glUniform3f(GPUobjectColor, 0.5f, 0.5f, 0.5f);   //color of faces first mesh
         f->glDrawArrays(GL_TRIANGLES , 0, sizeDrawVertexFirstObject/6);
 
-//        if(drawSecondObject->fn!=0)
-//        {
-            f->glUniform3f(GPUobjectColor, 0.0f, 0.5f, 1.0f);
-            f->glDrawArrays(GL_TRIANGLES , sizeDrawVertexFirstObject/6, sizeDrawVertex/6);
-       // }
+        //draw faces second mesh
+        f->glUniform3f(GPUobjectColor, 0.0f, 0.5f, 1.0f);   //color of faces second mesh
+        f->glDrawArrays(GL_TRIANGLES , sizeDrawVertexFirstObject/6, sizeDrawVertex/6);
     }
 
     if(isDrawGrid)
     {
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        f->glUniform3f(GPUobjectColor, 0.0f, 0.0f, 0.7f);
+
+        //draw grid first mesh
+        f->glUniform3f(GPUobjectColor, 0.0f, 0.0f, 0.7f);   //color of grid first mesh
         f->glDrawArrays(GL_TRIANGLES , 0, sizeDrawVertexFirstObject/6);
 
-//        if(drawSecondObject->fn!=0)
-//        {
-            f->glUniform3f(GPUobjectColor, 0.0f, 1.0f, 0.0f);
-            f->glDrawArrays(GL_TRIANGLES , sizeDrawVertexFirstObject/6, sizeDrawVertex/6);
-      //  }
+        //draw grid second mesh
+        f->glUniform3f(GPUobjectColor, 0.0f, 1.0f, 0.0f);//color of grid second mesh
+        f->glDrawArrays(GL_TRIANGLES , sizeDrawVertexFirstObject/6, sizeDrawVertex/6);
     }
 
-
-
-    //  f->glDrawArrays(GL_LINES , 0, sizeDrawVertex/3);
     f->glBindVertexArray(0);
-
-    // Swap the screen buffers
-    //  f-> doubleBuffer();
-
-
-
-
-    return;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    return ;
-    //  projection.setToIdentity();
-
-
-    //    projection.perspective(fov, aspect, minMaxXYZ[4]-perspectiveScale*abs((minMaxXYZ[4]+minMaxXYZ[5])),minMaxXYZ[5]+perspectiveScale*abs((minMaxXYZ[4]+minMaxXYZ[5])));
-
-
-    glOrtho(-maxOrigin*scaleWheel*aspect,maxOrigin*scaleWheel*aspect,
-            -maxOrigin*scaleWheel,maxOrigin*scaleWheel,
-            -maxOrigin*scaleWheel,maxOrigin*scaleWheel);
-    // gluPerspective(20, aspect, -maxOrigin*scaleWheel, maxOrigin*scaleWheel);
-    //  qDebug()<<"Scale wheel= "<<scaleWheel;
-
-
-    matrix.setToIdentity();
-    matrix.rotate(rotation);
-    // matrix.translate(translateX,translateY,0);
-
-    // matrix.scale(scaleWheel,-scaleWheel,scaleWheel);
-    // glMatrixMode(GL_MODELVIEW);
-    // glLoadIdentity();
-
-    glMultMatrixf(matrix.constData());
-
-
-    // glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
-
-    if(isLight)
-    {
-        glLightModelf(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
-
-        glEnable(GL_LIGHTING);
-        // glLightModelf(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
-
-        glEnable(GL_LIGHT0);
-        glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
-        glLightfv(GL_LIGHT0, GL_POSITION, light_position);
-        glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
-        // glLightfv(GL_LIGHT0, GL_SPECULAR, light_ambient);
-
-        glEnable(GL_LIGHT1);
-        glLightfv(GL_LIGHT1, GL_DIFFUSE, light_diffuse);
-        glLightfv(GL_LIGHT1, GL_POSITION, light_position2);
-        glLightfv(GL_LIGHT1, GL_AMBIENT, light_ambient);
-        glLightfv(GL_LIGHT1, GL_SPECULAR, light_ambient);
-
-    }
-    else{
-        glDisable(GL_LIGHT0);
-        glDisable(GL_LIGHT1);
-        glDisable(GL_LIGHTING);
-    }
-
-    if(isDrawGrid)
-    {
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-        glColor3f(std::get<0>(MESH1_GRID_COLOR),std::get<1>(MESH1_GRID_COLOR),std::get<2>(MESH1_GRID_COLOR));  // outline color (orange)
-        drawFirstMesh();
-
-        glColor3f(std::get<0>(MESH2_GRID_COLOR),std::get<1>(MESH2_GRID_COLOR),std::get<2>(MESH2_GRID_COLOR));  // outline color (red)
-        drawSecondMesh();
-    }
-    if(isDrawFaces)
-    {
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-        glColor3f(std::get<0>(MESH1_FACES_COLOR),std::get<1>(MESH1_FACES_COLOR),std::get<2>(MESH1_FACES_COLOR));  // filling color (grey)
-        drawFirstMesh();
-
-        glColor3f(std::get<0>(MESH2_FACES_COLOR),std::get<1>(MESH2_FACES_COLOR),std::get<2>(MESH2_FACES_COLOR));   // filling color (grey)
-        drawSecondMesh();
-    }
-
-    doubleBuffer();
 }
 
 
@@ -502,42 +365,6 @@ void OpenGlViewer::findMinMaxForStl(MyMesh *_object)
     }
 }
 
-//void OpenGlViewer::compareObjects()
-//{
-////    qDebug()<<"COmpare first object start";
-////    for(int i=0;i<testFirstObject.vn;++i)
-////    {
-////        if(testFirstObject.vert[i].P().X()-(*drawFirstObject).vert[i].P().X()!=0)
-////        {
-////            qDebug()<<"["<<i<<"]="<<testFirstObject.vert[i].P().X()-(*drawFirstObject).vert[i].P().X();
-////        }
-////    }
-////       qDebug()<<"COmpare first object finished";
-
-//       qDebug()<<"COmpare second object start";
-//       for(int i=0;i<testSecondObject.vn;++i)
-//       {
-//           if(testSecondObject.vert[i].P().X()-(*drawSecondObject).vert[i].P().X()!=0)
-//           {
-//               qDebug()<<"["<<i<<"]="<<testSecondObject.vert[i].P().X()-(*drawSecondObject).vert[i].P().X();
-//           }
-//       }
-//          qDebug()<<"COmpare second object finished";
-//}
-
-//void OpenGlViewer::coutMatrix(vcg::Matrix44d *resultTransformMatrix)
-//{
-//    qDebug()<<"Matrix cout start:";
-//    for(int i=0;i<4;++i)
-//    {
-//        for(int j=0;j<4;++j)
-//        {
-//            qDebug()<<"Element["<<i<<","<<j<<"]="<<resultTransformMatrix->ElementAt(i,j);
-//        }
-//    }
-//    qDebug()<<"Matrix cout end:";
-//}
-
 QString OpenGlViewer::vcgMatrixToString(const vcg::Matrix44d &resultTransformMatrix)
 {
     QString result;
@@ -578,21 +405,18 @@ void OpenGlViewer::InitMaxOrigin()
     if(maxOrigin<distanceZ)
         maxOrigin=distanceZ;
 
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    glTranslatef(-(minMaxXYZ[1] + minMaxXYZ[0])/2.0f,-(minMaxXYZ[3] + minMaxXYZ[2])/2.0f,-(minMaxXYZ[4] + minMaxXYZ[5])/2.0f);
+  //  glMatrixMode(GL_MODELVIEW);
+  //  glLoadIdentity();
+    //glTranslatef(-(minMaxXYZ[1] + minMaxXYZ[0])/2.0f,-(minMaxXYZ[3] + minMaxXYZ[2])/2.0f,-(minMaxXYZ[4] + minMaxXYZ[5])/2.0f);
 
 }
 
 void OpenGlViewer::updateDrawVertex()
 {
 
-
-    // return;
     if(drawVertex!=nullptr)
         delete[] drawVertex;
 
-    // sizeDrawVertex=12*(drawFirstObject->face.size()+drawSecondObject->face.size());
     int n=18;
 
     sizeDrawVertex=n*(drawFirstObject->face.size()+drawSecondObject->face.size());
@@ -601,12 +425,10 @@ void OpenGlViewer::updateDrawVertex()
     drawVertex=new GLfloat[sizeDrawVertex];
 
 
-
     sizeDrawVertexFirstObject=drawFirstObject->face.size();
 
     for(int i=0;i<sizeDrawVertexFirstObject;++i)
     {
-
         drawVertex[n*i  ]=(*drawFirstObject).face[i].P0(0).X();
         drawVertex[n*i+1]=(*drawFirstObject).face[i].P0(0).Y();
         drawVertex[n*i+2]=(*drawFirstObject).face[i].P0(0).Z();
@@ -630,31 +452,11 @@ void OpenGlViewer::updateDrawVertex()
         drawVertex[n*i+15]=(*drawFirstObject).face[i].N().X();
         drawVertex[n*i+16]=(*drawFirstObject).face[i].N().Y();
         drawVertex[n*i+17]=(*drawFirstObject).face[i].N().Z();
-
-        //        drawVertex[12*i  ]=(*drawFirstObject).face[i].P0(0).X();
-        //        drawVertex[12*i+1]=(*drawFirstObject).face[i].P0(0).Y();
-        //        drawVertex[12*i+2]=(*drawFirstObject).face[i].P0(0).Z();
-
-        //        drawVertex[12*i+3]=(*drawFirstObject).face[i].P0(1).X();
-        //        drawVertex[12*i+4]=(*drawFirstObject).face[i].P0(1).Y();
-        //        drawVertex[12*i+5]=(*drawFirstObject).face[i].P0(1).Z();
-
-        //        drawVertex[12*i+6]=(*drawFirstObject).face[i].P0(2).X();
-        //        drawVertex[12*i+7]=(*drawFirstObject).face[i].P0(2).Y();
-        //        drawVertex[12*i+8]=(*drawFirstObject).face[i].P0(2).Z();
-
-        //        drawVertex[12*i+9 ]=(*drawFirstObject).face[i].P0(0).X();
-        //        drawVertex[12*i+10]=(*drawFirstObject).face[i].P0(0).Y();
-        //        drawVertex[12*i+11]=(*drawFirstObject).face[i].P0(0).Z();
-
-        //        qDebug()<<"Triangle "<<i;
-        //        qDebug()<<"("<<drawVertex[i  ]<<"; "<<drawVertex[i+1]<<"; "<<drawVertex[i+2]<<";)";
-        //        qDebug()<<"("<<drawVertex[i+3 ]<<"; "<<drawVertex[i+4]<<"; "<<drawVertex[i+5]<<";)";
-        //        qDebug()<<"("<<drawVertex[i+6]<<"; "<<drawVertex[i+7]<<"; "<<drawVertex[i+8]<<";)";
-
     }
     sizeDrawVertexFirstObject*=n;
+
     int  size2=drawSecondObject->face.size();
+
     for(int i=0;i<size2;++i)
     {
         drawVertex[sizeDrawVertexFirstObject + n*i  ]=(*drawSecondObject).face[i].P0(0).X();
@@ -683,13 +485,9 @@ void OpenGlViewer::updateDrawVertex()
     }
 
 
-     f->glBufferData(GL_ARRAY_BUFFER,  sizeDrawVertex * sizeof(GLfloat), NULL, GL_STATIC_DRAW);
+    f->glBufferData(GL_ARRAY_BUFFER,  sizeDrawVertex * sizeof(GLfloat), NULL, GL_STATIC_DRAW);
     f->glBufferData(GL_ARRAY_BUFFER,  sizeDrawVertex * sizeof(GLfloat), drawVertex, GL_STATIC_DRAW);
-    //  m_vbo->allocate(drawVertex, sizeDrawVertex * sizeof(GLfloat));
-
-
-
-
+    update();
 }
 
 void OpenGlViewer::exportAsMLP(QString filename)
@@ -768,19 +566,9 @@ void OpenGlViewer::drawSecondMesh()
 
 bool OpenGlViewer::setFirstMesh(QString path, bool isNeedToDraw)
 {
-    //    vertices[1]=-1;
-    //    vertices[0]=5;
-    //    f->glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-    //    update();
-    //     vertices = {
-    //        // Positions
-    //        0.5f, -0.5f, 0.0f,  // Bottom Right
-    //        -0.5f, -0.5f, 0.0f,  // Bottom Left
-    //        0.0f,  0.5f, 0.0f   // Top
-    //    };
 
     if(drawFirstObject!=nullptr)
-         delete drawFirstObject;
+        delete drawFirstObject;
     drawFirstObject=new MyMesh();
 
     if(vcg::tri::io::Importer<MyMesh>::Open(*drawFirstObject,path.toLocal8Bit())) { // all the importers return 0 in case of success
@@ -796,7 +584,6 @@ bool OpenGlViewer::setFirstMesh(QString path, bool isNeedToDraw)
     {
         InitMaxOrigin();
         updateDrawVertex();
-        update();
     }
     return true;
 }
@@ -810,7 +597,7 @@ bool OpenGlViewer::setSecondMesh(QString path,bool isNeedToDraw)
         return false;
     }
     if(drawSecondObject!=nullptr)
-    delete drawSecondObject;
+        delete drawSecondObject;
     drawSecondObject=new MyMesh();
 
     if(vcg::tri::io::Importer<MyMesh>::Open(*drawSecondObject,path.toLocal8Bit())) { // all the importers return 0 in case of success
@@ -825,7 +612,6 @@ bool OpenGlViewer::setSecondMesh(QString path,bool isNeedToDraw)
     {
         InitMaxOrigin();
         updateDrawVertex();
-        update();
     }
     return true;
 }
@@ -987,7 +773,7 @@ void OpenGlViewer::alignSecondMesh(vcg::Matrix44d * resultTransformMatrix=nullpt
             (*isVisible)=true;
         emit setDistanceInLabel(QString("Distance:\ndd="+QString::number(distance.first)+"\ndd="+QString::number(distance.first)));
     }
-    update();
+    updateDrawVertex();
     QApplication::restoreOverrideCursor();
 }
 
@@ -1007,7 +793,7 @@ void OpenGlViewer::appendSecondMeshToFirst()
     (*drawSecondObject).face.clear();
     (*drawSecondObject).vert.clear();
     emit setDistanceInLabel(QString(""));
-    update();
+    updateDrawVertex();
     QApplication::restoreOverrideCursor();
 }
 
@@ -1087,6 +873,42 @@ void OpenGlViewer::openAlignFile()
     exportAsMLP(exportPath);
 
     InitMaxOrigin();
-    update();
+    updateDrawVertex();
 }
 
+
+//void OpenGlViewer::compareObjects()
+//{
+////    qDebug()<<"COmpare first object start";
+////    for(int i=0;i<testFirstObject.vn;++i)
+////    {
+////        if(testFirstObject.vert[i].P().X()-(*drawFirstObject).vert[i].P().X()!=0)
+////        {
+////            qDebug()<<"["<<i<<"]="<<testFirstObject.vert[i].P().X()-(*drawFirstObject).vert[i].P().X();
+////        }
+////    }
+////       qDebug()<<"COmpare first object finished";
+
+//       qDebug()<<"COmpare second object start";
+//       for(int i=0;i<testSecondObject.vn;++i)
+//       {
+//           if(testSecondObject.vert[i].P().X()-(*drawSecondObject).vert[i].P().X()!=0)
+//           {
+//               qDebug()<<"["<<i<<"]="<<testSecondObject.vert[i].P().X()-(*drawSecondObject).vert[i].P().X();
+//           }
+//       }
+//          qDebug()<<"COmpare second object finished";
+//}
+
+//void OpenGlViewer::coutMatrix(vcg::Matrix44d *resultTransformMatrix)
+//{
+//    qDebug()<<"Matrix cout start:";
+//    for(int i=0;i<4;++i)
+//    {
+//        for(int j=0;j<4;++j)
+//        {
+//            qDebug()<<"Element["<<i<<","<<j<<"]="<<resultTransformMatrix->ElementAt(i,j);
+//        }
+//    }
+//    qDebug()<<"Matrix cout end:";
+//}
