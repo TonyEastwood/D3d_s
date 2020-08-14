@@ -73,6 +73,8 @@ private:
 
     void InitMaxOrigin();
 
+    void updateDrawVertex();
+
     void drawFirstMesh();
     void drawSecondMesh();
 
@@ -81,7 +83,8 @@ private:
 private:
     const uint COUNT_ALIGN_CYCLES=5;
     const double ERROR_ALIGN=0.021f;
-
+    GLfloat * drawVertex;
+       int sizeDrawVertex;
     GLuint VBO, VAO;
     const QColor BACKGROUND_COLOR=QColor(181,150, 235); //White background
     GLuint shaderProgram;
@@ -103,6 +106,7 @@ private:
 
 
 private:
+     QOpenGLExtraFunctions *f;
     // QMatrix4x4 projection;      //matrix that save all mesh transformations
 
     QVector2D mousePressPosition;       //save mouse position

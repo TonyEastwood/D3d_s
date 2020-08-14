@@ -12,7 +12,7 @@ const GLchar* vertexShaderSource = "#version 330 core\n"
                                    "out vec3 ourColor;\n"
                                    "void main()\n"
                                    "{\n"
-                                    "vec4 tempPos = vec4(position, 1.0);\n"
+                                   "vec4 tempPos = vec4(position, 1.0);\n"
                                    "gl_Position = projMatrix * transMatrix*  tempPos;\n"
                                    "ourColor = color;\n"
                                    "}\0";
@@ -23,7 +23,12 @@ const GLchar* fragmentShaderSource = "#version 330 core\n"
                                      "{\n"
                                      "color = ourColor;\n"
                                      "}\n\0";
-
+//GLfloat vertices[] = {
+//    // Positions
+//    0.5f, -0.5f, 0.0f,  // Bottom Right
+//    -0.5f, -0.5f, 0.0f,  // Bottom Left
+//    0.0f,  0.5f, 0.0f   // Top
+//};
 OpenGlViewer::OpenGlViewer( QWidget *parent)
     : QGLWidget(parent) {
 
@@ -31,6 +36,10 @@ OpenGlViewer::OpenGlViewer( QWidget *parent)
 
     rotation.setVector(0,0,0);
     // rotationAxis=QVector3D(0,0,0);
+
+    sizeDrawVertex=0;
+
+    drawVertex=nullptr;
 
     translateX=0;
     translateY=0;
@@ -93,9 +102,9 @@ OpenGlViewer::~OpenGlViewer() {
 
 void OpenGlViewer::initializeGL() {
 
-initializeOpenGLFunctions();
+    initializeOpenGLFunctions();
 
-    QOpenGLExtraFunctions *f = QOpenGLContext::currentContext()->extraFunctions();
+    f = QOpenGLContext::currentContext()->extraFunctions();
 
     GLuint vertexShader=f->glCreateShader(GL_VERTEX_SHADER);
     f->glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
@@ -136,12 +145,7 @@ initializeOpenGLFunctions();
 
 
     // Set up vertex data (and buffer(s)) and attribute pointers
-    GLfloat vertices[] = {
-        // Positions
-        0.5f, -0.5f, 0.0f,  // Bottom Right
-        -0.5f, -0.5f, 0.0f,  // Bottom Left
-        0.0f,  0.5f, 0.0f   // Top
-    };
+
 
     f->glGenVertexArrays(1, &VAO);
 
@@ -151,7 +155,7 @@ initializeOpenGLFunctions();
     f->glBindVertexArray(VAO);
 
     f->glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    f->glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    //  f->glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
     // Position attribute
     f->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
@@ -193,44 +197,51 @@ void OpenGlViewer::paintGL() {
 
     // Now use QOpenGLExtraFunctions instead of QOpenGLFunctions as we want to
     // do more than what GL(ES) 2.0 offers.
-     QOpenGLExtraFunctions *f  = QOpenGLContext::currentContext()->extraFunctions();
+    f  = QOpenGLContext::currentContext()->extraFunctions();
 
     f->glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-          f->glClear(GL_COLOR_BUFFER_BIT);
+    f->glClear(GL_COLOR_BUFFER_BIT);
 
 
 
-          // Be sure to activate the shader
-           f->glUseProgram(shaderProgram);
+    // Be sure to activate the shader
+    f->glUseProgram(shaderProgram);
 
-          // Update the uniform color
+    // Update the uniform color
 
-          GLfloat greenValue = 150;
-          GLint vertexColorLocation =  f->glGetUniformLocation(shaderProgram, "ourColor");
-           f->glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
+    GLfloat greenValue = 150;
+    GLint vertexColorLocation =  f->glGetUniformLocation(shaderProgram, "ourColor");
+    f->glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
 
-           m_transform.setToIdentity();
-           m_transform.rotate(rotation);
+    m_transform.setToIdentity();
+    // m_transform.translate(-(minMaxXYZ[1] + minMaxXYZ[0])/2.0f,-(minMaxXYZ[3] + minMaxXYZ[2])/2.0f,-(minMaxXYZ[4] + minMaxXYZ[5])/2.0f);
+    m_transform.rotate(rotation);
 
-           m_projection.setToIdentity();
-           m_projection.ortho(-5*scaleWheel,5*scaleWheel,5*scaleWheel,-5*scaleWheel,-5*scaleWheel,5*scaleWheel);
+    m_projection.setToIdentity();
 
-           GLint transformMatrix =  f->glGetUniformLocation(shaderProgram, "transMatrix");
-           // f->glUniform4f(projMatrix, &m_proj);
-            f->glUniformMatrix4fv(transformMatrix,1,GL_FALSE,m_transform.constData());
-
-            GLint projMatrix =  f->glGetUniformLocation(shaderProgram, "projMatrix");
-            // f->glUniform4f(projMatrix, &m_proj);
-             f->glUniformMatrix4fv(projMatrix,1,GL_FALSE,m_projection.constData());
+    //   m_projection.translate(-1,0,0);
+    m_projection.ortho(-maxOrigin*scaleWheel*aspect,maxOrigin*scaleWheel*aspect,
+                       -maxOrigin*scaleWheel,maxOrigin*scaleWheel,
+                       -maxOrigin*scaleWheel,maxOrigin*scaleWheel);
 
 
-          // Draw the triangle
-           f->glBindVertexArray(VAO);
-           f->glDrawArrays(GL_TRIANGLES, 0, 3);
-           f->glBindVertexArray(0);
 
-          // Swap the screen buffers
-        //  f-> doubleBuffer();
+    GLint transformMatrix =  f->glGetUniformLocation(shaderProgram, "transMatrix");
+    // f->glUniform4f(projMatrix, &m_proj);
+    f->glUniformMatrix4fv(transformMatrix,1,GL_FALSE,m_transform.constData());
+
+    GLint projMatrix =  f->glGetUniformLocation(shaderProgram, "projMatrix");
+    // f->glUniform4f(projMatrix, &m_proj);
+    f->glUniformMatrix4fv(projMatrix,1,GL_FALSE,m_projection.constData());
+
+
+    // Draw the triangle
+    f->glBindVertexArray(VAO);
+    f->glDrawArrays(GL_TRIANGLES, 0, sizeDrawVertex/3);
+    f->glBindVertexArray(0);
+
+    // Swap the screen buffers
+    //  f-> doubleBuffer();
 
 
 
@@ -507,6 +518,188 @@ void OpenGlViewer::InitMaxOrigin()
 
 }
 
+void OpenGlViewer::updateDrawVertex()
+{
+//    sizeDrawVertex=72;
+
+//    drawVertex=new GLfloat[sizeDrawVertex];
+
+//    drawVertex[0]=  -1     ;
+//    drawVertex[1]=    -1   ;
+//    drawVertex[2]=      -1 ;    //+
+
+//    drawVertex[3]=  -1     ;
+//    drawVertex[4]=    -1   ;
+//    drawVertex[5]=      1 ;     //+
+
+//    drawVertex[6]= -1      ;
+//    drawVertex[7]=   1    ;
+//    drawVertex[8]=   1   ;  //+
+
+//    drawVertex[9]=   1    ;
+//    drawVertex[10]=  1     ;
+//    drawVertex[11]=  -1     ;   //+
+
+//    drawVertex[12]=   -1    ;
+//    drawVertex[13]=     -1  ;
+//    drawVertex[14]=       -1;//
+
+//    drawVertex[15]=   -1    ;
+//    drawVertex[16]=     1  ;
+//    drawVertex[17]=       -1;//
+
+//    drawVertex[18]=   1   ;
+//    drawVertex[19]=     -1  ;
+//    drawVertex[20]=      1;
+
+//    drawVertex[21]=   -1    ;
+//    drawVertex[22]=     -1  ;
+//    drawVertex[23]=       -1;
+
+//    drawVertex[24]= 1     ;
+//    drawVertex[25]=  -1    ;
+//    drawVertex[26]=    -1  ;
+
+//    drawVertex[27]=  1    ;
+//    drawVertex[28]=  -1   ;
+//    drawVertex[29]=    -1 ;
+
+//    drawVertex[30]=  1    ;
+//    drawVertex[31]=  1   ;
+//    drawVertex[32]=  -1   ;
+
+//    drawVertex[33]=   1   ;
+//    drawVertex[34]=    -1 ;
+//    drawVertex[35]=    -1 ;
+
+//    drawVertex[36]= -1     ;
+//    drawVertex[37]=  -1   ;
+//    drawVertex[38]= -1  ;
+
+//    drawVertex[39]=  -1    ;
+//    drawVertex[40]=    -1 ;
+//    drawVertex[41]=   -1;
+
+//    drawVertex[42]= -1     ;
+//    drawVertex[43]=  1   ;
+//    drawVertex[44]= 1  ;
+
+//    drawVertex[45]=   -1   ;
+//    drawVertex[46]=  1   ;
+//    drawVertex[47]=  -1 ;
+
+//    drawVertex[48]=  1    ;
+//    drawVertex[49]= -1    ;
+//    drawVertex[50]=   1;
+
+//    drawVertex[51]=   -1   ;
+//    drawVertex[52]=     -1;
+//    drawVertex[53]=   1;
+
+//    drawVertex[54]=   -1   ;
+//    drawVertex[55]=     -1;
+//    drawVertex[56]=   -1;
+
+//    drawVertex[57]=   -1   ;
+//    drawVertex[58]=     1;
+//    drawVertex[59]=   1;
+
+//    drawVertex[60]=  -1  ;
+//    drawVertex[61]=    -1 ;
+//    drawVertex[62]=  1 ;
+
+//    drawVertex[63]=  1  ;
+//    drawVertex[64]=  -1   ;
+//    drawVertex[65]=  1 ;
+
+//    drawVertex[66]= 1   ;
+//    drawVertex[67]=  1   ;
+//    drawVertex[68]= 1  ;
+
+//    drawVertex[69]=  1  ;
+//    drawVertex[70]=  -1   ;
+//    drawVertex[71]=   -1;
+
+
+
+//    1.0f, 1.0f,-1.0f,
+//    1.0f,-1.0f,-1.0f,
+//    1.0f, 1.0f, 1.0f,
+//    1.0f,-1.0f, 1.0f,
+//    1.0f, 1.0f, 1.0f,
+//    1.0f, 1.0f,-1.0f,
+//    -1.0f, 1.0f,-1.0f,
+//    1.0f, 1.0f, 1.0f,
+//    -1.0f, 1.0f,-1.0f,
+//    -1.0f, 1.0f, 1.0f,
+//    1.0f, 1.0f, 1.0f,
+//    -1.0f, 1.0f, 1.0f,
+//    1.0f,-1.0f, 1.0f
+
+
+
+   // maxOrigin=1;
+
+   // f->glBufferData(GL_ARRAY_BUFFER,  sizeDrawVertex * sizeof(GLfloat), drawVertex, GL_STATIC_DRAW);
+
+   // return;
+    if(drawVertex!=nullptr)
+        delete[] drawVertex;
+
+    sizeDrawVertex=9*(drawFirstObject->face.size()+drawSecondObject->face.size());
+
+    drawVertex=new GLfloat[sizeDrawVertex];
+
+
+
+    int size1=drawFirstObject->face.size();
+
+    for(int i=0;i<size1;++i)
+    {
+        drawVertex[9*i  ]=(*drawFirstObject).face[i].P0(0).X();
+        drawVertex[9*i+1]=(*drawFirstObject).face[i].P0(0).Y();
+        drawVertex[9*i+2]=(*drawFirstObject).face[i].P0(0).Z();
+
+        drawVertex[9*i+3]=(*drawFirstObject).face[i].P0(1).X();
+        drawVertex[9*i+4]=(*drawFirstObject).face[i].P0(1).Y();
+        drawVertex[9*i+5]=(*drawFirstObject).face[i].P0(1).Z();
+
+        drawVertex[9*i+6]=(*drawFirstObject).face[i].P0(2).X();
+        drawVertex[9*i+7]=(*drawFirstObject).face[i].P0(2).Y();
+        drawVertex[9*i+8]=(*drawFirstObject).face[i].P0(2).Z();
+
+//        qDebug()<<"Triangle "<<i;
+//        qDebug()<<"("<<drawVertex[i  ]<<"; "<<drawVertex[i+1]<<"; "<<drawVertex[i+2]<<";)";
+//        qDebug()<<"("<<drawVertex[i+3 ]<<"; "<<drawVertex[i+4]<<"; "<<drawVertex[i+5]<<";)";
+//        qDebug()<<"("<<drawVertex[i+6]<<"; "<<drawVertex[i+7]<<"; "<<drawVertex[i+8]<<";)";
+
+    }
+
+    int  size2=drawSecondObject->face.size();
+    for(int i=0;i<size2;++i)
+    {
+        drawVertex[size1+i]=(*drawSecondObject).face[i].P0(0).X();
+        drawVertex[size1+i+1]=(*drawSecondObject).face[i].P0(0).Y();
+        drawVertex[size1+i+2]=(*drawSecondObject).face[i].P0(0).Z();
+
+        drawVertex[size1+i+3]=(*drawSecondObject).face[i].P0(1).X();
+        drawVertex[size1+i+4]=(*drawSecondObject).face[i].P0(1).Y();
+        drawVertex[size1+i+5]=(*drawSecondObject).face[i].P0(1).Z();
+
+        drawVertex[size1+i+6]=(*drawSecondObject).face[i].P0(2).X();
+        drawVertex[size1+i+7]=(*drawSecondObject).face[i].P0(2).Y();
+        drawVertex[size1+i+8]=(*drawSecondObject).face[i].P0(2).Z();
+    }
+
+
+
+    f->glBufferData(GL_ARRAY_BUFFER,  sizeDrawVertex * sizeof(GLfloat), drawVertex, GL_STATIC_DRAW);
+    //  m_vbo->allocate(drawVertex, sizeDrawVertex * sizeof(GLfloat));
+
+
+
+}
+
 void OpenGlViewer::exportAsMLP(QString filename)
 {
     if(vectorContentMLP.empty() || filename.isEmpty())
@@ -583,6 +776,20 @@ void OpenGlViewer::drawSecondMesh()
 
 bool OpenGlViewer::setFirstMesh(QString path, bool isNeedToDraw)
 {
+    //    vertices[1]=-1;
+    //    vertices[0]=5;
+    //    f->glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    //    update();
+    //     vertices = {
+    //        // Positions
+    //        0.5f, -0.5f, 0.0f,  // Bottom Right
+    //        -0.5f, -0.5f, 0.0f,  // Bottom Left
+    //        0.0f,  0.5f, 0.0f   // Top
+    //    };
+
+
+
+
     if(vcg::tri::io::Importer<MyMesh>::Open(*drawFirstObject,path.toLocal8Bit())) { // all the importers return 0 in case of success
         printf("Error in reading %s: '%s'\n");
         // QMessageBox::warning(this,"Error", "Can't open file "+path);
@@ -595,6 +802,7 @@ bool OpenGlViewer::setFirstMesh(QString path, bool isNeedToDraw)
     if(isNeedToDraw)
     {
         InitMaxOrigin();
+        updateDrawVertex();
         update();
     }
     return true;
