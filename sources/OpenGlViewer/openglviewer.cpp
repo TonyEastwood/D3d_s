@@ -405,8 +405,8 @@ void OpenGlViewer::InitMaxOrigin()
     if(maxOrigin<distanceZ)
         maxOrigin=distanceZ;
 
-  //  glMatrixMode(GL_MODELVIEW);
-  //  glLoadIdentity();
+    //  glMatrixMode(GL_MODELVIEW);
+    //  glLoadIdentity();
     //glTranslatef(-(minMaxXYZ[1] + minMaxXYZ[0])/2.0f,-(minMaxXYZ[3] + minMaxXYZ[2])/2.0f,-(minMaxXYZ[4] + minMaxXYZ[5])/2.0f);
 
 }
@@ -569,12 +569,16 @@ bool OpenGlViewer::setFirstMesh(QString path, bool isNeedToDraw)
 
     if(drawFirstObject!=nullptr)
         delete drawFirstObject;
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+
+
     drawFirstObject=new MyMesh();
 
     if(vcg::tri::io::Importer<MyMesh>::Open(*drawFirstObject,path.toLocal8Bit())) { // all the importers return 0 in case of success
         printf("Error in reading %s: '%s'\n");
         // QMessageBox::warning(this,"Error", "Can't open file "+path);
         drawFirstObject->Clear();
+        QApplication::restoreOverrideCursor();
         return false;
     }
 
@@ -585,6 +589,7 @@ bool OpenGlViewer::setFirstMesh(QString path, bool isNeedToDraw)
         InitMaxOrigin();
         updateDrawVertex();
     }
+    QApplication::restoreOverrideCursor();
     return true;
 }
 
@@ -598,12 +603,15 @@ bool OpenGlViewer::setSecondMesh(QString path,bool isNeedToDraw)
     }
     if(drawSecondObject!=nullptr)
         delete drawSecondObject;
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+
     drawSecondObject=new MyMesh();
 
     if(vcg::tri::io::Importer<MyMesh>::Open(*drawSecondObject,path.toLocal8Bit())) { // all the importers return 0 in case of success
         drawSecondObject->Clear();
         printf("Error in reading %s: '%s'\n");
         // QMessageBox::warning(this,"Error", "Can't open file "+path);
+        QApplication::restoreOverrideCursor();
         return false;
     }
     vcg::tri::UpdateNormal<MyMesh>::PerVertexNormalizedPerFace(*drawSecondObject);
@@ -613,7 +621,9 @@ bool OpenGlViewer::setSecondMesh(QString path,bool isNeedToDraw)
         InitMaxOrigin();
         updateDrawVertex();
     }
+    QApplication::restoreOverrideCursor();
     return true;
+
 }
 
 void OpenGlViewer::setLight(bool value)
