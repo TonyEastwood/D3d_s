@@ -86,11 +86,13 @@ private:
     GLfloat * drawVertex;
        int sizeDrawVertex;
     GLuint VBO, VAO;
-    const QColor BACKGROUND_COLOR=QColor(181,150, 235); //White background
+//    const QColor BACKGROUND_COLOR=QColor(181,150, 235); //White background
+    const GLclampf BACKGROUND_COLOR[3]={0.709,0.588, 0.921}; //White background
     GLuint shaderProgram;
     QOpenGLBuffer *m_vbo = nullptr;
     QOpenGLVertexArrayObject *m_vao = nullptr;
 
+    uint sizeDrawVertexFirstObject=0;
 
     QOpenGLShaderProgram *m_program = nullptr;
     const std::tuple<float,float,float> MESH1_FACES_COLOR={0.5f, 0.5f, 0.5f}; //color faces mesh1

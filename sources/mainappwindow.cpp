@@ -41,13 +41,13 @@ MainAppWindow::MainAppWindow(  QWidget *parent)
 
     QLabel * drawGrid=new QLabel("Enable Grid");
     QLabel * drawFace=new QLabel("Enable Faces");
-    QLabel * lightLabel=new QLabel("Enable Light");
+   // QLabel * lightLabel=new QLabel("Enable Light");
 
     QLabel * distanceLabel=new QLabel("");
 
     drawGrid->setFont(font);
     drawFace->setFont(font);
-    lightLabel->setFont(font);
+   // lightLabel->setFont(font);
 
     QPushButton * buttonAlign=new QPushButton("Align pair");
     QPushButton * buttonMerge=new QPushButton("Merge objects");
@@ -72,8 +72,8 @@ MainAppWindow::MainAppWindow(  QWidget *parent)
     horizLay2->addWidget(drawFace);
     horizLay2->addWidget(isFaceGrid);
 
-    horizLay3->addWidget(lightLabel);
-    horizLay3->addWidget(isLightOn);
+   // horizLay3->addWidget(lightLabel);
+   // horizLay3->addWidget(isLightOn);
 
     horizLay->setContentsMargins(0,0,5,0);
     horizLay->setSpacing(5);
@@ -92,7 +92,7 @@ MainAppWindow::MainAppWindow(  QWidget *parent)
 
     drawGrid->setAlignment(Qt::AlignTop);
     drawFace->setAlignment(Qt::AlignBottom);
-    lightLabel->setAlignment(Qt::AlignTop);
+   // lightLabel->setAlignment(Qt::AlignTop);
 
 
     //     isFaceGrid->setAlignment(Qt::AlignTop);
