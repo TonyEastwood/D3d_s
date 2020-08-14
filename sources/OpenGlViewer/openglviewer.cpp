@@ -163,7 +163,10 @@ void OpenGlViewer::initializeGL() {
 
     f->glBindVertexArray(0); // Unbind VAO
 
-
+//   f->glDepthFunc(GL_LEQUAL);   // buff deep
+  // f->glEnable(GL_DEPTH_TEST);  // line that we can't see - become invisible
+   f->glEnable(GL_COLOR_MATERIAL);
+   f->glEnable(GL_NORMALIZE);
     // Game loop
 
     // Check if any events have been activiated (key pressed, mouse moved etc.) and call corresponding response functions
@@ -209,9 +212,8 @@ void OpenGlViewer::paintGL() {
 
     // Update the uniform color
 
-    GLfloat greenValue = 150;
     GLint vertexColorLocation =  f->glGetUniformLocation(shaderProgram, "ourColor");
-    f->glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
+    // f->glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
 
     m_transform.setToIdentity();
     // m_transform.translate(-(minMaxXYZ[1] + minMaxXYZ[0])/2.0f,-(minMaxXYZ[3] + minMaxXYZ[2])/2.0f,-(minMaxXYZ[4] + minMaxXYZ[5])/2.0f);
@@ -237,14 +239,59 @@ void OpenGlViewer::paintGL() {
 
     // Draw the triangle
     f->glBindVertexArray(VAO);
-    f->glDrawArrays(GL_TRIANGLES, 0, sizeDrawVertex/3);
+
+
+    if(isLight)
+    {
+        glLightModelf(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
+
+         f->glEnable(GL_LIGHTING);
+        // glLightModelf(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
+
+         f->glEnable(GL_LIGHT0);
+        glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
+        glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+        glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
+        // glLightfv(GL_LIGHT0, GL_SPECULAR, light_ambient);
+
+         f->glEnable(GL_LIGHT1);
+        glLightfv(GL_LIGHT1, GL_DIFFUSE, light_diffuse);
+        glLightfv(GL_LIGHT1, GL_POSITION, light_position2);
+        glLightfv(GL_LIGHT1, GL_AMBIENT, light_ambient);
+        glLightfv(GL_LIGHT1, GL_SPECULAR, light_ambient);
+
+    }
+    else{
+         f->glDisable(GL_LIGHT0);
+         f->glDisable(GL_LIGHT1);
+         f->glDisable(GL_LIGHTING);
+    }
+
+
+    if(isDrawFaces)
+    {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        f->glUniform4f(vertexColorLocation, 0.5f, 0.5f, 0.5f, 1.0f);
+        f->glDrawArrays(GL_TRIANGLES , 0, sizeDrawVertex/3);
+    }
+
+    if(isDrawGrid)
+    {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        f->glUniform4f(vertexColorLocation, 0.0f, 1.0f, 0.0f, 1.0f);
+        f->glDrawArrays(GL_TRIANGLES , 0, sizeDrawVertex/3);
+    }
+
+
+
+    //  f->glDrawArrays(GL_LINES , 0, sizeDrawVertex/3);
     f->glBindVertexArray(0);
 
     // Swap the screen buffers
     //  f-> doubleBuffer();
 
 
-
+   // doubleBuffer();
 
 
     return;
@@ -520,133 +567,135 @@ void OpenGlViewer::InitMaxOrigin()
 
 void OpenGlViewer::updateDrawVertex()
 {
-//    sizeDrawVertex=72;
+    //    sizeDrawVertex=72;
 
-//    drawVertex=new GLfloat[sizeDrawVertex];
+    //    drawVertex=new GLfloat[sizeDrawVertex];
 
-//    drawVertex[0]=  -1     ;
-//    drawVertex[1]=    -1   ;
-//    drawVertex[2]=      -1 ;    //+
+    //    drawVertex[0]=  -1     ;
+    //    drawVertex[1]=    -1   ;
+    //    drawVertex[2]=      -1 ;    //+
 
-//    drawVertex[3]=  -1     ;
-//    drawVertex[4]=    -1   ;
-//    drawVertex[5]=      1 ;     //+
+    //    drawVertex[3]=  -1     ;
+    //    drawVertex[4]=    -1   ;
+    //    drawVertex[5]=      1 ;     //+
 
-//    drawVertex[6]= -1      ;
-//    drawVertex[7]=   1    ;
-//    drawVertex[8]=   1   ;  //+
+    //    drawVertex[6]= -1      ;
+    //    drawVertex[7]=   1    ;
+    //    drawVertex[8]=   1   ;  //+
 
-//    drawVertex[9]=   1    ;
-//    drawVertex[10]=  1     ;
-//    drawVertex[11]=  -1     ;   //+
+    //    drawVertex[9]=   1    ;
+    //    drawVertex[10]=  1     ;
+    //    drawVertex[11]=  -1     ;   //+
 
-//    drawVertex[12]=   -1    ;
-//    drawVertex[13]=     -1  ;
-//    drawVertex[14]=       -1;//
+    //    drawVertex[12]=   -1    ;
+    //    drawVertex[13]=     -1  ;
+    //    drawVertex[14]=       -1;//
 
-//    drawVertex[15]=   -1    ;
-//    drawVertex[16]=     1  ;
-//    drawVertex[17]=       -1;//
+    //    drawVertex[15]=   -1    ;
+    //    drawVertex[16]=     1  ;
+    //    drawVertex[17]=       -1;//
 
-//    drawVertex[18]=   1   ;
-//    drawVertex[19]=     -1  ;
-//    drawVertex[20]=      1;
+    //    drawVertex[18]=   1   ;
+    //    drawVertex[19]=     -1  ;
+    //    drawVertex[20]=      1;
 
-//    drawVertex[21]=   -1    ;
-//    drawVertex[22]=     -1  ;
-//    drawVertex[23]=       -1;
+    //    drawVertex[21]=   -1    ;
+    //    drawVertex[22]=     -1  ;
+    //    drawVertex[23]=       -1;
 
-//    drawVertex[24]= 1     ;
-//    drawVertex[25]=  -1    ;
-//    drawVertex[26]=    -1  ;
+    //    drawVertex[24]= 1     ;
+    //    drawVertex[25]=  -1    ;
+    //    drawVertex[26]=    -1  ;
 
-//    drawVertex[27]=  1    ;
-//    drawVertex[28]=  -1   ;
-//    drawVertex[29]=    -1 ;
+    //    drawVertex[27]=  1    ;
+    //    drawVertex[28]=  -1   ;
+    //    drawVertex[29]=    -1 ;
 
-//    drawVertex[30]=  1    ;
-//    drawVertex[31]=  1   ;
-//    drawVertex[32]=  -1   ;
+    //    drawVertex[30]=  1    ;
+    //    drawVertex[31]=  1   ;
+    //    drawVertex[32]=  -1   ;
 
-//    drawVertex[33]=   1   ;
-//    drawVertex[34]=    -1 ;
-//    drawVertex[35]=    -1 ;
+    //    drawVertex[33]=   1   ;
+    //    drawVertex[34]=    -1 ;
+    //    drawVertex[35]=    -1 ;
 
-//    drawVertex[36]= -1     ;
-//    drawVertex[37]=  -1   ;
-//    drawVertex[38]= -1  ;
+    //    drawVertex[36]= -1     ;
+    //    drawVertex[37]=  -1   ;
+    //    drawVertex[38]= -1  ;
 
-//    drawVertex[39]=  -1    ;
-//    drawVertex[40]=    -1 ;
-//    drawVertex[41]=   -1;
+    //    drawVertex[39]=  -1    ;
+    //    drawVertex[40]=    -1 ;
+    //    drawVertex[41]=   -1;
 
-//    drawVertex[42]= -1     ;
-//    drawVertex[43]=  1   ;
-//    drawVertex[44]= 1  ;
+    //    drawVertex[42]= -1     ;
+    //    drawVertex[43]=  1   ;
+    //    drawVertex[44]= 1  ;
 
-//    drawVertex[45]=   -1   ;
-//    drawVertex[46]=  1   ;
-//    drawVertex[47]=  -1 ;
+    //    drawVertex[45]=   -1   ;
+    //    drawVertex[46]=  1   ;
+    //    drawVertex[47]=  -1 ;
 
-//    drawVertex[48]=  1    ;
-//    drawVertex[49]= -1    ;
-//    drawVertex[50]=   1;
+    //    drawVertex[48]=  1    ;
+    //    drawVertex[49]= -1    ;
+    //    drawVertex[50]=   1;
 
-//    drawVertex[51]=   -1   ;
-//    drawVertex[52]=     -1;
-//    drawVertex[53]=   1;
+    //    drawVertex[51]=   -1   ;
+    //    drawVertex[52]=     -1;
+    //    drawVertex[53]=   1;
 
-//    drawVertex[54]=   -1   ;
-//    drawVertex[55]=     -1;
-//    drawVertex[56]=   -1;
+    //    drawVertex[54]=   -1   ;
+    //    drawVertex[55]=     -1;
+    //    drawVertex[56]=   -1;
 
-//    drawVertex[57]=   -1   ;
-//    drawVertex[58]=     1;
-//    drawVertex[59]=   1;
+    //    drawVertex[57]=   -1   ;
+    //    drawVertex[58]=     1;
+    //    drawVertex[59]=   1;
 
-//    drawVertex[60]=  -1  ;
-//    drawVertex[61]=    -1 ;
-//    drawVertex[62]=  1 ;
+    //    drawVertex[60]=  -1  ;
+    //    drawVertex[61]=    -1 ;
+    //    drawVertex[62]=  1 ;
 
-//    drawVertex[63]=  1  ;
-//    drawVertex[64]=  -1   ;
-//    drawVertex[65]=  1 ;
+    //    drawVertex[63]=  1  ;
+    //    drawVertex[64]=  -1   ;
+    //    drawVertex[65]=  1 ;
 
-//    drawVertex[66]= 1   ;
-//    drawVertex[67]=  1   ;
-//    drawVertex[68]= 1  ;
+    //    drawVertex[66]= 1   ;
+    //    drawVertex[67]=  1   ;
+    //    drawVertex[68]= 1  ;
 
-//    drawVertex[69]=  1  ;
-//    drawVertex[70]=  -1   ;
-//    drawVertex[71]=   -1;
-
-
-
-//    1.0f, 1.0f,-1.0f,
-//    1.0f,-1.0f,-1.0f,
-//    1.0f, 1.0f, 1.0f,
-//    1.0f,-1.0f, 1.0f,
-//    1.0f, 1.0f, 1.0f,
-//    1.0f, 1.0f,-1.0f,
-//    -1.0f, 1.0f,-1.0f,
-//    1.0f, 1.0f, 1.0f,
-//    -1.0f, 1.0f,-1.0f,
-//    -1.0f, 1.0f, 1.0f,
-//    1.0f, 1.0f, 1.0f,
-//    -1.0f, 1.0f, 1.0f,
-//    1.0f,-1.0f, 1.0f
+    //    drawVertex[69]=  1  ;
+    //    drawVertex[70]=  -1   ;
+    //    drawVertex[71]=   -1;
 
 
 
-   // maxOrigin=1;
+    //    1.0f, 1.0f,-1.0f,
+    //    1.0f,-1.0f,-1.0f,
+    //    1.0f, 1.0f, 1.0f,
+    //    1.0f,-1.0f, 1.0f,
+    //    1.0f, 1.0f, 1.0f,
+    //    1.0f, 1.0f,-1.0f,
+    //    -1.0f, 1.0f,-1.0f,
+    //    1.0f, 1.0f, 1.0f,
+    //    -1.0f, 1.0f,-1.0f,
+    //    -1.0f, 1.0f, 1.0f,
+    //    1.0f, 1.0f, 1.0f,
+    //    -1.0f, 1.0f, 1.0f,
+    //    1.0f,-1.0f, 1.0f
 
-   // f->glBufferData(GL_ARRAY_BUFFER,  sizeDrawVertex * sizeof(GLfloat), drawVertex, GL_STATIC_DRAW);
 
-   // return;
+
+    // maxOrigin=1;
+
+    // f->glBufferData(GL_ARRAY_BUFFER,  sizeDrawVertex * sizeof(GLfloat), drawVertex, GL_STATIC_DRAW);
+
+    // return;
     if(drawVertex!=nullptr)
         delete[] drawVertex;
 
+    // sizeDrawVertex=12*(drawFirstObject->face.size()+drawSecondObject->face.size());
     sizeDrawVertex=9*(drawFirstObject->face.size()+drawSecondObject->face.size());
+
 
     drawVertex=new GLfloat[sizeDrawVertex];
 
@@ -656,6 +705,7 @@ void OpenGlViewer::updateDrawVertex()
 
     for(int i=0;i<size1;++i)
     {
+
         drawVertex[9*i  ]=(*drawFirstObject).face[i].P0(0).X();
         drawVertex[9*i+1]=(*drawFirstObject).face[i].P0(0).Y();
         drawVertex[9*i+2]=(*drawFirstObject).face[i].P0(0).Z();
@@ -668,10 +718,26 @@ void OpenGlViewer::updateDrawVertex()
         drawVertex[9*i+7]=(*drawFirstObject).face[i].P0(2).Y();
         drawVertex[9*i+8]=(*drawFirstObject).face[i].P0(2).Z();
 
-//        qDebug()<<"Triangle "<<i;
-//        qDebug()<<"("<<drawVertex[i  ]<<"; "<<drawVertex[i+1]<<"; "<<drawVertex[i+2]<<";)";
-//        qDebug()<<"("<<drawVertex[i+3 ]<<"; "<<drawVertex[i+4]<<"; "<<drawVertex[i+5]<<";)";
-//        qDebug()<<"("<<drawVertex[i+6]<<"; "<<drawVertex[i+7]<<"; "<<drawVertex[i+8]<<";)";
+        //        drawVertex[12*i  ]=(*drawFirstObject).face[i].P0(0).X();
+        //        drawVertex[12*i+1]=(*drawFirstObject).face[i].P0(0).Y();
+        //        drawVertex[12*i+2]=(*drawFirstObject).face[i].P0(0).Z();
+
+        //        drawVertex[12*i+3]=(*drawFirstObject).face[i].P0(1).X();
+        //        drawVertex[12*i+4]=(*drawFirstObject).face[i].P0(1).Y();
+        //        drawVertex[12*i+5]=(*drawFirstObject).face[i].P0(1).Z();
+
+        //        drawVertex[12*i+6]=(*drawFirstObject).face[i].P0(2).X();
+        //        drawVertex[12*i+7]=(*drawFirstObject).face[i].P0(2).Y();
+        //        drawVertex[12*i+8]=(*drawFirstObject).face[i].P0(2).Z();
+
+        //        drawVertex[12*i+9 ]=(*drawFirstObject).face[i].P0(0).X();
+        //        drawVertex[12*i+10]=(*drawFirstObject).face[i].P0(0).Y();
+        //        drawVertex[12*i+11]=(*drawFirstObject).face[i].P0(0).Z();
+
+        //        qDebug()<<"Triangle "<<i;
+        //        qDebug()<<"("<<drawVertex[i  ]<<"; "<<drawVertex[i+1]<<"; "<<drawVertex[i+2]<<";)";
+        //        qDebug()<<"("<<drawVertex[i+3 ]<<"; "<<drawVertex[i+4]<<"; "<<drawVertex[i+5]<<";)";
+        //        qDebug()<<"("<<drawVertex[i+6]<<"; "<<drawVertex[i+7]<<"; "<<drawVertex[i+8]<<";)";
 
     }
 
