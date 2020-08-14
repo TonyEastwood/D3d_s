@@ -109,7 +109,8 @@ private:
     // QVector3D rotationAxis;
 
     QQuaternion rotation;
-
+    QMatrix4x4 m_transform;
+    QMatrix4x4 m_projection;
     qreal aspect;
 
     std::vector<QStringList> vectorContentMLP;

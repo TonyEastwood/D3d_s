@@ -7,10 +7,13 @@ vcg::Box3d vcg::PointMatchingScale::b;
 const GLchar* vertexShaderSource = "#version 330 core\n"
                                    "layout (location = 0) in vec3 position;\n"
                                    "layout (location = 1) in vec3 color;\n"
+                                   "uniform mat4 projMatrix;\n"
+                                   "uniform mat4 transMatrix;\n"
                                    "out vec3 ourColor;\n"
                                    "void main()\n"
                                    "{\n"
-                                   "gl_Position = vec4(position, 1.0);\n"
+                                    "vec4 tempPos = vec4(position, 1.0);\n"
+                                   "gl_Position = projMatrix * transMatrix*  tempPos;\n"
                                    "ourColor = color;\n"
                                    "}\0";
 const GLchar* fragmentShaderSource = "#version 330 core\n"
@@ -195,6 +198,8 @@ void OpenGlViewer::paintGL() {
     f->glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
           f->glClear(GL_COLOR_BUFFER_BIT);
 
+
+
           // Be sure to activate the shader
            f->glUseProgram(shaderProgram);
 
@@ -203,6 +208,21 @@ void OpenGlViewer::paintGL() {
           GLfloat greenValue = 150;
           GLint vertexColorLocation =  f->glGetUniformLocation(shaderProgram, "ourColor");
            f->glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
+
+           m_transform.setToIdentity();
+           m_transform.rotate(rotation);
+
+           m_projection.setToIdentity();
+           m_projection.ortho(-5*scaleWheel,5*scaleWheel,5*scaleWheel,-5*scaleWheel,-5*scaleWheel,5*scaleWheel);
+
+           GLint transformMatrix =  f->glGetUniformLocation(shaderProgram, "transMatrix");
+           // f->glUniform4f(projMatrix, &m_proj);
+            f->glUniformMatrix4fv(transformMatrix,1,GL_FALSE,m_transform.constData());
+
+            GLint projMatrix =  f->glGetUniformLocation(shaderProgram, "projMatrix");
+            // f->glUniform4f(projMatrix, &m_proj);
+             f->glUniformMatrix4fv(projMatrix,1,GL_FALSE,m_projection.constData());
+
 
           // Draw the triangle
            f->glBindVertexArray(VAO);
