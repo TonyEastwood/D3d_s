@@ -38,7 +38,8 @@ const GLchar* fragmentShaderSource = "#version 330 core\n"
                                        "vec3 ambient = 0.1f *lightColor;\n"
 
                                      "vec3 norm =normalize(Normal);\n"
-                                     "vec3 lightDir =normalize(LightPosition-FragPos);\n"
+                                     //"vec3 lightDir =normalize(LightPosition-FragPos);\n"
+                                      "vec3 lightDir =normalize(vec3(0.5,0.5,0.5));\n"
 
                                       "float diff=max(dot(norm,lightDir),0.0);\n"
                                       "vec3 diffuse=diff*lightColor;\n"
@@ -249,8 +250,9 @@ void OpenGlViewer::paintGL() {
     // f->glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
 
     m_transform.setToIdentity();
-    // m_transform.translate(-(minMaxXYZ[1] + minMaxXYZ[0])/2.0f,-(minMaxXYZ[3] + minMaxXYZ[2])/2.0f,-(minMaxXYZ[4] + minMaxXYZ[5])/2.0f);
-    m_transform.rotate(rotation);
+     m_transform.rotate(rotation);
+     m_transform.translate(-(minMaxXYZ[1] + minMaxXYZ[0])/2.0f,-(minMaxXYZ[3] + minMaxXYZ[2])/2.0f,-(minMaxXYZ[4] + minMaxXYZ[5])/2.0f);
+
 
     m_projection.setToIdentity();
 
