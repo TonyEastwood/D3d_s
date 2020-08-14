@@ -6,23 +6,50 @@ vcg::Box3d vcg::PointMatchingScale::b;
 
 const GLchar* vertexShaderSource = "#version 330 core\n"
                                    "layout (location = 0) in vec3 position;\n"
-                                   "layout (location = 1) in vec3 color;\n"
+                                   "layout(location = 1) in vec3 normal;\n"
                                    "uniform mat4 projMatrix;\n"
                                    "uniform mat4 transMatrix;\n"
-                                   "out vec3 ourColor;\n"
+                                  // "out vec3 ourColor;\n"
+                                   "out vec3 Normal;\n"
+                                   "out vec3 FragPos;\n"
+
                                    "void main()\n"
                                    "{\n"
                                    "vec4 tempPos = vec4(position, 1.0);\n"
+                                    "Normal =normal;\n"
+                                 "FragPos =vec3(transMatrix*vec4(position,1.0f));\n"
                                    "gl_Position = projMatrix * transMatrix*  tempPos;\n"
-                                   "ourColor = color;\n"
-                                   "}\0";
+                                     "}\0";
+
+
+                                  // "ourColor = color;\n"
+
 const GLchar* fragmentShaderSource = "#version 330 core\n"
                                      "out vec4 color;\n"
-                                     "uniform vec4 ourColor;\n"
+                                     "in vec3 FragPos;\n"
+                                    "in vec3 Normal;\n"
+
+                                    "uniform vec3 LightPosition;\n"
+                                     "uniform vec3 ourColor;\n"
+                                     "uniform vec3 lightColor;\n"
                                      "void main()\n"
                                      "{\n"
-                                     "color = ourColor;\n"
+
+                                       "vec3 ambient = 0.1f *lightColor;\n"
+
+                                     "vec3 norm =normalize(Normal);\n"
+                                     "vec3 lightDir =normalize(LightPosition-FragPos);\n"
+
+                                      "float diff=max(dot(norm,lightDir),0.0);\n"
+                                      "vec3 diffuse=diff*lightColor;\n"
+                                     //  "color = vec4 (lightColor*ourColor, 1.0f);\n"
+                                         "vec3 result=(ambient+diffuse)*ourColor;\n"
+                                       "color=vec4(result,1.0f);\n"
+        //"color =ourColor;\n"
+
                                      "}\n\0";
+
+     //   "color = ourColor;\n"
 //GLfloat vertices[] = {
 //    // Positions
 //    0.5f, -0.5f, 0.0f,  // Bottom Right
@@ -158,13 +185,19 @@ void OpenGlViewer::initializeGL() {
     //  f->glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
     // Position attribute
-    f->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+    f->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
+    f->glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat),
+                                 reinterpret_cast<void *>(3 * sizeof(GLfloat)));
+
     f->glEnableVertexAttribArray(0);
+     f->glEnableVertexAttribArray(1);
 
     f->glBindVertexArray(0); // Unbind VAO
 
-//   f->glDepthFunc(GL_LEQUAL);   // buff deep
-  // f->glEnable(GL_DEPTH_TEST);  // line that we can't see - become invisible
+
+     f->glDepthFunc(GL_LEQUAL);   // buff deep
+   f->glEnable(GL_DEPTH_TEST);  // line that we can't see - become invisible
+
    f->glEnable(GL_COLOR_MATERIAL);
    f->glEnable(GL_NORMALIZE);
     // Game loop
@@ -203,7 +236,7 @@ void OpenGlViewer::paintGL() {
     f  = QOpenGLContext::currentContext()->extraFunctions();
 
     f->glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-    f->glClear(GL_COLOR_BUFFER_BIT);
+    f->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
 
@@ -235,6 +268,14 @@ void OpenGlViewer::paintGL() {
     GLint projMatrix =  f->glGetUniformLocation(shaderProgram, "projMatrix");
     // f->glUniform4f(projMatrix, &m_proj);
     f->glUniformMatrix4fv(projMatrix,1,GL_FALSE,m_projection.constData());
+
+
+    GLint lightPos =  f->glGetUniformLocation(shaderProgram, "LightPosition");
+    GLint lightColorPos =  f->glGetUniformLocation(shaderProgram, "lightColor");
+
+     f->glUniform3f(lightPos,light_position[0],light_position[1],light_position[2]);
+      f->glUniform3f(lightColorPos,1,1,1);
+
 
 
     // Draw the triangle
@@ -271,14 +312,14 @@ void OpenGlViewer::paintGL() {
     if(isDrawFaces)
     {
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-        f->glUniform4f(vertexColorLocation, 0.5f, 0.5f, 0.5f, 1.0f);
+        f->glUniform3f(vertexColorLocation, 0.5f, 0.5f, 0.5f);
         f->glDrawArrays(GL_TRIANGLES , 0, sizeDrawVertex/3);
     }
 
     if(isDrawGrid)
     {
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        f->glUniform4f(vertexColorLocation, 0.0f, 1.0f, 0.0f, 1.0f);
+        f->glUniform3f(vertexColorLocation, 0.0f, 1.0f, 0.0f);
         f->glDrawArrays(GL_TRIANGLES , 0, sizeDrawVertex/3);
     }
 
@@ -694,7 +735,9 @@ void OpenGlViewer::updateDrawVertex()
         delete[] drawVertex;
 
     // sizeDrawVertex=12*(drawFirstObject->face.size()+drawSecondObject->face.size());
-    sizeDrawVertex=9*(drawFirstObject->face.size()+drawSecondObject->face.size());
+    int n=18;
+
+    sizeDrawVertex=n*(drawFirstObject->face.size()+drawSecondObject->face.size());
 
 
     drawVertex=new GLfloat[sizeDrawVertex];
@@ -706,17 +749,29 @@ void OpenGlViewer::updateDrawVertex()
     for(int i=0;i<size1;++i)
     {
 
-        drawVertex[9*i  ]=(*drawFirstObject).face[i].P0(0).X();
-        drawVertex[9*i+1]=(*drawFirstObject).face[i].P0(0).Y();
-        drawVertex[9*i+2]=(*drawFirstObject).face[i].P0(0).Z();
+        drawVertex[n*i  ]=(*drawFirstObject).face[i].P0(0).X();
+        drawVertex[n*i+1]=(*drawFirstObject).face[i].P0(0).Y();
+        drawVertex[n*i+2]=(*drawFirstObject).face[i].P0(0).Z();
 
-        drawVertex[9*i+3]=(*drawFirstObject).face[i].P0(1).X();
-        drawVertex[9*i+4]=(*drawFirstObject).face[i].P0(1).Y();
-        drawVertex[9*i+5]=(*drawFirstObject).face[i].P0(1).Z();
+        drawVertex[n*i+3]=(*drawFirstObject).face[i].N().X();
+        drawVertex[n*i+4]=(*drawFirstObject).face[i].N().Y();
+        drawVertex[n*i+5]=(*drawFirstObject).face[i].N().Z();
 
-        drawVertex[9*i+6]=(*drawFirstObject).face[i].P0(2).X();
-        drawVertex[9*i+7]=(*drawFirstObject).face[i].P0(2).Y();
-        drawVertex[9*i+8]=(*drawFirstObject).face[i].P0(2).Z();
+        drawVertex[n*i+6]=(*drawFirstObject).face[i].P0(1).X();
+        drawVertex[n*i+7]=(*drawFirstObject).face[i].P0(1).Y();
+        drawVertex[n*i+8]=(*drawFirstObject).face[i].P0(1).Z();
+
+        drawVertex[n*i+9]=(*drawFirstObject).face[i].N().X();
+        drawVertex[n*i+10]=(*drawFirstObject).face[i].N().Y();
+        drawVertex[n*i+11]=(*drawFirstObject).face[i].N().Z();
+
+        drawVertex[n*i+12]=(*drawFirstObject).face[i].P0(2).X();
+        drawVertex[n*i+13]=(*drawFirstObject).face[i].P0(2).Y();
+        drawVertex[n*i+14]=(*drawFirstObject).face[i].P0(2).Z();
+
+        drawVertex[n*i+15]=(*drawFirstObject).face[i].N().X();
+        drawVertex[n*i+16]=(*drawFirstObject).face[i].N().Y();
+        drawVertex[n*i+17]=(*drawFirstObject).face[i].N().Z();
 
         //        drawVertex[12*i  ]=(*drawFirstObject).face[i].P0(0).X();
         //        drawVertex[12*i+1]=(*drawFirstObject).face[i].P0(0).Y();
