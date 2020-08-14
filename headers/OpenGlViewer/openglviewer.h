@@ -16,8 +16,14 @@
 #include <QDebug>
 #include <QFile>
 #include <GL/GLU.h>
+//#include <GLFW/glfw3.h>
+//#include <GL/glfw3.h>
 #include <QQuaternion>
 #include <QMatrix4x4>
+#include <QOpenGLExtraFunctions>
+#include <QOpenGLShaderProgram>
+#include <QOpenGLBuffer>
+#include <QOpenGLVertexArrayObject>
 namespace Ui {
 class OpenGlViewer;
 }
@@ -67,16 +73,18 @@ private:
 
     void InitMaxOrigin();
 
+    void updateDrawVertex();
+
     void drawFirstMesh();
     void drawSecondMesh();
 
-  //  void drawTestCube();
+    //  void drawTestCube();
     //temporary const
 private:
     const uint COUNT_ALIGN_CYCLES=5;
     const double ERROR_ALIGN=0.021f;
 
-    const QColor BACKGROUND_COLOR=QColor(181,150, 235); //White background
+    const GLclampf BACKGROUND_COLOR[3]={0.709,0.588, 0.921}; //White background
 
     const std::tuple<float,float,float> MESH1_FACES_COLOR={0.5f, 0.5f, 0.5f}; //color faces mesh1
     const std::tuple<float,float,float> MESH1_GRID_COLOR={1.0f, 0.5f, 0.2f}; // color grid mesh1
@@ -91,13 +99,31 @@ private:
 
 
 private:
-   // QMatrix4x4 projection;      //matrix that save all mesh transformations
+
+    GLfloat * drawVertex;   //vertex that contain Vertex shader
+    uint sizeDrawVertex=0;  //size all of vertex that need to draw
+    uint sizeDrawVertexFirstObject=0;   //size of first mesh that need to draw
+
+    GLint GPUobjectColor;
+    GLint GPUtransformMatrix;
+    GLint GPUprojectionMatrix;
+    GLint GPUlightColor;
+
+    GLint GPUlightPosition;
+
+    GLuint VBO, VAO;
+    GLuint shaderProgram;
+
+    QOpenGLExtraFunctions *f;
+
+
 
     QVector2D mousePressPosition;       //save mouse position
-   // QVector3D rotationAxis;
+    // QVector3D rotationAxis;
 
     QQuaternion rotation;
-
+    QMatrix4x4 m_transform;
+    QMatrix4x4 m_projection;
     qreal aspect;
 
     std::vector<QStringList> vectorContentMLP;
