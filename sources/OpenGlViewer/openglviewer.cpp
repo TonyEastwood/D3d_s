@@ -207,22 +207,11 @@ void OpenGlViewer::initializeGL() {
     f->glUseProgram(shaderProgram);
     // Check if any events have been activiated (key pressed, mouse moved etc.) and call corresponding response functions
 
-
-    return;
-    initializeOpenGLFunctions();
-    glDepthFunc(GL_LEQUAL);   // buff deep
-    //  qglClearColor(BACKGROUND_COLOR);  // set background
-
-
-    glEnable(GL_DEPTH_TEST);  // line that we can't see - become invisible
-    glEnable(GL_COLOR_MATERIAL);
-    glEnable(GL_NORMALIZE);
-    //    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);    //to enable
-
-
-
-
-
+      GPUobjectColor =  f->glGetUniformLocation(shaderProgram, "ourColor");
+      GPUtransformMatrix=f->glGetUniformLocation(shaderProgram, "transMatrix");
+    GPUprojectionMatrix=f->glGetUniformLocation(shaderProgram, "projMatrix");
+    GPUlightPosition=f->glGetUniformLocation(shaderProgram, "LightPosition");
+    GPUlightColor=f->glGetUniformLocation(shaderProgram, "lightColor");
 }
 void OpenGlViewer::resizeGL(int w, int h) {
     glMatrixMode(GL_PROJECTION);
@@ -248,7 +237,7 @@ void OpenGlViewer::paintGL() {
 
     // Update the uniform color
 
-    GLint vertexColorLocation =  f->glGetUniformLocation(shaderProgram, "ourColor");
+  //  GLint vertexColorLocation =  f->glGetUniformLocation(shaderProgram, "ourColor");
     // f->glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
 
     m_transform.setToIdentity();
@@ -265,20 +254,20 @@ void OpenGlViewer::paintGL() {
 
 
 
-    GLint transformMatrix =  f->glGetUniformLocation(shaderProgram, "transMatrix");
+//    GLint transformMatrix =  f->glGetUniformLocation(shaderProgram, "transMatrix");
+//    // f->glUniform4f(projMatrix, &m_proj);
+    f->glUniformMatrix4fv(GPUtransformMatrix,1,GL_FALSE,m_transform.constData());
+
+  //  GLint projMatrix =  f->glGetUniformLocation(shaderProgram, "projMatrix");
     // f->glUniform4f(projMatrix, &m_proj);
-    f->glUniformMatrix4fv(transformMatrix,1,GL_FALSE,m_transform.constData());
-
-    GLint projMatrix =  f->glGetUniformLocation(shaderProgram, "projMatrix");
-    // f->glUniform4f(projMatrix, &m_proj);
-    f->glUniformMatrix4fv(projMatrix,1,GL_FALSE,m_projection.constData());
+    f->glUniformMatrix4fv(GPUprojectionMatrix,1,GL_FALSE,m_projection.constData());
 
 
-    GLint lightPos =  f->glGetUniformLocation(shaderProgram, "LightPosition");
-    GLint lightColorPos =  f->glGetUniformLocation(shaderProgram, "lightColor");
 
-    f->glUniform3f(lightPos,light_position[0],light_position[1],light_position[2]);
-    f->glUniform3f(lightColorPos,1,1,1);
+   // GLint lightColorPos =  f->glGetUniformLocation(shaderProgram, "lightColor");
+
+    f->glUniform3f(GPUlightPosition,light_position[0],light_position[1],light_position[2]);
+    f->glUniform3f(GPUlightColor,1,1,1);
 
 
 
@@ -290,12 +279,12 @@ void OpenGlViewer::paintGL() {
     if(isDrawFaces)
     {
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-        f->glUniform3f(vertexColorLocation, 0.5f, 0.5f, 0.5f);
+        f->glUniform3f(GPUobjectColor, 0.5f, 0.5f, 0.5f);
         f->glDrawArrays(GL_TRIANGLES , 0, sizeDrawVertexFirstObject/6);
 
 //        if(drawSecondObject->fn!=0)
 //        {
-            f->glUniform3f(vertexColorLocation, 0.0f, 0.5f, 1.0f);
+            f->glUniform3f(GPUobjectColor, 0.0f, 0.5f, 1.0f);
             f->glDrawArrays(GL_TRIANGLES , sizeDrawVertexFirstObject/6, sizeDrawVertex/6);
        // }
     }
@@ -303,12 +292,12 @@ void OpenGlViewer::paintGL() {
     if(isDrawGrid)
     {
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        f->glUniform3f(vertexColorLocation, 0.0f, 0.0f, 0.7f);
+        f->glUniform3f(GPUobjectColor, 0.0f, 0.0f, 0.7f);
         f->glDrawArrays(GL_TRIANGLES , 0, sizeDrawVertexFirstObject/6);
 
 //        if(drawSecondObject->fn!=0)
 //        {
-            f->glUniform3f(vertexColorLocation, 0.0f, 1.0f, 0.0f);
+            f->glUniform3f(GPUobjectColor, 0.0f, 1.0f, 0.0f);
             f->glDrawArrays(GL_TRIANGLES , sizeDrawVertexFirstObject/6, sizeDrawVertex/6);
       //  }
     }

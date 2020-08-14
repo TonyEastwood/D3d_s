@@ -83,18 +83,9 @@ private:
 private:
     const uint COUNT_ALIGN_CYCLES=5;
     const double ERROR_ALIGN=0.021f;
-    GLfloat * drawVertex;
-       int sizeDrawVertex;
-    GLuint VBO, VAO;
-//    const QColor BACKGROUND_COLOR=QColor(181,150, 235); //White background
+
     const GLclampf BACKGROUND_COLOR[3]={0.709,0.588, 0.921}; //White background
-    GLuint shaderProgram;
-    QOpenGLBuffer *m_vbo = nullptr;
-    QOpenGLVertexArrayObject *m_vao = nullptr;
 
-    uint sizeDrawVertexFirstObject=0;
-
-    QOpenGLShaderProgram *m_program = nullptr;
     const std::tuple<float,float,float> MESH1_FACES_COLOR={0.5f, 0.5f, 0.5f}; //color faces mesh1
     const std::tuple<float,float,float> MESH1_GRID_COLOR={1.0f, 0.5f, 0.2f}; // color grid mesh1
 
@@ -108,8 +99,24 @@ private:
 
 
 private:
-     QOpenGLExtraFunctions *f;
-    // QMatrix4x4 projection;      //matrix that save all mesh transformations
+
+    GLfloat * drawVertex;   //vertex that contain Vertex shader
+    uint sizeDrawVertex=0;  //size all of vertex that need to draw
+    uint sizeDrawVertexFirstObject=0;   //size of first mesh that need to draw
+
+    GLint GPUobjectColor;
+    GLint GPUtransformMatrix;
+    GLint GPUprojectionMatrix;
+    GLint GPUlightColor;
+
+    GLint GPUlightPosition;
+
+    GLuint VBO, VAO;
+    GLuint shaderProgram;
+
+    QOpenGLExtraFunctions *f;
+
+
 
     QVector2D mousePressPosition;       //save mouse position
     // QVector3D rotationAxis;
