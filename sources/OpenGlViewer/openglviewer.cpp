@@ -61,7 +61,7 @@ OpenGlViewer::OpenGlViewer( QWidget *parent)
     // rotationAxis=QVector3D(0,0,0);
 
     sizeDrawVertex=0;
-
+    distanceInfo.clear();
     drawVertex=nullptr;
 
     translateX=0;
@@ -684,14 +684,23 @@ void OpenGlViewer::saveFirstMesh()
 
 }
 
-void OpenGlViewer::alignSecondMesh(vcg::Matrix44d * resultTransformMatrix=nullptr, bool * isVisible=nullptr)
+void OpenGlViewer::alignSecondMesh(MyMesh * firstMesh=nullptr, MyMesh * secondMesh=nullptr,vcg::Matrix44d * resultTransformMatrix=nullptr, bool * isVisible=nullptr)
 {
-    QApplication::setOverrideCursor(Qt::WaitCursor);
-    if(drawFirstObject->fn==0 || drawSecondObject->fn==0)
+
+
+    if(firstMesh==nullptr || secondMesh==nullptr)
+    {
+        firstMesh=drawFirstObject;
+        secondMesh=drawSecondObject;
+        distanceInfo.clear();
+    }
+
+    if(firstMesh->fn==0 || secondMesh->fn==0)
     {
         QMessageBox::warning(this, "Warning","Please, choose two objects");
         return;
     }
+    QApplication::setOverrideCursor(Qt::WaitCursor);
 
     if(resultTransformMatrix!=nullptr)
         resultTransformMatrix->SetIdentity();
@@ -709,9 +718,9 @@ void OpenGlViewer::alignSecondMesh(vcg::Matrix44d * resultTransformMatrix=nullpt
 
 
     // 1) Convert fixed mesh and put it into the grid.
-    aa.convertMesh<MyMesh>(*drawFirstObject,fix);
+    aa.convertMesh<MyMesh>(*firstMesh,fix);
 
-    if((*drawFirstObject).fn==0 || ap.UseVertexOnly) {
+    if((*firstMesh).fn==0 || ap.UseVertexOnly) {
         fix.initVert(vcg::Matrix44d::Identity());
         vcg::AlignPair::InitFixVert(&fix,ap,VG);
     }
@@ -724,9 +733,11 @@ void OpenGlViewer::alignSecondMesh(vcg::Matrix44d * resultTransformMatrix=nullpt
     // 2) Convert the second mesh and sample a <ap.SampleNum> points on it.
     float previousError=100000;
     std::pair<double,double> distance={10000,10000};
+
+    int quantityIteration=0;
     for(uint i=0;i<COUNT_ALIGN_CYCLES;++i)
     {
-        aa.convertVertex((*drawSecondObject).vert,tmpmv);
+        aa.convertVertex((*secondMesh).vert,tmpmv);
         aa.sampleMovVert(tmpmv, ap.SampleNum, ap.SampleMode);
 
         aa.mov=&tmpmv;
@@ -741,16 +752,17 @@ void OpenGlViewer::alignSecondMesh(vcg::Matrix44d * resultTransformMatrix=nullpt
         aa.align(In,UG,VG,result);
 
         //rotate m2 using the resulting transformation
-        vcg::tri::UpdatePosition<MyMesh>::Matrix(*drawSecondObject, result.Tr, true);
-        vcg::tri::UpdateBounding<MyMesh>::Box(*drawSecondObject);
+        vcg::tri::UpdatePosition<MyMesh>::Matrix(*secondMesh, result.Tr, true);
+        vcg::tri::UpdateBounding<MyMesh>::Box(*secondMesh);
 
         distance=result.computeAvgErr();
 
-        if(distance.second==distance.first || isnan(distance.second) || isnan(distance.first))
+        if( isnan(distance.second) || isnan(distance.first))
         {
             if(isVisible!=nullptr)
                 (*isVisible)=false;
-            emit setDistanceInLabel("Defective mesh, distance so long");
+            distanceInfo.append("Iteration="+QString::number(i+1)+" distance is Nan.[Bad mesh]\n");
+            emit setDistanceInLabel(distanceInfo);
             QApplication::restoreOverrideCursor();
             return;
         }
@@ -761,12 +773,14 @@ void OpenGlViewer::alignSecondMesh(vcg::Matrix44d * resultTransformMatrix=nullpt
             previousError=distance.first;
             if(resultTransformMatrix!=nullptr)
                 (*resultTransformMatrix)=(*resultTransformMatrix)*result.Tr;
+            quantityIteration=i;
         }
         else{
-            vcg::tri::UpdatePosition<MyMesh>::Matrix(*drawSecondObject,vcg::Inverse(result.Tr), true);
-            vcg::tri::UpdatePosition<MyMesh>::Matrix(*drawSecondObject, previousResult.Tr, true);
-            vcg::tri::UpdateBounding<MyMesh>::Box(*drawSecondObject);
+            vcg::tri::UpdatePosition<MyMesh>::Matrix(*secondMesh,vcg::Inverse(result.Tr), true);
+            vcg::tri::UpdatePosition<MyMesh>::Matrix(*secondMesh, previousResult.Tr, true);
+            vcg::tri::UpdateBounding<MyMesh>::Box(*secondMesh);
             distance=previousResult.computeAvgErr();
+            quantityIteration=i;
             break;
         }
 
@@ -775,13 +789,16 @@ void OpenGlViewer::alignSecondMesh(vcg::Matrix44d * resultTransformMatrix=nullpt
     {
         if(isVisible!=nullptr)
             (*isVisible)=false;
-        emit setDistanceInLabel(QString("Defective mesh\nDistance="+QString::number(distance.first)+">"+QString::number(ERROR_ALIGN)));
+        distanceInfo.append("Iteration="+QString::number(quantityIteration+1)+" Distance="+QString::number(distance.first)+"[Bad mesh]\n");
+        emit setDistanceInLabel(distanceInfo);
     }
     else
     {
         if(isVisible!=nullptr)
             (*isVisible)=true;
-        emit setDistanceInLabel(QString("Distance:\ndd="+QString::number(distance.first)+"\ndd="+QString::number(distance.first)));
+
+        distanceInfo.append("Iteration="+QString::number(quantityIteration+1)+" Distance="+QString::number(distance.first)+"[Good mesh]\n");
+        emit setDistanceInLabel(distanceInfo);
     }
     updateDrawVertex();
     QApplication::restoreOverrideCursor();
@@ -789,12 +806,14 @@ void OpenGlViewer::alignSecondMesh(vcg::Matrix44d * resultTransformMatrix=nullpt
 
 void OpenGlViewer::appendSecondMeshToFirst()
 {
-    QApplication::setOverrideCursor(Qt::WaitCursor);
+
     if((*drawFirstObject).fn==0 || (*drawSecondObject).fn==0)
     {
         QMessageBox::warning(this, "Warning extension","Please select two objects");
         return;
     }
+     QApplication::setOverrideCursor(Qt::WaitCursor);
+
     vcg::tri::Append<MyMesh, MyMesh>::Mesh(*drawFirstObject,*drawSecondObject);
 
     vcg::tri::UpdateNormal<MyMesh>::PerVertexNormalizedPerFace(*drawFirstObject);
@@ -821,8 +840,11 @@ void OpenGlViewer::setShowFaces(bool value)
 
 void OpenGlViewer::openAlignFile()
 {
+    distanceInfo.clear();
     vectorContentMLP.clear();
-
+    std::vector<QString> vectorFileNames;
+    std::vector<vcg::Matrix44d> vectorMatrix;
+    std::vector<bool> vectorVisible;
     //path to file with meshes that need to align
     QString pathAlignMeshes=QFileDialog::getOpenFileName(this,"Open file with collect of meshes" );
     QString exportPath=pathAlignMeshes.split(".")[0]+".mlp";
@@ -851,11 +873,16 @@ void OpenGlViewer::openAlignFile()
                 continue;
         }while(!setFirstMesh(pathToDir+fileName,false) && !fileWithAlignMeshes.atEnd());
 
-        vectorContentMLP.push_back({fileName,identityMatrix,"1"}); //add First mesh to MPL vector with Identity matrix
+        // vectorContentMLP.push_back({fileName,identityMatrix,"1"}); //add First mesh to MPL vector with Identity matrix
 
         //read all meshes from file and import it
         vcg::Matrix44d tempMatrix;
+        tempMatrix.SetIdentity();
+
         bool isVisible=false;
+        vectorFileNames.push_back(fileName);
+        vectorMatrix.push_back(tempMatrix);
+        vectorVisible.push_back(true);
 
         while(!fileWithAlignMeshes.atEnd())
         {
@@ -868,17 +895,45 @@ void OpenGlViewer::openAlignFile()
             if(!QFileInfo(pathToDir+fileName).exists() || !setSecondMesh(pathToDir+fileName,false))
                 continue;
 
-            alignSecondMesh(&tempMatrix,&isVisible);
+            alignSecondMesh(drawSecondObject,drawFirstObject,&tempMatrix,&isVisible);
 
             if(isVisible)
             {
-                vectorContentMLP.push_back({fileName,vcgMatrixToString(tempMatrix),"1"});  //if visible push actual matrix data with visible ==1
+                for(int i=0;i<vectorMatrix.size();++i)
+                {
+                    if(vectorVisible[i])
+                        vectorMatrix[i]*=tempMatrix;
+                }
+                vectorFileNames.push_back(fileName);
+
+                tempMatrix.SetIdentity();
+                vectorMatrix.push_back(tempMatrix);
+                vectorVisible.push_back(true);
+                // vectorContentMLP.push_back({fileName,vcgMatrixToString(tempMatrix),"1"});  //if visible push actual matrix data with visible ==1
                 appendSecondMeshToFirst();
             }
             else
-                vectorContentMLP.push_back({fileName,identityMatrix,"0"}); //if non visible, - push Matrix Identity with visible ==0
+            {
+                vectorFileNames.push_back(fileName);
+
+                tempMatrix.SetIdentity();
+                vectorMatrix.push_back(tempMatrix);
+                vectorVisible.push_back(false);
+                // vectorContentMLP.push_back({fileName,identityMatrix,"0"}); //if non visible, - push Matrix Identity with visible ==0
+            }
         }
     }
+    if(vectorMatrix.size()!=vectorVisible.size() || vectorMatrix.size()!=vectorFileNames.size())
+    {
+        QMessageBox::warning(this,"Error size incorrect", "Send it to developer error in code");
+        return;
+    }
+
+    for(int i=0;i<vectorMatrix.size();++i)
+        vectorContentMLP.push_back({vectorFileNames[i],vcgMatrixToString(vectorMatrix[i]),vectorVisible[i]?"1":"0"});
+
+
+
     fileWithAlignMeshes.close();
     exportAsMLP(exportPath);
 

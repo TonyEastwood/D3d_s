@@ -43,7 +43,7 @@ public:
     void saveFirstMesh();
     void saveSecondMesh();
 
-    void alignSecondMesh(vcg::Matrix44d * resultTransformMatrix, bool * isVisible);
+    void alignSecondMesh(MyMesh * firstMesh, MyMesh * secondMesh, vcg::Matrix44d * resultTransformMatrix, bool * isVisible);
     void appendSecondMeshToFirst();
 
     void openAlignFile();
@@ -117,6 +117,7 @@ private:
     QOpenGLExtraFunctions *f;
 
 
+     QString distanceInfo;
 
     QVector2D mousePressPosition;       //save mouse position
     // QVector3D rotationAxis;
