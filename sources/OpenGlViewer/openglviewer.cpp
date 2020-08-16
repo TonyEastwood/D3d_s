@@ -821,7 +821,7 @@ void OpenGlViewer::appendSecondMeshToFirst()
     (*drawSecondObject).fn=0;
     (*drawSecondObject).face.clear();
     (*drawSecondObject).vert.clear();
-    emit setDistanceInLabel(QString(""));
+  //  emit setDistanceInLabel(QString(""));
     updateDrawVertex();
     QApplication::restoreOverrideCursor();
 }
