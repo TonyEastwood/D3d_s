@@ -30,18 +30,23 @@ const GLchar* fragmentShaderSource = "#version 330 core\n"
                                      "in vec3 Normal;\n"
 
                                      "uniform vec3 LightPosition;\n"
+                                     "uniform vec3 LightPosition2;\n"
                                      "uniform vec3 ourColor;\n"
                                      "uniform vec3 lightColor;\n"
                                      "void main()\n"
                                      "{\n"
 
-                                     "vec3 ambient = 0.1f *lightColor;\n"
+                                     "vec3 ambient = 0.3f *lightColor;\n"
 
                                      "vec3 norm =normalize(Normal);\n"
-        //"vec3 lightDir =normalize(LightPosition-FragPos);\n"
-        "vec3 lightDir =normalize(vec3(0.5,0.5,0.5));\n"
-
-        "float diff=max(dot(norm,lightDir),0.0);\n"
+                                     "vec3 lightDir =normalize(LightPosition-FragPos);\n"
+                                     "vec3 lightDir2 =normalize(LightPosition2-FragPos);\n"
+        //"vec3 lightDir =normalize(vec3(0.5,0.5,0.5));\n"
+        "float diff;\n"
+        "if(max(dot(norm,lightDir),0.0)>max(dot(norm,lightDir2),0.0)) \n"
+        " diff=max(dot(norm,lightDir),0.0);\n"
+        "else \n"
+        " diff=max(dot(norm,lightDir2),0.0);\n"
         "vec3 diffuse=diff*lightColor;\n"
         //  "color = vec4 (lightColor*ourColor, 1.0f);\n"
         "vec3 result=(ambient+diffuse)*ourColor;\n"
@@ -98,14 +103,14 @@ OpenGlViewer::OpenGlViewer( QWidget *parent)
     scaleWheel = 1;
 
     light_position[0]=0;
-    light_position[1]=0;
-    light_position[2]=1;
+    light_position[1]=-50;
+    light_position[2]=-10;
     light_position[3]=0;
 
 
     light_position2[0]=0;
-    light_position2[1]=0;
-    light_position2[2]=-1;
+    light_position2[1]=50;
+    light_position2[2]=-10;
     light_position2[3]=0;
 
     rotate_x=0;
@@ -206,6 +211,7 @@ void OpenGlViewer::initializeGL() {
     GPUtransformMatrix=f->glGetUniformLocation(shaderProgram, "transMatrix");
     GPUprojectionMatrix=f->glGetUniformLocation(shaderProgram, "projMatrix");
     GPUlightPosition=f->glGetUniformLocation(shaderProgram, "LightPosition");
+    GPUlightPosition2=f->glGetUniformLocation(shaderProgram, "LightPosition2");
     GPUlightColor=f->glGetUniformLocation(shaderProgram, "lightColor");
 }
 void OpenGlViewer::resizeGL(int w, int h) {
@@ -236,6 +242,7 @@ void OpenGlViewer::paintGL() {
     f->glUniformMatrix4fv(GPUprojectionMatrix,1,GL_FALSE,m_projection.constData());
     //set light position in geometry shader
     f->glUniform3f(GPUlightPosition,light_position[0],light_position[1],light_position[2]);
+    f->glUniform3f(GPUlightPosition2,light_position2[0],light_position2[1],light_position2[2]);
     //set color light in geometry shader (white)
     f->glUniform3f(GPUlightColor,1,1,1);
 
@@ -381,15 +388,17 @@ QString OpenGlViewer::vcgMatrixToString(const vcg::Matrix44d &resultTransformMat
 
 void OpenGlViewer::InitMaxOrigin()
 {
-    if((*drawFirstObject).fn!=0)
-    {
-        minMaxXYZ[0]=minMaxXYZ[2]=minMaxXYZ[4]=100000000;
-        minMaxXYZ[1]=minMaxXYZ[3]=minMaxXYZ[5]=-100000000;
-        findMinMaxForStl(drawFirstObject);
-    }
+    if(drawFirstObject!=nullptr)
+        if((*drawFirstObject).fn!=0)
+        {
+            minMaxXYZ[0]=minMaxXYZ[2]=minMaxXYZ[4]=100000000;
+            minMaxXYZ[1]=minMaxXYZ[3]=minMaxXYZ[5]=-100000000;
+            findMinMaxForStl(drawFirstObject);
+        }
 
-    if((*drawSecondObject).fn!=0)
-        findMinMaxForStl(drawSecondObject);
+    if(drawSecondObject!=nullptr)
+        if((*drawSecondObject).fn!=0)
+            findMinMaxForStl(drawSecondObject);
 
 
     double distanceX=abs((minMaxXYZ[1]-minMaxXYZ[0]));
@@ -419,7 +428,10 @@ void OpenGlViewer::updateDrawVertex()
 
     int n=18;
 
-    sizeDrawVertex=n*(drawFirstObject->face.size()+drawSecondObject->face.size());
+    if(drawSecondObject==nullptr)
+        sizeDrawVertex=n*drawFirstObject->face.size();
+    else
+        sizeDrawVertex=n*(drawFirstObject->face.size()+drawSecondObject->face.size());
 
 
     drawVertex=new GLfloat[sizeDrawVertex];
@@ -455,35 +467,38 @@ void OpenGlViewer::updateDrawVertex()
     }
     sizeDrawVertexFirstObject*=n;
 
-    int  size2=drawSecondObject->face.size();
-
-    for(int i=0;i<size2;++i)
+    if(drawSecondObject!=nullptr)
     {
-        drawVertex[sizeDrawVertexFirstObject + n*i  ]=(*drawSecondObject).face[i].P0(0).X();
-        drawVertex[sizeDrawVertexFirstObject +n*i+1]=(*drawSecondObject).face[i].P0(0).Y();
-        drawVertex[sizeDrawVertexFirstObject +n*i+2]=(*drawSecondObject).face[i].P0(0).Z();
+        int  size2=drawSecondObject->face.size();
 
-        drawVertex[sizeDrawVertexFirstObject +n*i+3]=(*drawSecondObject).face[i].N().X();
-        drawVertex[sizeDrawVertexFirstObject +n*i+4]=(*drawSecondObject).face[i].N().Y();
-        drawVertex[sizeDrawVertexFirstObject +n*i+5]=(*drawSecondObject).face[i].N().Z();
+        for(int i=0;i<size2;++i)
+        {
+            drawVertex[sizeDrawVertexFirstObject + n*i  ]=(*drawSecondObject).face[i].P0(0).X();
+            drawVertex[sizeDrawVertexFirstObject +n*i+1]=(*drawSecondObject).face[i].P0(0).Y();
+            drawVertex[sizeDrawVertexFirstObject +n*i+2]=(*drawSecondObject).face[i].P0(0).Z();
 
-        drawVertex[sizeDrawVertexFirstObject +n*i+6]=(*drawSecondObject).face[i].P0(1).X();
-        drawVertex[sizeDrawVertexFirstObject +n*i+7]=(*drawSecondObject).face[i].P0(1).Y();
-        drawVertex[sizeDrawVertexFirstObject +n*i+8]=(*drawSecondObject).face[i].P0(1).Z();
+            drawVertex[sizeDrawVertexFirstObject +n*i+3]=(*drawSecondObject).face[i].N().X();
+            drawVertex[sizeDrawVertexFirstObject +n*i+4]=(*drawSecondObject).face[i].N().Y();
+            drawVertex[sizeDrawVertexFirstObject +n*i+5]=(*drawSecondObject).face[i].N().Z();
 
-        drawVertex[sizeDrawVertexFirstObject +n*i+9]=(*drawSecondObject).face[i].N().X();
-        drawVertex[sizeDrawVertexFirstObject +n*i+10]=(*drawSecondObject).face[i].N().Y();
-        drawVertex[sizeDrawVertexFirstObject +n*i+11]=(*drawSecondObject).face[i].N().Z();
+            drawVertex[sizeDrawVertexFirstObject +n*i+6]=(*drawSecondObject).face[i].P0(1).X();
+            drawVertex[sizeDrawVertexFirstObject +n*i+7]=(*drawSecondObject).face[i].P0(1).Y();
+            drawVertex[sizeDrawVertexFirstObject +n*i+8]=(*drawSecondObject).face[i].P0(1).Z();
 
-        drawVertex[sizeDrawVertexFirstObject +n*i+12]=(*drawSecondObject).face[i].P0(2).X();
-        drawVertex[sizeDrawVertexFirstObject +n*i+13]=(*drawSecondObject).face[i].P0(2).Y();
-        drawVertex[sizeDrawVertexFirstObject +n*i+14]=(*drawSecondObject).face[i].P0(2).Z();
+            drawVertex[sizeDrawVertexFirstObject +n*i+9]=(*drawSecondObject).face[i].N().X();
+            drawVertex[sizeDrawVertexFirstObject +n*i+10]=(*drawSecondObject).face[i].N().Y();
+            drawVertex[sizeDrawVertexFirstObject +n*i+11]=(*drawSecondObject).face[i].N().Z();
 
-        drawVertex[sizeDrawVertexFirstObject +n*i+15]=(*drawSecondObject).face[i].N().X();
-        drawVertex[sizeDrawVertexFirstObject +n*i+16]=(*drawSecondObject).face[i].N().Y();
-        drawVertex[sizeDrawVertexFirstObject +n*i+17]=(*drawSecondObject).face[i].N().Z();
+            drawVertex[sizeDrawVertexFirstObject +n*i+12]=(*drawSecondObject).face[i].P0(2).X();
+            drawVertex[sizeDrawVertexFirstObject +n*i+13]=(*drawSecondObject).face[i].P0(2).Y();
+            drawVertex[sizeDrawVertexFirstObject +n*i+14]=(*drawSecondObject).face[i].P0(2).Z();
+
+            drawVertex[sizeDrawVertexFirstObject +n*i+15]=(*drawSecondObject).face[i].N().X();
+            drawVertex[sizeDrawVertexFirstObject +n*i+16]=(*drawSecondObject).face[i].N().Y();
+            drawVertex[sizeDrawVertexFirstObject +n*i+17]=(*drawSecondObject).face[i].N().Z();
+        }
+
     }
-
 
     f->glBufferData(GL_ARRAY_BUFFER,  sizeDrawVertex * sizeof(GLfloat), NULL, GL_STATIC_DRAW);
     f->glBufferData(GL_ARRAY_BUFFER,  sizeDrawVertex * sizeof(GLfloat), drawVertex, GL_STATIC_DRAW);
@@ -538,31 +553,31 @@ void OpenGlViewer::exportAsMLP(QString filename)
 }
 
 
-void OpenGlViewer::drawFirstMesh()
-{
-    uint size=drawFirstObject->face.size();
-    glBegin(GL_TRIANGLES);  // START TRIANGLES DRAWING
-    for (uint i = 0; i < size; ++i) {
-        glNormal3f((*drawFirstObject).face[i].N().X(),(*drawFirstObject).face[i].N().Y(),(*drawFirstObject).face[i].N().Z());
-        glVertex3f((*drawFirstObject).face[i].P0(0).X(),(*drawFirstObject).face[i].P0(0).Y(),(*drawFirstObject).face[i].P0(0).Z());
-        glVertex3f((*drawFirstObject).face[i].P0(1).X(),(*drawFirstObject).face[i].P0(1).Y(),(*drawFirstObject).face[i].P0(1).Z());
-        glVertex3f((*drawFirstObject).face[i].P0(2).X(),(*drawFirstObject).face[i].P0(2).Y(),(*drawFirstObject).face[i].P0(2).Z());
-    }
-    glEnd();  // END TRIANGLES DRAWING
-}
+//void OpenGlViewer::drawFirstMesh()
+//{
+//    uint size=drawFirstObject->face.size();
+//    glBegin(GL_TRIANGLES);  // START TRIANGLES DRAWING
+//    for (uint i = 0; i < size; ++i) {
+//        glNormal3f((*drawFirstObject).face[i].N().X(),(*drawFirstObject).face[i].N().Y(),(*drawFirstObject).face[i].N().Z());
+//        glVertex3f((*drawFirstObject).face[i].P0(0).X(),(*drawFirstObject).face[i].P0(0).Y(),(*drawFirstObject).face[i].P0(0).Z());
+//        glVertex3f((*drawFirstObject).face[i].P0(1).X(),(*drawFirstObject).face[i].P0(1).Y(),(*drawFirstObject).face[i].P0(1).Z());
+//        glVertex3f((*drawFirstObject).face[i].P0(2).X(),(*drawFirstObject).face[i].P0(2).Y(),(*drawFirstObject).face[i].P0(2).Z());
+//    }
+//    glEnd();  // END TRIANGLES DRAWING
+//}
 
-void OpenGlViewer::drawSecondMesh()
-{
-    uint size=drawSecondObject->face.size();
-    glBegin(GL_TRIANGLES);  // START TRIANGLES DRAWING
-    for (uint i = 0; i < size; ++i) {
-        glNormal3f((*drawSecondObject).face[i].N().X(),(*drawSecondObject).face[i].N().Y(),(*drawSecondObject).face[i].N().Z());
-        glVertex3f((*drawSecondObject).face[i].P0(0).X(),(*drawSecondObject).face[i].P0(0).Y(),(*drawSecondObject).face[i].P0(0).Z());
-        glVertex3f((*drawSecondObject).face[i].P0(1).X(),(*drawSecondObject).face[i].P0(1).Y(),(*drawSecondObject).face[i].P0(1).Z());
-        glVertex3f((*drawSecondObject).face[i].P0(2).X(),(*drawSecondObject).face[i].P0(2).Y(),(*drawSecondObject).face[i].P0(2).Z());
-    }
-    glEnd();  // END TRIANGLES DRAWING
-}
+//void OpenGlViewer::drawSecondMesh()
+//{
+//    uint size=drawSecondObject->face.size();
+//    glBegin(GL_TRIANGLES);  // START TRIANGLES DRAWING
+//    for (uint i = 0; i < size; ++i) {
+//        glNormal3f((*drawSecondObject).face[i].N().X(),(*drawSecondObject).face[i].N().Y(),(*drawSecondObject).face[i].N().Z());
+//        glVertex3f((*drawSecondObject).face[i].P0(0).X(),(*drawSecondObject).face[i].P0(0).Y(),(*drawSecondObject).face[i].P0(0).Z());
+//        glVertex3f((*drawSecondObject).face[i].P0(1).X(),(*drawSecondObject).face[i].P0(1).Y(),(*drawSecondObject).face[i].P0(1).Z());
+//        glVertex3f((*drawSecondObject).face[i].P0(2).X(),(*drawSecondObject).face[i].P0(2).Y(),(*drawSecondObject).face[i].P0(2).Z());
+//    }
+//    glEnd();  // END TRIANGLES DRAWING
+//}
 
 bool OpenGlViewer::setFirstMesh(QString path, bool isNeedToDraw)
 {
@@ -634,6 +649,12 @@ void OpenGlViewer::setLight(bool value)
 
 void OpenGlViewer::saveSecondMesh()
 {
+    if(drawSecondObject==nullptr)
+    {
+        QMessageBox::warning(this, "Error","Second object ==nullptr");
+        return;
+        return;
+    }
     if(drawSecondObject->fn==0)
     {
         QMessageBox::warning(this, "Warning","Please, choose second object");
@@ -690,6 +711,11 @@ void OpenGlViewer::alignSecondMesh(MyMesh * firstMesh=nullptr, MyMesh * secondMe
 
     if(firstMesh==nullptr || secondMesh==nullptr)
     {
+        if(drawFirstObject==nullptr || drawSecondObject==nullptr)
+        {
+            QMessageBox::warning(this, "Error align SecondMesh","First or second object==nullptr");
+            return;
+        }
         firstMesh=drawFirstObject;
         secondMesh=drawSecondObject;
         distanceInfo.clear();
@@ -806,13 +832,17 @@ void OpenGlViewer::alignSecondMesh(MyMesh * firstMesh=nullptr, MyMesh * secondMe
 
 void OpenGlViewer::appendSecondMeshToFirst()
 {
-
+    if(drawFirstObject==nullptr || drawSecondObject==nullptr)
+    {
+        QMessageBox::warning(this, "Warning objects ==nullptr. Append second mesh error","Please select two objects");
+        return;
+    }
     if((*drawFirstObject).fn==0 || (*drawSecondObject).fn==0)
     {
         QMessageBox::warning(this, "Warning extension","Please select two objects");
         return;
     }
-     QApplication::setOverrideCursor(Qt::WaitCursor);
+    QApplication::setOverrideCursor(Qt::WaitCursor);
 
     vcg::tri::Append<MyMesh, MyMesh>::Mesh(*drawFirstObject,*drawSecondObject);
 
@@ -821,7 +851,7 @@ void OpenGlViewer::appendSecondMeshToFirst()
     (*drawSecondObject).fn=0;
     (*drawSecondObject).face.clear();
     (*drawSecondObject).vert.clear();
-  //  emit setDistanceInLabel(QString(""));
+    //  emit setDistanceInLabel(QString(""));
     updateDrawVertex();
     QApplication::restoreOverrideCursor();
 }
@@ -910,7 +940,11 @@ void OpenGlViewer::openAlignFile()
                 vectorMatrix.push_back(tempMatrix);
                 vectorVisible.push_back(true);
                 // vectorContentMLP.push_back({fileName,vcgMatrixToString(tempMatrix),"1"});  //if visible push actual matrix data with visible ==1
-                appendSecondMeshToFirst();
+                //appendSecondMeshToFirst();
+                if(drawFirstObject!=nullptr)
+                    delete drawFirstObject;
+                drawFirstObject=drawSecondObject;
+                drawSecondObject=nullptr;
             }
             else
             {

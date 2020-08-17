@@ -110,6 +110,7 @@ private:
     GLint GPUlightColor;
 
     GLint GPUlightPosition;
+    GLint GPUlightPosition2;
 
     GLuint VBO, VAO;
     GLuint shaderProgram;
