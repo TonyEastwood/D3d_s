@@ -868,6 +868,20 @@ void OpenGlViewer::setShowFaces(bool value)
     update();
 }
 
+void OpenGlViewer::addedMeshesToAlign(QStringList meshesList)
+{
+
+}
+
+void OpenGlViewer::clearMeshes()
+{
+    listAlignObjects.clear();
+    if(drawFirstObject!=nullptr)
+        delete drawFirstObject;
+    if(drawSecondObject!=nullptr)
+        delete drawSecondObject;
+}
+
 void OpenGlViewer::openAlignFile()
 {
     distanceInfo.clear();

@@ -7,6 +7,10 @@ MainAppWindow::MainAppWindow(  QWidget *parent)
     , ui(new Ui::MainAppWindow)
 {
 
+    WM_NewMesh = RegisterWindowMessageA(WM_NewMeshName);
+    WM_FilePath = RegisterWindowMessageA(WM_FilePathName);
+
+
 
     // this->setStyleSheet("QMenu::item { background-color: #262527; selection-color: white; } ");
     //this->setStyleSheet("QMenu  { background-color: #262527; selection-color: white; border: 1px solid black;} ");
@@ -31,8 +35,8 @@ MainAppWindow::MainAppWindow(  QWidget *parent)
     fileMenu->addSeparator();
     QAction *  openAlignFile = fileMenu->addAction(tr("Load mesh file to align"));
     fileMenu->addSeparator();
-   // QAction *  exportMlp = fileMenu->addAction(tr("Export mlp file"));
-   // fileMenu->addSeparator();
+    // QAction *  exportMlp = fileMenu->addAction(tr("Export mlp file"));
+    // fileMenu->addSeparator();
     QAction *  exitAction = fileMenu->addAction(tr("E&xit"));
 
     QFont font;
@@ -41,13 +45,13 @@ MainAppWindow::MainAppWindow(  QWidget *parent)
 
     QLabel * drawGrid=new QLabel("Enable Grid");
     QLabel * drawFace=new QLabel("Enable Faces");
-   // QLabel * lightLabel=new QLabel("Enable Light");
+    // QLabel * lightLabel=new QLabel("Enable Light");
 
     QLabel * distanceLabel=new QLabel("");
 
     drawGrid->setFont(font);
     drawFace->setFont(font);
-   // lightLabel->setFont(font);
+    // lightLabel->setFont(font);
 
     QPushButton * buttonAlign=new QPushButton("Align pair");
     QPushButton * buttonMerge=new QPushButton("Merge objects");
@@ -72,8 +76,8 @@ MainAppWindow::MainAppWindow(  QWidget *parent)
     horizLay2->addWidget(drawFace);
     horizLay2->addWidget(isFaceGrid);
 
-   // horizLay3->addWidget(lightLabel);
-   // horizLay3->addWidget(isLightOn);
+    // horizLay3->addWidget(lightLabel);
+    // horizLay3->addWidget(isLightOn);
 
     horizLay->setContentsMargins(0,0,5,0);
     horizLay->setSpacing(5);
@@ -92,7 +96,7 @@ MainAppWindow::MainAppWindow(  QWidget *parent)
 
     drawGrid->setAlignment(Qt::AlignTop);
     drawFace->setAlignment(Qt::AlignBottom);
-   // lightLabel->setAlignment(Qt::AlignTop);
+    // lightLabel->setAlignment(Qt::AlignTop);
 
 
     //     isFaceGrid->setAlignment(Qt::AlignTop);
@@ -141,8 +145,19 @@ MainAppWindow::MainAppWindow(  QWidget *parent)
     ui->centralwidget->setLayout(mainLayout);
     ui->centralwidget->show();
 
+    //    getMessageCustom
+
+  //  timer=new QTimer(this);
+
+
+   // timer->start(100);
+
+    connect(this, &MainAppWindow::infoDisplay, this, &MainAppWindow::coutInfo);
+
     connect(buttonMerge, &QPushButton::clicked, this, &MainAppWindow::appendSecondToFirst);
     connect(buttonAlign, &QPushButton::clicked, this, &MainAppWindow::alignSecondMesh);
+    //connect(buttonAlign, &QPushButton::clicked, this, &MainAppWindow::getMessageCustom);
+
     connect(isFaceGrid, &QCheckBox::toggled, this, &MainAppWindow::setDrawFaces);
     connect(isDrawGrid, &QCheckBox::toggled, this, &MainAppWindow::setDrawGrid);
     connect(isLightOn, &QCheckBox::toggled, this, &MainAppWindow::setLight);
@@ -155,6 +170,68 @@ MainAppWindow::MainAppWindow(  QWidget *parent)
     connect(openGlViewer, &OpenGlViewer::setDistanceInLabel, distanceLabel, &QLabel::setText);
     //connect(exportMlp, &QAction::triggered, this, &MainAppWindow::exportMlpFile);
 
+
+
+
+
+            // getMessageCustom(this);
+    // t1.detach();
+}
+
+bool MainAppWindow::nativeEvent(const QByteArray &eventType, void *message, long *result)
+{
+
+    MSG *msg = static_cast<MSG*>(message);
+
+
+
+
+    //if(GetMessage(&msg, NULL, NULL, NULL)>0){ // извлекаем сообщения из очереди, посылаемые фу-циями, ОС
+        if(msg->message==WM_NewMesh)
+        {
+            QStringList stringList;
+            if(!pathToFile.isEmpty())
+            {
+                QFile file(pathToFile);
+                QByteArray data;
+                if(file.open(QIODevice::ReadOnly))
+                {
+                    while(!file.atEnd())
+                    {
+                        stringList.append(QString::fromStdString(file.readLine().toStdString()).split(QRegExp("[\r\n]"),QString::SkipEmptyParts)[0]);
+                    }
+
+                }
+                file.close();
+                emit infoDisplay("MessageParse start");
+                for(auto &i:stringList)
+                    emit infoDisplay(i);
+                emit infoDisplay("MessageParse end");
+                //   qDebug()<<data;
+            }
+            return true;
+        }
+
+         if(msg->message==WM_FilePath)
+        {
+            QSettings m("HKEY_CURRENT_USER\\Software\\D3D-s\\AlignLab",QSettings::Registry64Format);
+            // qDebug()<<GetRegistryValueString(HKEY_CURRENT_USER, 'Software\D3D-s\AlignLab',  'PathToMeshList');
+            QString val = m.value("PathToMeshList").toString();
+            pathToFile=val;
+            emit infoDisplay(val.toLocal8Bit());
+
+            return true;
+        }
+        //emit infoDisplay("blabla");
+
+        //  TranslateMessage(&msg); // интерпретируем сообщения
+        // DispatchMessage(&msg); // передаём сообщения обратно ОС
+
+  //  }
+
+   // emit infoDisplay("blabla");
+
+        return false;
 }
 
 MainAppWindow::~MainAppWindow()
@@ -243,6 +320,64 @@ void MainAppWindow::openAlignFile()
 void MainAppWindow::exportMlpFile()
 {
     //openGlViewer->exportAsMLP();
+}
+
+void MainAppWindow::getMessageCustom()
+{
+
+    MSG msg;
+
+
+
+    if(GetMessage(&msg, NULL, NULL, NULL)>0){ // извлекаем сообщения из очереди, посылаемые фу-циями, ОС
+        if(msg.message==WM_NewMesh)
+        {
+            QStringList stringList;
+            if(!pathToFile.isEmpty())
+            {
+                QFile file(pathToFile);
+                QByteArray data;
+                if(file.open(QIODevice::ReadOnly))
+                {
+                    while(!file.atEnd())
+                    {
+                        stringList.append(QString::fromStdString(file.readLine().toStdString()).split(QRegExp("[\r\n]"),QString::SkipEmptyParts)[0]);
+                    }
+
+                }
+                file.close();
+                emit infoDisplay("MessageParse start");
+                for(auto &i:stringList)
+                    emit infoDisplay(i);
+                emit infoDisplay("MessageParse end");
+                //   qDebug()<<data;
+            }
+        }
+
+        else if(msg.message==WM_FilePath)
+        {
+            QSettings m("HKEY_CURRENT_USER\\Software\\D3D-s\\AlignLab",QSettings::Registry64Format);
+            // qDebug()<<GetRegistryValueString(HKEY_CURRENT_USER, 'Software\D3D-s\AlignLab',  'PathToMeshList');
+            QString val = m.value("PathToMeshList").toString();
+            pathToFile=val;
+            emit infoDisplay(val.toLocal8Bit());
+        }
+        emit infoDisplay("blabla");
+
+        //  TranslateMessage(&msg); // интерпретируем сообщения
+        // DispatchMessage(&msg); // передаём сообщения обратно ОС
+
+    }
+
+    emit infoDisplay("blabla");
+
+
+}
+
+void MainAppWindow::coutInfo(const QString & info)
+{
+    qDebug()<<info;
+    // std::cout<<info.toStdString()<<std::endl;
 }
 
 

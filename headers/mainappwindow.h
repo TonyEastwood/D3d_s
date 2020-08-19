@@ -13,6 +13,8 @@
 #include <QPushButton>
 #include <QCheckBox>
 #include <QStyleFactory>
+#include <QSettings>
+#include <QDebug>
 namespace Ui {
 class MainAppWindow;
 }
@@ -21,8 +23,20 @@ class MainAppWindow : public QMainWindow
 {
     Q_OBJECT
 
+private:
+    const LPCSTR WM_NewMeshName= LPCSTR("WM_NewMesh_D3D-s");
+    const LPCSTR WM_FilePathName  = LPCSTR("WM_FilePathName_D3D-s");
+
+    UINT WM_NewMesh;
+    UINT WM_FilePath ;
+
+    QString pathToFile;
+
 public:
     explicit MainAppWindow(  QWidget *parent = nullptr);
+
+    bool nativeEvent(const QByteArray &eventType, void *message, long *result) override;
+
     ~MainAppWindow();
 public slots:
     void setFirstOpenglMesh();
@@ -44,9 +58,15 @@ public slots:
 
     void exportMlpFile();
 
+    void getMessageCustom();
+
+    public slots:
+    void coutInfo(const QString & info);
+signals:
+    void infoDisplay(const QString &result);
+
 private:
     void initAlignWindow();
-
 
     Ui::MainAppWindow *ui;
     OpenGlViewer *openGlViewer; // openGl viewer

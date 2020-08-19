@@ -55,6 +55,10 @@ signals:
 public slots:
     void setShowGrid(bool value);
     void setShowFaces(bool value);
+
+
+    void addedMeshesToAlign(QStringList meshesList);
+    void clearMeshes();
 protected:
     void initializeGL() override;
     void resizeGL(int w, int h) override;
@@ -83,6 +87,8 @@ private:
 private:
     const uint COUNT_ALIGN_CYCLES=5;
     const double ERROR_ALIGN=0.021f;
+
+    QStringList listAlignObjects;
 
     const GLclampf BACKGROUND_COLOR[3]={0.709,0.588, 0.921}; //White background
 
