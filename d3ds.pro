@@ -627,6 +627,8 @@ FORMS += \
     ui/mainwindow.ui \
     ui/OpenGlViewer/openglviewer.ui
 
+LIBS += -luser32
+
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
