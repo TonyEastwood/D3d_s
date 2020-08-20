@@ -52,7 +52,6 @@ const GLchar* fragmentShaderSource = "#version 330 core\n"
         "vec3 result=(ambient+diffuse)*ourColor;\n"
         "color=vec4(result,1.0f);\n"
         //"color =ourColor;\n"
-
         "}\n\0";
 
 //   "color = ourColor;\n"
@@ -61,6 +60,7 @@ OpenGlViewer::OpenGlViewer( QWidget *parent)
     : QGLWidget(parent) {
 
     ui->setupUi(this);
+
 
     rotation.setVector(0,0,0);
     // rotationAxis=QVector3D(0,0,0);
@@ -582,8 +582,8 @@ void OpenGlViewer::exportAsMLP(QString filename)
 bool OpenGlViewer::setFirstMesh(QString path, bool isNeedToDraw)
 {
 
-    if(drawFirstObject!=nullptr)
-        delete drawFirstObject;
+//    if(drawFirstObject!=nullptr)
+//        delete drawFirstObject;
     QApplication::setOverrideCursor(Qt::WaitCursor);
 
 
@@ -616,8 +616,8 @@ bool OpenGlViewer::setSecondMesh(QString path,bool isNeedToDraw)
         QMessageBox::warning(this, "Warning","Please, choose first object");
         return false;
     }
-    if(drawSecondObject!=nullptr)
-        delete drawSecondObject;
+//    if(drawSecondObject!=nullptr)
+//        delete drawSecondObject;
     QApplication::setOverrideCursor(Qt::WaitCursor);
 
     drawSecondObject=new MyMesh();
@@ -868,18 +868,124 @@ void OpenGlViewer::setShowFaces(bool value)
     update();
 }
 
-void OpenGlViewer::addedMeshesToAlign(QStringList meshesList)
+void OpenGlViewer::addedMeshesToAlign(QStringList meshesList, QString path)
 {
+    if(path.isEmpty())
+        return;
+    vectorContentMLP.clear();
+    QString exportPath=path.split(".")[0]+".mlp";
+    QFileInfo fileInfo(path);
+    //get path to dir where file with meshes located
+    const QString pathToDir=path.mid(0,path.size()-fileInfo.fileName().size());
 
+
+
+    QStringList meshesNeedToAlign;  //will contain all meshes that need to align without duplicate
+    bool isNeedToAdd=true;
+    for(int i=0;i<meshesList.size();++i)
+    {
+        isNeedToAdd=true;
+        for(int j=0;j<WRvectorFileNames.size();++j)
+            if(meshesList[i]==WRvectorFileNames[j])
+            {
+                isNeedToAdd=false;
+                break;
+            }
+        if(isNeedToAdd)
+            meshesNeedToAlign.append(meshesList[i]);
+    }
+
+
+    if(meshesNeedToAlign.isEmpty())
+        return;
+
+    vcg::Matrix44d tempMatrix;
+    tempMatrix.SetIdentity();
+    bool isVisible=false;
+
+    int currentIndex=0;
+    if(WRvectorFileNames.empty())
+    {
+        for(int i=0;i<meshesNeedToAlign.size();++i)
+            if(setFirstMesh(pathToDir+meshesNeedToAlign[i],false))
+            {
+                currentIndex=i+1;
+                WRvectorFileNames.push_back(meshesNeedToAlign[i]);
+                WRvectorMatrix.push_back(tempMatrix);
+                WRvectorVisible.push_back(true);
+                break;
+            }
+    }
+    if(meshesNeedToAlign.size()>currentIndex)
+    {
+        for(int i=currentIndex;i<meshesNeedToAlign.size();++i)
+        {
+
+            if(meshesNeedToAlign[i].isEmpty() || meshesNeedToAlign[i]=="\r\n" || meshesNeedToAlign[i]=="\n")
+                continue;
+
+            if(!QFileInfo(pathToDir+meshesNeedToAlign[i]).exists() || !setSecondMesh(pathToDir+meshesNeedToAlign[i],false))
+                continue;
+
+            alignSecondMesh(drawSecondObject,drawFirstObject,&tempMatrix,&isVisible);
+
+            if(isVisible)
+            {
+                for(int i=0;i<WRvectorMatrix.size();++i)
+                {
+                    if(WRvectorVisible[i])
+                        WRvectorMatrix[i]*=tempMatrix;
+                }
+                WRvectorFileNames.push_back(meshesNeedToAlign[i]);
+
+                tempMatrix.SetIdentity();
+                WRvectorMatrix.push_back(tempMatrix);
+                WRvectorVisible.push_back(true);
+                // vectorContentMLP.push_back({fileName,vcgMatrixToString(tempMatrix),"1"});  //if visible push actual matrix data with visible ==1
+                //appendSecondMeshToFirst();
+                if(drawFirstObject!=nullptr)
+                    delete drawFirstObject;
+                drawFirstObject=drawSecondObject;
+                drawSecondObject=nullptr;
+            }
+            else
+            {
+                WRvectorFileNames.push_back(meshesNeedToAlign[i]);
+
+                tempMatrix.SetIdentity();
+                WRvectorMatrix.push_back(tempMatrix);
+                WRvectorVisible.push_back(false);
+                // vectorContentMLP.push_back({fileName,identityMatrix,"0"}); //if non visible, - push Matrix Identity with visible ==0
+            }
+        }
+    }
+    else return;
+
+    if(WRvectorMatrix.size()!=WRvectorVisible.size() || WRvectorMatrix.size()!=WRvectorFileNames.size())
+    {
+        QMessageBox::warning(this,"Error size incorrect", "Send it to developer error in code");
+        return;
+    }
+
+    for(int i=0;i<WRvectorMatrix.size();++i)
+        vectorContentMLP.push_back({WRvectorFileNames[i],vcgMatrixToString(WRvectorMatrix[i]),WRvectorVisible[i]?"1":"0"});
+
+    exportAsMLP(exportPath);
+    InitMaxOrigin();
+    updateDrawVertex();
 }
 
 void OpenGlViewer::clearMeshes()
 {
-    listAlignObjects.clear();
-    if(drawFirstObject!=nullptr)
-        delete drawFirstObject;
-    if(drawSecondObject!=nullptr)
-        delete drawSecondObject;
+    distanceInfo.clear();
+    vectorContentMLP.clear();
+    WRvectorFileNames.clear();
+    WRvectorMatrix.clear();
+    WRvectorVisible.clear();
+//    if(drawFirstObject!=nullptr)
+//        delete drawFirstObject;
+//    if(drawSecondObject!=nullptr)
+//        delete drawSecondObject;
 }
 
 void OpenGlViewer::openAlignFile()

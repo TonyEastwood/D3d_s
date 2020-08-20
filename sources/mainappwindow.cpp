@@ -147,10 +147,10 @@ MainAppWindow::MainAppWindow(  QWidget *parent)
 
     //    getMessageCustom
 
-  //  timer=new QTimer(this);
+    //  timer=new QTimer(this);
 
 
-   // timer->start(100);
+    // timer->start(100);
 
     connect(this, &MainAppWindow::infoDisplay, this, &MainAppWindow::coutInfo);
 
@@ -168,13 +168,17 @@ MainAppWindow::MainAppWindow(  QWidget *parent)
     connect(saveFirstMesh, &QAction::triggered, this, &MainAppWindow::saveFirstMesh);
     connect(exitAction, &QAction::triggered, this, &QWidget::close);
     connect(openGlViewer, &OpenGlViewer::setDistanceInLabel, distanceLabel, &QLabel::setText);
+
+    connect(this,&MainAppWindow::signalAppendMesh,openGlViewer,  &OpenGlViewer::addedMeshesToAlign, Qt::ConnectionType::QueuedConnection);
+    connect(this,&MainAppWindow::signalClearMeshesData,openGlViewer,  &OpenGlViewer::clearMeshes, Qt::ConnectionType::QueuedConnection);
+
     //connect(exportMlp, &QAction::triggered, this, &MainAppWindow::exportMlpFile);
 
 
 
 
 
-            // getMessageCustom(this);
+    // getMessageCustom(this);
     // t1.detach();
 }
 
@@ -182,56 +186,52 @@ bool MainAppWindow::nativeEvent(const QByteArray &eventType, void *message, long
 {
 
     MSG *msg = static_cast<MSG*>(message);
-
-
-
-
     //if(GetMessage(&msg, NULL, NULL, NULL)>0){ // извлекаем сообщения из очереди, посылаемые фу-циями, ОС
-        if(msg->message==WM_NewMesh)
+    if(msg->message==WM_NewMesh)
+    {
+        QStringList stringList;
+        if(!pathToFile.isEmpty())
         {
-            QStringList stringList;
-            if(!pathToFile.isEmpty())
+            QFile file(pathToFile);
+            QByteArray data;
+            if(file.open(QIODevice::ReadOnly))
             {
-                QFile file(pathToFile);
-                QByteArray data;
-                if(file.open(QIODevice::ReadOnly))
-                {
-                    while(!file.atEnd())
-                    {
-                        stringList.append(QString::fromStdString(file.readLine().toStdString()).split(QRegExp("[\r\n]"),QString::SkipEmptyParts)[0]);
-                    }
-
-                }
-                file.close();
-                emit infoDisplay("MessageParse start");
-                for(auto &i:stringList)
-                    emit infoDisplay(i);
-                emit infoDisplay("MessageParse end");
-                //   qDebug()<<data;
+                while(!file.atEnd())
+                    stringList.append(QString::fromStdString(file.readLine().toStdString()).split(QRegExp("[\r\n]"),QString::SkipEmptyParts)[0]);
             }
-            return true;
+            file.close();
+
+            //emit infoDisplay("MessageParse start");
+            // for(auto &i:stringList)
+            //   emit infoDisplay(i);
+            //emit infoDisplay("MessageParse end");
+            //   qDebug()<<data;
+            emit signalAppendMesh(stringList,pathToFile);
         }
+        return true;
+    }
 
-         if(msg->message==WM_FilePath)
-        {
-            QSettings m("HKEY_CURRENT_USER\\Software\\D3D-s\\AlignLab",QSettings::Registry64Format);
-            // qDebug()<<GetRegistryValueString(HKEY_CURRENT_USER, 'Software\D3D-s\AlignLab',  'PathToMeshList');
-            QString val = m.value("PathToMeshList").toString();
-            pathToFile=val;
-            emit infoDisplay(val.toLocal8Bit());
+    if(msg->message==WM_FilePath)
+    {
+        QSettings m("HKEY_CURRENT_USER\\Software\\D3D-s\\AlignLab",QSettings::Registry64Format);
+        // qDebug()<<GetRegistryValueString(HKEY_CURRENT_USER, 'Software\D3D-s\AlignLab',  'PathToMeshList');
+        QString val = m.value("PathToMeshList").toString();
+        pathToFile=val;
+        // emit infoDisplay(val.toLocal8Bit());
 
-            return true;
-        }
-        //emit infoDisplay("blabla");
+        emit signalClearMeshesData();
 
-        //  TranslateMessage(&msg); // интерпретируем сообщения
-        // DispatchMessage(&msg); // передаём сообщения обратно ОС
+        return true;
+    }
 
-  //  }
 
-   // emit infoDisplay("blabla");
+    //  TranslateMessage(&msg); // интерпретируем сообщения
+    // DispatchMessage(&msg); // передаём сообщения обратно ОС
 
-        return false;
+    //  }
+
+
+    return false;
 }
 
 MainAppWindow::~MainAppWindow()

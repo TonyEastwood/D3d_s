@@ -57,7 +57,7 @@ public slots:
     void setShowFaces(bool value);
 
 
-    void addedMeshesToAlign(QStringList meshesList);
+    void addedMeshesToAlign(QStringList meshesList, QString path);
     void clearMeshes();
 protected:
     void initializeGL() override;
@@ -88,7 +88,10 @@ private:
     const uint COUNT_ALIGN_CYCLES=5;
     const double ERROR_ALIGN=0.021f;
 
-    QStringList listAlignObjects;
+    std::vector<QString> WRvectorFileNames;
+    std::vector<vcg::Matrix44d> WRvectorMatrix;
+    std::vector<bool> WRvectorVisible;
+
 
     const GLclampf BACKGROUND_COLOR[3]={0.709,0.588, 0.921}; //White background
 

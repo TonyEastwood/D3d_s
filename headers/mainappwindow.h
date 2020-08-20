@@ -65,6 +65,10 @@ public slots:
 signals:
     void infoDisplay(const QString &result);
 
+    void signalAppendMesh(QStringList meshesList, QString path);
+
+    void signalClearMeshesData();
+
 private:
     void initAlignWindow();
 
