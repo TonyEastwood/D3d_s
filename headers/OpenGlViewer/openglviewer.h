@@ -85,8 +85,8 @@ private:
     //  void drawTestCube();
     //temporary const
 private:
-    const uint COUNT_ALIGN_CYCLES=5;
-    const double ERROR_ALIGN=0.021f;
+    const uint COUNT_ALIGN_CYCLES=50;
+    const double ERROR_ALIGN=0.005f;
 
     std::vector<QString> WRvectorFileNames;
     std::vector<vcg::Matrix44d> WRvectorMatrix;

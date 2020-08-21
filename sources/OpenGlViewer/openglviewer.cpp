@@ -787,35 +787,37 @@ void OpenGlViewer::alignSecondMesh(MyMesh * firstMesh=nullptr, MyMesh * secondMe
         {
             if(isVisible!=nullptr)
                 (*isVisible)=false;
-            distanceInfo.append("Iteration="+QString::number(i+1)+" distance is Nan.[Bad mesh]\n");
+            distanceInfo.append("Iteration="+QString::number(i+1)+" distance is Nan.[Bad mesh][Not included]\n");
             emit setDistanceInLabel(distanceInfo);
             QApplication::restoreOverrideCursor();
             return;
         }
 
-        if(distance.first<previousError)
-        {
+//        if(distance.first<previousError)
+//        {
             previousResult=result;
             previousError=distance.first;
             if(resultTransformMatrix!=nullptr)
                 (*resultTransformMatrix)=(*resultTransformMatrix)*result.Tr;
             quantityIteration=i;
-        }
-        else{
-            vcg::tri::UpdatePosition<MyMesh>::Matrix(*secondMesh,vcg::Inverse(result.Tr), true);
-            vcg::tri::UpdatePosition<MyMesh>::Matrix(*secondMesh, previousResult.Tr, true);
-            vcg::tri::UpdateBounding<MyMesh>::Box(*secondMesh);
-            distance=previousResult.computeAvgErr();
-            quantityIteration=i;
-            break;
-        }
+            if(distance.first<ERROR_ALIGN)
+                break;
+      //  }
+//        else{
+//            vcg::tri::UpdatePosition<MyMesh>::Matrix(*secondMesh,vcg::Inverse(result.Tr), true);
+//            vcg::tri::UpdatePosition<MyMesh>::Matrix(*secondMesh, previousResult.Tr, true);
+//            vcg::tri::UpdateBounding<MyMesh>::Box(*secondMesh);
+//            distance=previousResult.computeAvgErr();
+//            quantityIteration=i;
+//            break;
+//        }
 
     }
     if(distance.first>ERROR_ALIGN)
     {
         if(isVisible!=nullptr)
-            (*isVisible)=false;
-        distanceInfo.append("Iteration="+QString::number(quantityIteration+1)+" Distance="+QString::number(distance.first)+"[Bad mesh]\n");
+            (*isVisible)=true;
+        distanceInfo.append("Iteration="+QString::number(quantityIteration+1)+" Distance="+QString::number(distance.first)+"[Bad mesh][Included]\n");
         emit setDistanceInLabel(distanceInfo);
     }
     else
@@ -823,7 +825,7 @@ void OpenGlViewer::alignSecondMesh(MyMesh * firstMesh=nullptr, MyMesh * secondMe
         if(isVisible!=nullptr)
             (*isVisible)=true;
 
-        distanceInfo.append("Iteration="+QString::number(quantityIteration+1)+" Distance="+QString::number(distance.first)+"[Good mesh]\n");
+        distanceInfo.append("Iteration="+QString::number(quantityIteration+1)+" Distance="+QString::number(distance.first)+"[Good mesh][Included]\n");
         emit setDistanceInLabel(distanceInfo);
     }
     updateDrawVertex();
