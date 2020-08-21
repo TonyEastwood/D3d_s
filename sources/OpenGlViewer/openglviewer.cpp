@@ -74,14 +74,14 @@ OpenGlViewer::OpenGlViewer( QWidget *parent)
 
     translateSpeed=5;
 
-    drawFirstObject=new MyMesh();
+    //  drawFirstObject=new MyMesh();
 
 
     ratioWidthHeight=1;
 
-    drawSecondObject=new MyMesh();
+    //  drawSecondObject=new MyMesh();
 
-
+    meshes.clear();
     setFormat(QGLFormat(QGL::DoubleBuffer));  // double buff
 
     light_diffuse[0]=0.5;
@@ -123,8 +123,9 @@ OpenGlViewer::OpenGlViewer( QWidget *parent)
 }
 
 OpenGlViewer::~OpenGlViewer() {
-    delete drawFirstObject;
-    delete drawSecondObject;
+    for(int i=0;i<meshes.size();++i)
+        delete meshes[i];
+
     if(drawVertex!=nullptr)
         delete [] drawVertex;
     delete ui;
@@ -254,11 +255,11 @@ void OpenGlViewer::paintGL() {
 
         //draw faces first mesh
         f->glUniform3f(GPUobjectColor, 0.5f, 0.5f, 0.5f);   //color of faces first mesh
-        f->glDrawArrays(GL_TRIANGLES , 0, sizeDrawVertexFirstObject/6);
+        f->glDrawArrays(GL_TRIANGLES , 0, sizeDrawVertex/6);
 
-        //draw faces second mesh
-        f->glUniform3f(GPUobjectColor, 0.0f, 0.5f, 1.0f);   //color of faces second mesh
-        f->glDrawArrays(GL_TRIANGLES , sizeDrawVertexFirstObject/6, sizeDrawVertex/6);
+        //        //draw faces second mesh
+        //        f->glUniform3f(GPUobjectColor, 0.0f, 0.5f, 1.0f);   //color of faces second mesh
+        //        f->glDrawArrays(GL_TRIANGLES , sizeDrawVertexFirstObject/6, sizeDrawVertex/6);
     }
 
     if(isDrawGrid)
@@ -267,11 +268,11 @@ void OpenGlViewer::paintGL() {
 
         //draw grid first mesh
         f->glUniform3f(GPUobjectColor, 0.0f, 0.0f, 0.7f);   //color of grid first mesh
-        f->glDrawArrays(GL_TRIANGLES , 0, sizeDrawVertexFirstObject/6);
+        f->glDrawArrays(GL_TRIANGLES , 0, sizeDrawVertex/6);
 
-        //draw grid second mesh
-        f->glUniform3f(GPUobjectColor, 0.0f, 1.0f, 0.0f);//color of grid second mesh
-        f->glDrawArrays(GL_TRIANGLES , sizeDrawVertexFirstObject/6, sizeDrawVertex/6);
+        //        //draw grid second mesh
+        //        f->glUniform3f(GPUobjectColor, 0.0f, 1.0f, 0.0f);//color of grid second mesh
+        //        f->glDrawArrays(GL_TRIANGLES , sizeDrawVertexFirstObject/6, sizeDrawVertex/6);
     }
 
     f->glBindVertexArray(0);
@@ -388,17 +389,15 @@ QString OpenGlViewer::vcgMatrixToString(const vcg::Matrix44d &resultTransformMat
 
 void OpenGlViewer::InitMaxOrigin()
 {
-    if(drawFirstObject!=nullptr)
-        if((*drawFirstObject).fn!=0)
-        {
-            minMaxXYZ[0]=minMaxXYZ[2]=minMaxXYZ[4]=100000000;
-            minMaxXYZ[1]=minMaxXYZ[3]=minMaxXYZ[5]=-100000000;
-            findMinMaxForStl(drawFirstObject);
-        }
 
-    if(drawSecondObject!=nullptr)
-        if((*drawSecondObject).fn!=0)
-            findMinMaxForStl(drawSecondObject);
+    minMaxXYZ[0]=minMaxXYZ[2]=minMaxXYZ[4]=100000000;
+    minMaxXYZ[1]=minMaxXYZ[3]=minMaxXYZ[5]=-100000000;
+
+    for(int i=0;i<meshes.size();++i)
+        findMinMaxForStl(meshes[i]);
+
+
+
 
 
     double distanceX=abs((minMaxXYZ[1]-minMaxXYZ[0]));
@@ -428,81 +427,132 @@ void OpenGlViewer::updateDrawVertex()
 
     int n=18;
 
-    if(drawSecondObject==nullptr)
-        sizeDrawVertex=n*drawFirstObject->face.size();
-    else
-        sizeDrawVertex=n*(drawFirstObject->face.size()+drawSecondObject->face.size());
+    f->glBufferData(GL_ARRAY_BUFFER,  sizeDrawVertex * sizeof(GLfloat), NULL, GL_STATIC_DRAW);
+    sizeDrawVertex=0;
+    for(int i=0;i<meshes.size();++i)
+        sizeDrawVertex+=n*meshes[i]->face.size();
+    //    if(drawSecondObject==nullptr)
+    //        sizeDrawVertex=n*drawFirstObject->face.size();
+    //    else
+    //        sizeDrawVertex=n*(drawFirstObject->face.size()+drawSecondObject->face.size());
 
 
     drawVertex=new GLfloat[sizeDrawVertex];
 
+    int currentSize=0;
 
-    sizeDrawVertexFirstObject=drawFirstObject->face.size();
-
-    for(int i=0;i<sizeDrawVertexFirstObject;++i)
+    int currentPosition=0;
+    for(int i=0;i<meshes.size();++i)
     {
-        drawVertex[n*i  ]=(*drawFirstObject).face[i].P0(0).X();
-        drawVertex[n*i+1]=(*drawFirstObject).face[i].P0(0).Y();
-        drawVertex[n*i+2]=(*drawFirstObject).face[i].P0(0).Z();
+        currentSize=meshes[i]->face.size();
 
-        drawVertex[n*i+3]=(*drawFirstObject).face[i].N().X();
-        drawVertex[n*i+4]=(*drawFirstObject).face[i].N().Y();
-        drawVertex[n*i+5]=(*drawFirstObject).face[i].N().Z();
-
-        drawVertex[n*i+6]=(*drawFirstObject).face[i].P0(1).X();
-        drawVertex[n*i+7]=(*drawFirstObject).face[i].P0(1).Y();
-        drawVertex[n*i+8]=(*drawFirstObject).face[i].P0(1).Z();
-
-        drawVertex[n*i+9]=(*drawFirstObject).face[i].N().X();
-        drawVertex[n*i+10]=(*drawFirstObject).face[i].N().Y();
-        drawVertex[n*i+11]=(*drawFirstObject).face[i].N().Z();
-
-        drawVertex[n*i+12]=(*drawFirstObject).face[i].P0(2).X();
-        drawVertex[n*i+13]=(*drawFirstObject).face[i].P0(2).Y();
-        drawVertex[n*i+14]=(*drawFirstObject).face[i].P0(2).Z();
-
-        drawVertex[n*i+15]=(*drawFirstObject).face[i].N().X();
-        drawVertex[n*i+16]=(*drawFirstObject).face[i].N().Y();
-        drawVertex[n*i+17]=(*drawFirstObject).face[i].N().Z();
-    }
-    sizeDrawVertexFirstObject*=n;
-
-    if(drawSecondObject!=nullptr)
-    {
-        int  size2=drawSecondObject->face.size();
-
-        for(int i=0;i<size2;++i)
+        for(int j=0;j<currentSize;++j)
         {
-            drawVertex[sizeDrawVertexFirstObject + n*i  ]=(*drawSecondObject).face[i].P0(0).X();
-            drawVertex[sizeDrawVertexFirstObject +n*i+1]=(*drawSecondObject).face[i].P0(0).Y();
-            drawVertex[sizeDrawVertexFirstObject +n*i+2]=(*drawSecondObject).face[i].P0(0).Z();
+            drawVertex[currentPosition+n*j   ]=meshes[i]->face[j].P0(0).X();
+            drawVertex[currentPosition+n*j+ 1]=meshes[i]->face[j].P0(0).Y();
+            drawVertex[currentPosition+n*j+ 2]=meshes[i]->face[j].P0(0).Z();
 
-            drawVertex[sizeDrawVertexFirstObject +n*i+3]=(*drawSecondObject).face[i].N().X();
-            drawVertex[sizeDrawVertexFirstObject +n*i+4]=(*drawSecondObject).face[i].N().Y();
-            drawVertex[sizeDrawVertexFirstObject +n*i+5]=(*drawSecondObject).face[i].N().Z();
+            drawVertex[currentPosition+n*j+ 3]=meshes[i]->face[j].N().X();
+            drawVertex[currentPosition+n*j+ 4]=meshes[i]->face[j].N().Y();
+            drawVertex[currentPosition+n*j+ 5]=meshes[i]->face[j].N().Z();
 
-            drawVertex[sizeDrawVertexFirstObject +n*i+6]=(*drawSecondObject).face[i].P0(1).X();
-            drawVertex[sizeDrawVertexFirstObject +n*i+7]=(*drawSecondObject).face[i].P0(1).Y();
-            drawVertex[sizeDrawVertexFirstObject +n*i+8]=(*drawSecondObject).face[i].P0(1).Z();
+            drawVertex[currentPosition+n*j+ 6]=meshes[i]->face[j].P0(1).X();
+            drawVertex[currentPosition+n*j+ 7]=meshes[i]->face[j].P0(1).Y();
+            drawVertex[currentPosition+n*j+ 8]=meshes[i]->face[j].P0(1).Z();
 
-            drawVertex[sizeDrawVertexFirstObject +n*i+9]=(*drawSecondObject).face[i].N().X();
-            drawVertex[sizeDrawVertexFirstObject +n*i+10]=(*drawSecondObject).face[i].N().Y();
-            drawVertex[sizeDrawVertexFirstObject +n*i+11]=(*drawSecondObject).face[i].N().Z();
+            drawVertex[currentPosition+n*j+ 9]=meshes[i]->face[j].N().X();
+            drawVertex[currentPosition+n*j+10]=meshes[i]->face[j].N().Y();
+            drawVertex[currentPosition+n*j+11]=meshes[i]->face[j].N().Z();
 
-            drawVertex[sizeDrawVertexFirstObject +n*i+12]=(*drawSecondObject).face[i].P0(2).X();
-            drawVertex[sizeDrawVertexFirstObject +n*i+13]=(*drawSecondObject).face[i].P0(2).Y();
-            drawVertex[sizeDrawVertexFirstObject +n*i+14]=(*drawSecondObject).face[i].P0(2).Z();
+            drawVertex[currentPosition+n*j+12]=meshes[i]->face[j].P0(2).X();
+            drawVertex[currentPosition+n*j+13]=meshes[i]->face[j].P0(2).Y();
+            drawVertex[currentPosition+n*j+14]=meshes[i]->face[j].P0(2).Z();
 
-            drawVertex[sizeDrawVertexFirstObject +n*i+15]=(*drawSecondObject).face[i].N().X();
-            drawVertex[sizeDrawVertexFirstObject +n*i+16]=(*drawSecondObject).face[i].N().Y();
-            drawVertex[sizeDrawVertexFirstObject +n*i+17]=(*drawSecondObject).face[i].N().Z();
+            drawVertex[currentPosition+n*j+15]=meshes[i]->face[j].N().X();
+            drawVertex[currentPosition+n*j+16]=meshes[i]->face[j].N().Y();
+            drawVertex[currentPosition+n*j+17]=meshes[i]->face[j].N().Z();
         }
+        currentPosition+=n*currentSize;
+
+
+
 
     }
 
-    f->glBufferData(GL_ARRAY_BUFFER,  sizeDrawVertex * sizeof(GLfloat), NULL, GL_STATIC_DRAW);
+
+    //    sizeDrawVertexFirstObject=drawFirstObject->face.size();
+
+    //    for(int i=0;i<sizeDrawVertexFirstObject;++i)
+    //    {
+    //        drawVertex[n*i  ]=(*drawFirstObject).face[i].P0(0).X();
+    //        drawVertex[n*i+1]=(*drawFirstObject).face[i].P0(0).Y();
+    //        drawVertex[n*i+2]=(*drawFirstObject).face[i].P0(0).Z();
+
+    //        drawVertex[n*i+3]=(*drawFirstObject).face[i].N().X();
+    //        drawVertex[n*i+4]=(*drawFirstObject).face[i].N().Y();
+    //        drawVertex[n*i+5]=(*drawFirstObject).face[i].N().Z();
+
+    //        drawVertex[n*i+6]=(*drawFirstObject).face[i].P0(1).X();
+    //        drawVertex[n*i+7]=(*drawFirstObject).face[i].P0(1).Y();
+    //        drawVertex[n*i+8]=(*drawFirstObject).face[i].P0(1).Z();
+
+    //        drawVertex[n*i+9]=(*drawFirstObject).face[i].N().X();
+    //        drawVertex[n*i+10]=(*drawFirstObject).face[i].N().Y();
+    //        drawVertex[n*i+11]=(*drawFirstObject).face[i].N().Z();
+
+    //        drawVertex[n*i+12]=(*drawFirstObject).face[i].P0(2).X();
+    //        drawVertex[n*i+13]=(*drawFirstObject).face[i].P0(2).Y();
+    //        drawVertex[n*i+14]=(*drawFirstObject).face[i].P0(2).Z();
+
+    //        drawVertex[n*i+15]=(*drawFirstObject).face[i].N().X();
+    //        drawVertex[n*i+16]=(*drawFirstObject).face[i].N().Y();
+    //        drawVertex[n*i+17]=(*drawFirstObject).face[i].N().Z();
+    //    }
+    //    sizeDrawVertexFirstObject*=n;
+
+    //    if(drawSecondObject!=nullptr)
+    //    {
+    //        int  size2=drawSecondObject->face.size();
+
+    //        for(int i=0;i<size2;++i)
+    //        {
+    //            drawVertex[sizeDrawVertexFirstObject + n*i  ]=(*drawSecondObject).face[i].P0(0).X();
+    //            drawVertex[sizeDrawVertexFirstObject +n*i+1]=(*drawSecondObject).face[i].P0(0).Y();
+    //            drawVertex[sizeDrawVertexFirstObject +n*i+2]=(*drawSecondObject).face[i].P0(0).Z();
+
+    //            drawVertex[sizeDrawVertexFirstObject +n*i+3]=(*drawSecondObject).face[i].N().X();
+    //            drawVertex[sizeDrawVertexFirstObject +n*i+4]=(*drawSecondObject).face[i].N().Y();
+    //            drawVertex[sizeDrawVertexFirstObject +n*i+5]=(*drawSecondObject).face[i].N().Z();
+
+    //            drawVertex[sizeDrawVertexFirstObject +n*i+6]=(*drawSecondObject).face[i].P0(1).X();
+    //            drawVertex[sizeDrawVertexFirstObject +n*i+7]=(*drawSecondObject).face[i].P0(1).Y();
+    //            drawVertex[sizeDrawVertexFirstObject +n*i+8]=(*drawSecondObject).face[i].P0(1).Z();
+
+    //            drawVertex[sizeDrawVertexFirstObject +n*i+9]=(*drawSecondObject).face[i].N().X();
+    //            drawVertex[sizeDrawVertexFirstObject +n*i+10]=(*drawSecondObject).face[i].N().Y();
+    //            drawVertex[sizeDrawVertexFirstObject +n*i+11]=(*drawSecondObject).face[i].N().Z();
+
+    //            drawVertex[sizeDrawVertexFirstObject +n*i+12]=(*drawSecondObject).face[i].P0(2).X();
+    //            drawVertex[sizeDrawVertexFirstObject +n*i+13]=(*drawSecondObject).face[i].P0(2).Y();
+    //            drawVertex[sizeDrawVertexFirstObject +n*i+14]=(*drawSecondObject).face[i].P0(2).Z();
+
+    //            drawVertex[sizeDrawVertexFirstObject +n*i+15]=(*drawSecondObject).face[i].N().X();
+    //            drawVertex[sizeDrawVertexFirstObject +n*i+16]=(*drawSecondObject).face[i].N().Y();
+    //            drawVertex[sizeDrawVertexFirstObject +n*i+17]=(*drawSecondObject).face[i].N().Z();
+    //        }
+
+    //    }
+
+
     f->glBufferData(GL_ARRAY_BUFFER,  sizeDrawVertex * sizeof(GLfloat), drawVertex, GL_STATIC_DRAW);
     update();
+}
+
+void OpenGlViewer::clearMeshesVector()
+{
+    for(int i=0;i<meshes.size();++i)
+        delete meshes[i];
+    meshes.clear();
 }
 
 void OpenGlViewer::exportAsMLP(QString filename)
@@ -579,25 +629,25 @@ void OpenGlViewer::exportAsMLP(QString filename)
 //    glEnd();  // END TRIANGLES DRAWING
 //}
 
-bool OpenGlViewer::setFirstMesh(QString path, bool isNeedToDraw)
+bool OpenGlViewer::addMesh(QString path, bool isNeedToDraw)
 {
 
-//    if(drawFirstObject!=nullptr)
-//        delete drawFirstObject;
+    //    if(drawFirstObject!=nullptr)
+    //        delete drawFirstObject;
     QApplication::setOverrideCursor(Qt::WaitCursor);
 
 
-    drawFirstObject=new MyMesh();
+    meshes.push_back(new MyMesh());
 
-    if(vcg::tri::io::Importer<MyMesh>::Open(*drawFirstObject,path.toLocal8Bit())) { // all the importers return 0 in case of success
+    if(vcg::tri::io::Importer<MyMesh>::Open(*meshes.back(),path.toLocal8Bit())) { // all the importers return 0 in case of success
         printf("Error in reading %s: '%s'\n");
         // QMessageBox::warning(this,"Error", "Can't open file "+path);
-        drawFirstObject->Clear();
+        meshes.back()->Clear();
         QApplication::restoreOverrideCursor();
         return false;
     }
 
-    vcg::tri::UpdateNormal<MyMesh>::PerVertexNormalizedPerFace(*drawFirstObject);
+    vcg::tri::UpdateNormal<MyMesh>::PerVertexNormalizedPerFace(*meshes.back());
 
     if(isNeedToDraw)
     {
@@ -608,38 +658,38 @@ bool OpenGlViewer::setFirstMesh(QString path, bool isNeedToDraw)
     return true;
 }
 
-bool OpenGlViewer::setSecondMesh(QString path,bool isNeedToDraw)
-{
+//bool OpenGlViewer::setSecondMesh(QString path,bool isNeedToDraw)
+//{
 
-    if(drawFirstObject==nullptr)
-    {
-        QMessageBox::warning(this, "Warning","Please, choose first object");
-        return false;
-    }
-//    if(drawSecondObject!=nullptr)
-//        delete drawSecondObject;
-    QApplication::setOverrideCursor(Qt::WaitCursor);
+//    if(drawFirstObject==nullptr)
+//    {
+//        QMessageBox::warning(this, "Warning","Please, choose first object");
+//        return false;
+//    }
+//    //    if(drawSecondObject!=nullptr)
+//    //        delete drawSecondObject;
+//    QApplication::setOverrideCursor(Qt::WaitCursor);
 
-    drawSecondObject=new MyMesh();
+//    drawSecondObject=new MyMesh();
 
-    if(vcg::tri::io::Importer<MyMesh>::Open(*drawSecondObject,path.toLocal8Bit())) { // all the importers return 0 in case of success
-        drawSecondObject->Clear();
-        printf("Error in reading %s: '%s'\n");
-        // QMessageBox::warning(this,"Error", "Can't open file "+path);
-        QApplication::restoreOverrideCursor();
-        return false;
-    }
-    vcg::tri::UpdateNormal<MyMesh>::PerVertexNormalizedPerFace(*drawSecondObject);
+//    if(vcg::tri::io::Importer<MyMesh>::Open(*drawSecondObject,path.toLocal8Bit())) { // all the importers return 0 in case of success
+//        drawSecondObject->Clear();
+//        printf("Error in reading %s: '%s'\n");
+//        // QMessageBox::warning(this,"Error", "Can't open file "+path);
+//        QApplication::restoreOverrideCursor();
+//        return false;
+//    }
+//    vcg::tri::UpdateNormal<MyMesh>::PerVertexNormalizedPerFace(*drawSecondObject);
 
-    if(isNeedToDraw)
-    {
-        InitMaxOrigin();
-        updateDrawVertex();
-    }
-    QApplication::restoreOverrideCursor();
-    return true;
+//    if(isNeedToDraw)
+//    {
+//        InitMaxOrigin();
+//        updateDrawVertex();
+//    }
+//    QApplication::restoreOverrideCursor();
+//    return true;
 
-}
+//}
 
 void OpenGlViewer::setLight(bool value)
 {
@@ -647,43 +697,43 @@ void OpenGlViewer::setLight(bool value)
     update();
 }
 
-void OpenGlViewer::saveSecondMesh()
-{
-    if(drawSecondObject==nullptr)
-    {
-        QMessageBox::warning(this, "Error","Second object ==nullptr");
-        return;
-        return;
-    }
-    if(drawSecondObject->fn==0)
-    {
-        QMessageBox::warning(this, "Warning","Please, choose second object");
-        return;
-    }
-    QString resultPath=QFileDialog::getSaveFileName(this,"Save object","C://",tr("STL (*.stl);;PLY (*.ply)"));
-    QFileInfo file1(resultPath);
-    if(resultPath.isEmpty())
-        return;
-    if(file1.completeSuffix()=="ply")
-    {
-        vcg::tri::io::ExporterPLY<MyMesh>::Save(*drawSecondObject ,resultPath.toLocal8Bit());
-        return;
-    }
-    if(file1.completeSuffix()=="stl")
-    {
-        vcg::tri::io::ExporterSTL<MyMesh>::Save(*drawSecondObject ,resultPath.toLocal8Bit());
-        return;
-    }
-    QMessageBox::warning(this, "Warning extension","Please select object with another format");
-    return;
+//void OpenGlViewer::saveSecondMesh()
+//{
+//    if(drawSecondObject==nullptr)
+//    {
+//        QMessageBox::warning(this, "Error","Second object ==nullptr");
+//        return;
+//        return;
+//    }
+//    if(drawSecondObject->fn==0)
+//    {
+//        QMessageBox::warning(this, "Warning","Please, choose second object");
+//        return;
+//    }
+//    QString resultPath=QFileDialog::getSaveFileName(this,"Save object","C://",tr("STL (*.stl);;PLY (*.ply)"));
+//    QFileInfo file1(resultPath);
+//    if(resultPath.isEmpty())
+//        return;
+//    if(file1.completeSuffix()=="ply")
+//    {
+//        vcg::tri::io::ExporterPLY<MyMesh>::Save(*drawSecondObject ,resultPath.toLocal8Bit());
+//        return;
+//    }
+//    if(file1.completeSuffix()=="stl")
+//    {
+//        vcg::tri::io::ExporterSTL<MyMesh>::Save(*drawSecondObject ,resultPath.toLocal8Bit());
+//        return;
+//    }
+//    QMessageBox::warning(this, "Warning extension","Please select object with another format");
+//    return;
 
-}
+//}
 
 void OpenGlViewer::saveFirstMesh()
 {
-    if(drawFirstObject->fn==0)
+    if(meshes.size()==0)
     {
-        QMessageBox::warning(this, "Warning","Please, choose second object");
+        QMessageBox::warning(this, "Warning","Please, add at least one mesh");
         return;
     }
     QString resultPath=QFileDialog::getSaveFileName(this,"Save object","C://",tr("STL (*.stl);;PLY (*.ply)"));
@@ -692,12 +742,12 @@ void OpenGlViewer::saveFirstMesh()
         return;
     if(file1.completeSuffix()=="ply")
     {
-        vcg::tri::io::ExporterPLY<MyMesh>::Save(*drawFirstObject ,resultPath.toLocal8Bit());
+        vcg::tri::io::ExporterPLY<MyMesh>::Save(*meshes[0] ,resultPath.toLocal8Bit());
         return;
     }
     if(file1.completeSuffix()=="stl")
     {
-        vcg::tri::io::ExporterSTL<MyMesh>::Save(*drawFirstObject ,resultPath.toLocal8Bit());
+        vcg::tri::io::ExporterSTL<MyMesh>::Save(*meshes[0] ,resultPath.toLocal8Bit());
         return;
     }
     QMessageBox::warning(this, "Warning extension","Please select object with another format");
@@ -711,13 +761,13 @@ void OpenGlViewer::alignSecondMesh(MyMesh * firstMesh=nullptr, MyMesh * secondMe
 
     if(firstMesh==nullptr || secondMesh==nullptr)
     {
-        if(drawFirstObject==nullptr || drawSecondObject==nullptr)
+        if(meshes.size()<1)
         {
-            QMessageBox::warning(this, "Error align SecondMesh","First or second object==nullptr");
+            QMessageBox::warning(this, "Error align SecondMesh","Please, add at least two meshes");
             return;
         }
-        firstMesh=drawFirstObject;
-        secondMesh=drawSecondObject;
+        firstMesh=meshes[0];
+        secondMesh=meshes[1];
         distanceInfo.clear();
     }
 
@@ -793,24 +843,24 @@ void OpenGlViewer::alignSecondMesh(MyMesh * firstMesh=nullptr, MyMesh * secondMe
             return;
         }
 
-//        if(distance.first<previousError)
-//        {
-            previousResult=result;
-            previousError=distance.first;
-            if(resultTransformMatrix!=nullptr)
-                (*resultTransformMatrix)=(*resultTransformMatrix)*result.Tr;
-            quantityIteration=i;
-            if(distance.first<ERROR_ALIGN)
-                break;
-      //  }
-//        else{
-//            vcg::tri::UpdatePosition<MyMesh>::Matrix(*secondMesh,vcg::Inverse(result.Tr), true);
-//            vcg::tri::UpdatePosition<MyMesh>::Matrix(*secondMesh, previousResult.Tr, true);
-//            vcg::tri::UpdateBounding<MyMesh>::Box(*secondMesh);
-//            distance=previousResult.computeAvgErr();
-//            quantityIteration=i;
-//            break;
-//        }
+        //        if(distance.first<previousError)
+        //        {
+        previousResult=result;
+        previousError=distance.first;
+        if(resultTransformMatrix!=nullptr)
+            (*resultTransformMatrix)=(*resultTransformMatrix)*result.Tr;
+        quantityIteration=i;
+        if(distance.first<ERROR_ALIGN)
+            break;
+        //  }
+        //        else{
+        //            vcg::tri::UpdatePosition<MyMesh>::Matrix(*secondMesh,vcg::Inverse(result.Tr), true);
+        //            vcg::tri::UpdatePosition<MyMesh>::Matrix(*secondMesh, previousResult.Tr, true);
+        //            vcg::tri::UpdateBounding<MyMesh>::Box(*secondMesh);
+        //            distance=previousResult.computeAvgErr();
+        //            quantityIteration=i;
+        //            break;
+        //        }
 
     }
     if(distance.first>ERROR_ALIGN)
@@ -832,27 +882,27 @@ void OpenGlViewer::alignSecondMesh(MyMesh * firstMesh=nullptr, MyMesh * secondMe
     QApplication::restoreOverrideCursor();
 }
 
-void OpenGlViewer::appendSecondMeshToFirst()
+void OpenGlViewer::appendSecondMeshToFirst(MyMesh * firstMesh, MyMesh * secondMesh)
 {
-    if(drawFirstObject==nullptr || drawSecondObject==nullptr)
+    if(firstMesh==nullptr || secondMesh==nullptr)
     {
-        QMessageBox::warning(this, "Warning objects ==nullptr. Append second mesh error","Please select two objects");
-        return;
+        if(meshes.size()<1)
+        {
+            QMessageBox::warning(this, "Error align SecondMesh","Please, add at least two meshes");
+            return;
+        }
+        firstMesh=meshes[0];
+        secondMesh=meshes[1];
     }
-    if((*drawFirstObject).fn==0 || (*drawSecondObject).fn==0)
-    {
-        QMessageBox::warning(this, "Warning extension","Please select two objects");
-        return;
-    }
+
     QApplication::setOverrideCursor(Qt::WaitCursor);
 
-    vcg::tri::Append<MyMesh, MyMesh>::Mesh(*drawFirstObject,*drawSecondObject);
+    vcg::tri::Append<MyMesh, MyMesh>::Mesh(*firstMesh,*secondMesh);
 
-    vcg::tri::UpdateNormal<MyMesh>::PerVertexNormalizedPerFace(*drawFirstObject);
+    vcg::tri::UpdateNormal<MyMesh>::PerVertexNormalizedPerFace(*firstMesh);
 
-    (*drawSecondObject).fn=0;
-    (*drawSecondObject).face.clear();
-    (*drawSecondObject).vert.clear();
+    delete meshes[1];   //delete object that meshes[1] pointed to
+    meshes.erase(meshes.begin()+1);         //erase pointer from array
     //  emit setDistanceInLabel(QString(""));
     updateDrawVertex();
     QApplication::restoreOverrideCursor();
@@ -909,7 +959,7 @@ void OpenGlViewer::addedMeshesToAlign(QStringList meshesList, QString path)
     if(WRvectorFileNames.empty())
     {
         for(int i=0;i<meshesNeedToAlign.size();++i)
-            if(setFirstMesh(pathToDir+meshesNeedToAlign[i],false))
+            if(addMesh(pathToDir+meshesNeedToAlign[i],false))
             {
                 currentIndex=i+1;
                 WRvectorFileNames.push_back(meshesNeedToAlign[i]);
@@ -926,10 +976,10 @@ void OpenGlViewer::addedMeshesToAlign(QStringList meshesList, QString path)
             if(meshesNeedToAlign[i].isEmpty() || meshesNeedToAlign[i]=="\r\n" || meshesNeedToAlign[i]=="\n")
                 continue;
 
-            if(!QFileInfo(pathToDir+meshesNeedToAlign[i]).exists() || !setSecondMesh(pathToDir+meshesNeedToAlign[i],false))
+            if(!QFileInfo(pathToDir+meshesNeedToAlign[i]).exists() || !addMesh(pathToDir+meshesNeedToAlign[i],false))
                 continue;
 
-            alignSecondMesh(drawSecondObject,drawFirstObject,&tempMatrix,&isVisible);
+            alignSecondMesh(meshes[meshes.size()-1],meshes[meshes.size()-2],&tempMatrix,&isVisible);
 
             if(isVisible)
             {
@@ -938,6 +988,14 @@ void OpenGlViewer::addedMeshesToAlign(QStringList meshesList, QString path)
                     if(WRvectorVisible[i])
                         WRvectorMatrix[i]*=tempMatrix;
                 }
+                if(meshes.size()>2)
+                {
+                    for(int i=0;i<meshes.size()-2;++i)
+                    {
+                        vcg::tri::UpdatePosition<MyMesh>::Matrix(*meshes[i], tempMatrix, true);
+                        vcg::tri::UpdateBounding<MyMesh>::Box(*meshes[i]);
+                    }
+                }
                 WRvectorFileNames.push_back(meshesNeedToAlign[i]);
 
                 tempMatrix.SetIdentity();
@@ -945,10 +1003,10 @@ void OpenGlViewer::addedMeshesToAlign(QStringList meshesList, QString path)
                 WRvectorVisible.push_back(true);
                 // vectorContentMLP.push_back({fileName,vcgMatrixToString(tempMatrix),"1"});  //if visible push actual matrix data with visible ==1
                 //appendSecondMeshToFirst();
-                if(drawFirstObject!=nullptr)
-                    delete drawFirstObject;
-                drawFirstObject=drawSecondObject;
-                drawSecondObject=nullptr;
+                //                if(drawFirstObject!=nullptr)
+                //                    delete drawFirstObject;
+                //                drawFirstObject=drawSecondObject;
+                //                drawSecondObject=nullptr;
             }
             else
             {
@@ -979,19 +1037,22 @@ void OpenGlViewer::addedMeshesToAlign(QStringList meshesList, QString path)
 
 void OpenGlViewer::clearMeshes()
 {
+    clearMeshesVector();
     distanceInfo.clear();
     vectorContentMLP.clear();
     WRvectorFileNames.clear();
     WRvectorMatrix.clear();
     WRvectorVisible.clear();
-//    if(drawFirstObject!=nullptr)
-//        delete drawFirstObject;
-//    if(drawSecondObject!=nullptr)
-//        delete drawSecondObject;
+    //    if(drawFirstObject!=nullptr)
+    //        delete drawFirstObject;
+    //    if(drawSecondObject!=nullptr)
+    //        delete drawSecondObject;
 }
 
 void OpenGlViewer::openAlignFile()
 {
+
+    clearMeshesVector();
     distanceInfo.clear();
     vectorContentMLP.clear();
     std::vector<QString> vectorFileNames;
@@ -1023,7 +1084,7 @@ void OpenGlViewer::openAlignFile()
 
             if(!QFileInfo(pathToDir+fileName).exists())
                 continue;
-        }while(!setFirstMesh(pathToDir+fileName,false) && !fileWithAlignMeshes.atEnd());
+        }while(!addMesh(pathToDir+fileName,false) && !fileWithAlignMeshes.atEnd());
 
         // vectorContentMLP.push_back({fileName,identityMatrix,"1"}); //add First mesh to MPL vector with Identity matrix
 
@@ -1044,10 +1105,10 @@ void OpenGlViewer::openAlignFile()
 
             fileName=QString::fromStdString(isEmpty.toStdString()).split(QRegExp("[\r\n]"),QString::SkipEmptyParts)[0];
 
-            if(!QFileInfo(pathToDir+fileName).exists() || !setSecondMesh(pathToDir+fileName,false))
+            if(!QFileInfo(pathToDir+fileName).exists() || !addMesh(pathToDir+fileName,false))
                 continue;
 
-            alignSecondMesh(drawSecondObject,drawFirstObject,&tempMatrix,&isVisible);
+            alignSecondMesh(meshes[meshes.size()-1],meshes[meshes.size()-2],&tempMatrix,&isVisible);
 
             if(isVisible)
             {
@@ -1063,10 +1124,10 @@ void OpenGlViewer::openAlignFile()
                 vectorVisible.push_back(true);
                 // vectorContentMLP.push_back({fileName,vcgMatrixToString(tempMatrix),"1"});  //if visible push actual matrix data with visible ==1
                 //appendSecondMeshToFirst();
-                if(drawFirstObject!=nullptr)
-                    delete drawFirstObject;
-                drawFirstObject=drawSecondObject;
-                drawSecondObject=nullptr;
+                //                if(drawFirstObject!=nullptr)
+                //                    delete drawFirstObject;
+                //                drawFirstObject=drawSecondObject;
+                //                drawSecondObject=nullptr;
             }
             else
             {
