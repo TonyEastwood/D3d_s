@@ -39,8 +39,8 @@ public:
 
     ~MainAppWindow();
 public slots:
-    void setFirstOpenglMesh();
-    void setSecondOpenglMesh();
+    void addMesh();
+    //void setSecondOpenglMesh();
 
 
     void setDrawGrid(bool value);
@@ -49,7 +49,7 @@ public slots:
     void setLight(bool value);
 
     void saveFirstMesh();
-    void saveSecondMesh();
+   // void saveSecondMesh();
 
     void alignSecondMesh();
     void appendSecondToFirst();

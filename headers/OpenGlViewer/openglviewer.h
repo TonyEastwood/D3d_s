@@ -35,16 +35,16 @@ public:
     explicit OpenGlViewer(  QWidget *parent = nullptr);
     ~OpenGlViewer() override;
 
-    bool setFirstMesh(QString path,bool isNeedToDraw=true);
-    bool setSecondMesh(QString path,bool isNeedToDraw=true);
+    bool addMesh(QString path,bool isNeedToDraw=true);
+   // bool setSecondMesh(QString path,bool isNeedToDraw=true);
 
     void setLight(bool value);
 
     void saveFirstMesh();
-    void saveSecondMesh();
+    //void saveSecondMesh();
 
     void alignSecondMesh(MyMesh * firstMesh, MyMesh * secondMesh, vcg::Matrix44d * resultTransformMatrix, bool * isVisible);
-    void appendSecondMeshToFirst();
+    void appendSecondMeshToFirst(MyMesh * firstMesh=nullptr, MyMesh * secondMesh=nullptr);
 
     void openAlignFile();
 
@@ -59,6 +59,7 @@ public slots:
 
     void addedMeshesToAlign(QStringList meshesList, QString path);
     void clearMeshes();
+
 protected:
     void initializeGL() override;
     void resizeGL(int w, int h) override;
@@ -72,6 +73,7 @@ protected:
 private:
     void findMinMaxForStl(MyMesh * _object);
 
+
     QString vcgMatrixToString(const vcg::Matrix44d & resultTransformMatrix);
 
 
@@ -81,6 +83,8 @@ private:
 
     void drawFirstMesh();
     void drawSecondMesh();
+
+    void clearMeshesVector();
 
     //  void drawTestCube();
     //temporary const
@@ -111,7 +115,7 @@ private:
 
     GLfloat * drawVertex;   //vertex that contain Vertex shader
     uint sizeDrawVertex=0;  //size all of vertex that need to draw
-    uint sizeDrawVertexFirstObject=0;   //size of first mesh that need to draw
+
 
     GLint GPUobjectColor;
     GLint GPUtransformMatrix;
@@ -143,8 +147,10 @@ private:
 
     float minMaxXYZ[6];//minX maxX minY maxY minZ maxZ
 
-    MyMesh *  drawFirstObject;                     // object that need to draw
-    MyMesh *  drawSecondObject;                     // object that need to draw
+
+    std::vector<MyMesh*> meshes;
+//    MyMesh *  drawFirstObject;                     // object that need to draw
+//    MyMesh *  drawSecondObject;                     // object that need to draw
 
     float x_pos, y_pos, rotate_y, rotate_x;  // rotate values
     float translateX, translateY;
