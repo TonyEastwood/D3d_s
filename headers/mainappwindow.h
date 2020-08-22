@@ -60,8 +60,9 @@ public slots:
 
     void getMessageCustom();
 
-    public slots:
     void coutInfo(const QString & info);
+
+    void clearMeshesOpengl();
 signals:
     void infoDisplay(const QString &result);
 

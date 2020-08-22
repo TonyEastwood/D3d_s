@@ -55,6 +55,7 @@ MainAppWindow::MainAppWindow(  QWidget *parent)
 
     QPushButton * buttonAlign=new QPushButton("Align pair");
     QPushButton * buttonMerge=new QPushButton("Merge objects");
+    QPushButton * clearMeshes=new QPushButton("Clear meshes");
 
     QCheckBox * isDrawGrid=new QCheckBox();
     QCheckBox * isFaceGrid=new QCheckBox();
@@ -117,7 +118,9 @@ MainAppWindow::MainAppWindow(  QWidget *parent)
     Vbox->addLayout(horizLay3,400);
     Vbox->addWidget(buttonAlign,1000,Qt::AlignTop);
     Vbox->addWidget(buttonMerge,5000,Qt::AlignTop);
-    Vbox->addWidget(distanceLabel,10000,Qt::AlignTop);
+    Vbox->addWidget(clearMeshes,40000,Qt::AlignTop);
+    Vbox->addWidget(distanceLabel,70000,Qt::AlignTop);
+
 
 
 
@@ -155,6 +158,7 @@ MainAppWindow::MainAppWindow(  QWidget *parent)
     connect(this, &MainAppWindow::infoDisplay, this, &MainAppWindow::coutInfo);
 
     connect(buttonMerge, &QPushButton::clicked, this, &MainAppWindow::appendSecondToFirst);
+    connect(clearMeshes, &QPushButton::clicked, this, &MainAppWindow::clearMeshesOpengl);
     connect(buttonAlign, &QPushButton::clicked, this, &MainAppWindow::alignSecondMesh);
     //connect(buttonAlign, &QPushButton::clicked, this, &MainAppWindow::getMessageCustom);
 
@@ -362,14 +366,14 @@ void MainAppWindow::getMessageCustom()
             pathToFile=val;
             emit infoDisplay(val.toLocal8Bit());
         }
-        emit infoDisplay("blabla");
+     
 
         //  TranslateMessage(&msg); // интерпретируем сообщения
         // DispatchMessage(&msg); // передаём сообщения обратно ОС
 
     }
 
-    emit infoDisplay("blabla");
+   
 
 
 }
@@ -378,6 +382,11 @@ void MainAppWindow::coutInfo(const QString & info)
 {
     qDebug()<<info;
     // std::cout<<info.toStdString()<<std::endl;
+}
+
+void MainAppWindow::clearMeshesOpengl()
+{
+    openGlViewer->clearMeshes();
 }
 
 
