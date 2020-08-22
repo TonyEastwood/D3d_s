@@ -16,7 +16,7 @@ const GLchar* vertexShaderSource = "#version 330 core\n"
         "void main()\n"
         "{\n"
         "vec4 tempPos = vec4(position, 1.0);\n"
-        "Normal =normal;\n"
+        "Normal =vec3(projMatrix * transMatrix*vec4(-normal,0.0));\n"
         "FragPos =vec3(transMatrix*vec4(position,1.0f));\n"
         "gl_Position = projMatrix * transMatrix*  tempPos;\n"
         "}\0";
@@ -108,9 +108,9 @@ OpenGlViewer::OpenGlViewer( QWidget *parent)
     light_position[3]=0;
 
 
-    light_position2[0]=0;
-    light_position2[1]=50;
-    light_position2[2]=-10;
+    light_position2[0]=maxOrigin;
+    light_position2[1]=maxOrigin;
+    light_position2[2]=-maxOrigin;
     light_position2[3]=0;
 
     rotate_x=0;
@@ -603,31 +603,6 @@ void OpenGlViewer::exportAsMLP(QString filename)
 }
 
 
-//void OpenGlViewer::drawFirstMesh()
-//{
-//    uint size=drawFirstObject->face.size();
-//    glBegin(GL_TRIANGLES);  // START TRIANGLES DRAWING
-//    for (uint i = 0; i < size; ++i) {
-//        glNormal3f((*drawFirstObject).face[i].N().X(),(*drawFirstObject).face[i].N().Y(),(*drawFirstObject).face[i].N().Z());
-//        glVertex3f((*drawFirstObject).face[i].P0(0).X(),(*drawFirstObject).face[i].P0(0).Y(),(*drawFirstObject).face[i].P0(0).Z());
-//        glVertex3f((*drawFirstObject).face[i].P0(1).X(),(*drawFirstObject).face[i].P0(1).Y(),(*drawFirstObject).face[i].P0(1).Z());
-//        glVertex3f((*drawFirstObject).face[i].P0(2).X(),(*drawFirstObject).face[i].P0(2).Y(),(*drawFirstObject).face[i].P0(2).Z());
-//    }
-//    glEnd();  // END TRIANGLES DRAWING
-//}
-
-//void OpenGlViewer::drawSecondMesh()
-//{
-//    uint size=drawSecondObject->face.size();
-//    glBegin(GL_TRIANGLES);  // START TRIANGLES DRAWING
-//    for (uint i = 0; i < size; ++i) {
-//        glNormal3f((*drawSecondObject).face[i].N().X(),(*drawSecondObject).face[i].N().Y(),(*drawSecondObject).face[i].N().Z());
-//        glVertex3f((*drawSecondObject).face[i].P0(0).X(),(*drawSecondObject).face[i].P0(0).Y(),(*drawSecondObject).face[i].P0(0).Z());
-//        glVertex3f((*drawSecondObject).face[i].P0(1).X(),(*drawSecondObject).face[i].P0(1).Y(),(*drawSecondObject).face[i].P0(1).Z());
-//        glVertex3f((*drawSecondObject).face[i].P0(2).X(),(*drawSecondObject).face[i].P0(2).Y(),(*drawSecondObject).face[i].P0(2).Z());
-//    }
-//    glEnd();  // END TRIANGLES DRAWING
-//}
 
 bool OpenGlViewer::addMesh(QString path, bool isNeedToDraw)
 {
@@ -642,7 +617,8 @@ bool OpenGlViewer::addMesh(QString path, bool isNeedToDraw)
     if(vcg::tri::io::Importer<MyMesh>::Open(*meshes.back(),path.toLocal8Bit())) { // all the importers return 0 in case of success
         printf("Error in reading %s: '%s'\n");
         // QMessageBox::warning(this,"Error", "Can't open file "+path);
-        meshes.back()->Clear();
+        delete meshes[meshes.size()-1];
+        meshes.pop_back();
         QApplication::restoreOverrideCursor();
         return false;
     }
@@ -658,38 +634,7 @@ bool OpenGlViewer::addMesh(QString path, bool isNeedToDraw)
     return true;
 }
 
-//bool OpenGlViewer::setSecondMesh(QString path,bool isNeedToDraw)
-//{
 
-//    if(drawFirstObject==nullptr)
-//    {
-//        QMessageBox::warning(this, "Warning","Please, choose first object");
-//        return false;
-//    }
-//    //    if(drawSecondObject!=nullptr)
-//    //        delete drawSecondObject;
-//    QApplication::setOverrideCursor(Qt::WaitCursor);
-
-//    drawSecondObject=new MyMesh();
-
-//    if(vcg::tri::io::Importer<MyMesh>::Open(*drawSecondObject,path.toLocal8Bit())) { // all the importers return 0 in case of success
-//        drawSecondObject->Clear();
-//        printf("Error in reading %s: '%s'\n");
-//        // QMessageBox::warning(this,"Error", "Can't open file "+path);
-//        QApplication::restoreOverrideCursor();
-//        return false;
-//    }
-//    vcg::tri::UpdateNormal<MyMesh>::PerVertexNormalizedPerFace(*drawSecondObject);
-
-//    if(isNeedToDraw)
-//    {
-//        InitMaxOrigin();
-//        updateDrawVertex();
-//    }
-//    QApplication::restoreOverrideCursor();
-//    return true;
-
-//}
 
 void OpenGlViewer::setLight(bool value)
 {
@@ -697,37 +642,7 @@ void OpenGlViewer::setLight(bool value)
     update();
 }
 
-//void OpenGlViewer::saveSecondMesh()
-//{
-//    if(drawSecondObject==nullptr)
-//    {
-//        QMessageBox::warning(this, "Error","Second object ==nullptr");
-//        return;
-//        return;
-//    }
-//    if(drawSecondObject->fn==0)
-//    {
-//        QMessageBox::warning(this, "Warning","Please, choose second object");
-//        return;
-//    }
-//    QString resultPath=QFileDialog::getSaveFileName(this,"Save object","C://",tr("STL (*.stl);;PLY (*.ply)"));
-//    QFileInfo file1(resultPath);
-//    if(resultPath.isEmpty())
-//        return;
-//    if(file1.completeSuffix()=="ply")
-//    {
-//        vcg::tri::io::ExporterPLY<MyMesh>::Save(*drawSecondObject ,resultPath.toLocal8Bit());
-//        return;
-//    }
-//    if(file1.completeSuffix()=="stl")
-//    {
-//        vcg::tri::io::ExporterSTL<MyMesh>::Save(*drawSecondObject ,resultPath.toLocal8Bit());
-//        return;
-//    }
-//    QMessageBox::warning(this, "Warning extension","Please select object with another format");
-//    return;
 
-//}
 
 void OpenGlViewer::saveFirstMesh()
 {
@@ -761,7 +676,7 @@ void OpenGlViewer::alignSecondMesh(MyMesh * firstMesh=nullptr, MyMesh * secondMe
 
     if(firstMesh==nullptr || secondMesh==nullptr)
     {
-        if(meshes.size()<1)
+        if(meshes.size()<2)
         {
             QMessageBox::warning(this, "Error align SecondMesh","Please, add at least two meshes");
             return;
@@ -886,7 +801,7 @@ void OpenGlViewer::appendSecondMeshToFirst(MyMesh * firstMesh, MyMesh * secondMe
 {
     if(firstMesh==nullptr || secondMesh==nullptr)
     {
-        if(meshes.size()<1)
+        if(meshes.size()<2)
         {
             QMessageBox::warning(this, "Error align SecondMesh","Please, add at least two meshes");
             return;
@@ -929,8 +844,6 @@ void OpenGlViewer::addedMeshesToAlign(QStringList meshesList, QString path)
     QFileInfo fileInfo(path);
     //get path to dir where file with meshes located
     const QString pathToDir=path.mid(0,path.size()-fileInfo.fileName().size());
-
-
 
     QStringList meshesNeedToAlign;  //will contain all meshes that need to align without duplicate
     bool isNeedToAdd=true;
@@ -1047,6 +960,8 @@ void OpenGlViewer::clearMeshes()
     //        delete drawFirstObject;
     //    if(drawSecondObject!=nullptr)
     //        delete drawSecondObject;
+    emit setDistanceInLabel(" ");
+    updateDrawVertex();
 }
 
 void OpenGlViewer::openAlignFile()
@@ -1149,8 +1064,6 @@ void OpenGlViewer::openAlignFile()
     for(int i=0;i<vectorMatrix.size();++i)
         vectorContentMLP.push_back({vectorFileNames[i],vcgMatrixToString(vectorMatrix[i]),vectorVisible[i]?"1":"0"});
 
-
-
     fileWithAlignMeshes.close();
     exportAsMLP(exportPath);
 
@@ -1193,4 +1106,94 @@ void OpenGlViewer::openAlignFile()
 //        }
 //    }
 //    qDebug()<<"Matrix cout end:";
+//}
+
+
+//void OpenGlViewer::drawFirstMesh()
+//{
+//    uint size=drawFirstObject->face.size();
+//    glBegin(GL_TRIANGLES);  // START TRIANGLES DRAWING
+//    for (uint i = 0; i < size; ++i) {
+//        glNormal3f((*drawFirstObject).face[i].N().X(),(*drawFirstObject).face[i].N().Y(),(*drawFirstObject).face[i].N().Z());
+//        glVertex3f((*drawFirstObject).face[i].P0(0).X(),(*drawFirstObject).face[i].P0(0).Y(),(*drawFirstObject).face[i].P0(0).Z());
+//        glVertex3f((*drawFirstObject).face[i].P0(1).X(),(*drawFirstObject).face[i].P0(1).Y(),(*drawFirstObject).face[i].P0(1).Z());
+//        glVertex3f((*drawFirstObject).face[i].P0(2).X(),(*drawFirstObject).face[i].P0(2).Y(),(*drawFirstObject).face[i].P0(2).Z());
+//    }
+//    glEnd();  // END TRIANGLES DRAWING
+//}
+
+//void OpenGlViewer::drawSecondMesh()
+//{
+//    uint size=drawSecondObject->face.size();
+//    glBegin(GL_TRIANGLES);  // START TRIANGLES DRAWING
+//    for (uint i = 0; i < size; ++i) {
+//        glNormal3f((*drawSecondObject).face[i].N().X(),(*drawSecondObject).face[i].N().Y(),(*drawSecondObject).face[i].N().Z());
+//        glVertex3f((*drawSecondObject).face[i].P0(0).X(),(*drawSecondObject).face[i].P0(0).Y(),(*drawSecondObject).face[i].P0(0).Z());
+//        glVertex3f((*drawSecondObject).face[i].P0(1).X(),(*drawSecondObject).face[i].P0(1).Y(),(*drawSecondObject).face[i].P0(1).Z());
+//        glVertex3f((*drawSecondObject).face[i].P0(2).X(),(*drawSecondObject).face[i].P0(2).Y(),(*drawSecondObject).face[i].P0(2).Z());
+//    }
+//    glEnd();  // END TRIANGLES DRAWING
+//}
+//bool OpenGlViewer::setSecondMesh(QString path,bool isNeedToDraw)
+//{
+
+//    if(drawFirstObject==nullptr)
+//    {
+//        QMessageBox::warning(this, "Warning","Please, choose first object");
+//        return false;
+//    }
+//    //    if(drawSecondObject!=nullptr)
+//    //        delete drawSecondObject;
+//    QApplication::setOverrideCursor(Qt::WaitCursor);
+
+//    drawSecondObject=new MyMesh();
+
+//    if(vcg::tri::io::Importer<MyMesh>::Open(*drawSecondObject,path.toLocal8Bit())) { // all the importers return 0 in case of success
+//        drawSecondObject->Clear();
+//        printf("Error in reading %s: '%s'\n");
+//        // QMessageBox::warning(this,"Error", "Can't open file "+path);
+//        QApplication::restoreOverrideCursor();
+//        return false;
+//    }
+//    vcg::tri::UpdateNormal<MyMesh>::PerVertexNormalizedPerFace(*drawSecondObject);
+
+//    if(isNeedToDraw)
+//    {
+//        InitMaxOrigin();
+//        updateDrawVertex();
+//    }
+//    QApplication::restoreOverrideCursor();
+//    return true;
+
+//}
+//void OpenGlViewer::saveSecondMesh()
+//{
+//    if(drawSecondObject==nullptr)
+//    {
+//        QMessageBox::warning(this, "Error","Second object ==nullptr");
+//        return;
+//        return;
+//    }
+//    if(drawSecondObject->fn==0)
+//    {
+//        QMessageBox::warning(this, "Warning","Please, choose second object");
+//        return;
+//    }
+//    QString resultPath=QFileDialog::getSaveFileName(this,"Save object","C://",tr("STL (*.stl);;PLY (*.ply)"));
+//    QFileInfo file1(resultPath);
+//    if(resultPath.isEmpty())
+//        return;
+//    if(file1.completeSuffix()=="ply")
+//    {
+//        vcg::tri::io::ExporterPLY<MyMesh>::Save(*drawSecondObject ,resultPath.toLocal8Bit());
+//        return;
+//    }
+//    if(file1.completeSuffix()=="stl")
+//    {
+//        vcg::tri::io::ExporterSTL<MyMesh>::Save(*drawSecondObject ,resultPath.toLocal8Bit());
+//        return;
+//    }
+//    QMessageBox::warning(this, "Warning extension","Please select object with another format");
+//    return;
+
 //}
