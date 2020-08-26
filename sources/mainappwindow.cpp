@@ -11,6 +11,12 @@ MainAppWindow::MainAppWindow(  QWidget *parent)
     WM_FilePath = RegisterWindowMessageA(WM_FilePathName);
 
 
+    WM_Integrate= RegisterWindowMessageA(WM_IntegrateName);  // wParam - parent HWND
+    WM_CloseProgram= RegisterWindowMessageA(WM_CloseProgramName);
+    WM_ChangeSize= RegisterWindowMessageA(WM_ChangeSizeName);       //wParam - width lParam - high
+    WM_SwitchVisibility= RegisterWindowMessageA(WM_SwitchVisibilityName);  //wParam 0 - not visible 1 - visible
+
+
 
     // this->setStyleSheet("QMenu::item { background-color: #262527; selection-color: white; } ");
     //this->setStyleSheet("QMenu  { background-color: #262527; selection-color: white; border: 1px solid black;} ");
@@ -28,10 +34,10 @@ MainAppWindow::MainAppWindow(  QWidget *parent)
 
 
     QAction *  openFirstMesh = fileMenu->addAction(tr("Add mesh"));
-   // QAction *  openSecondMesh = fileMenu->addAction(tr("Open second mesh"));
+    // QAction *  openSecondMesh = fileMenu->addAction(tr("Open second mesh"));
     fileMenu->addSeparator();
     QAction *  saveFirstMesh = fileMenu->addAction(tr("Save first mesh"));
-   // QAction *  saveSecondMesh = fileMenu->addAction(tr("Save second mesh"));
+    // QAction *  saveSecondMesh = fileMenu->addAction(tr("Save second mesh"));
     fileMenu->addSeparator();
     QAction *  openAlignFile = fileMenu->addAction(tr("Load mesh file to align"));
     fileMenu->addSeparator();
@@ -166,9 +172,9 @@ MainAppWindow::MainAppWindow(  QWidget *parent)
     connect(isDrawGrid, &QCheckBox::toggled, this, &MainAppWindow::setDrawGrid);
     connect(isLightOn, &QCheckBox::toggled, this, &MainAppWindow::setLight);
     connect(openFirstMesh, &QAction::triggered, this, &MainAppWindow::addMesh);
-  //  connect(openSecondMesh, &QAction::triggered, this, &MainAppWindow::setSecondOpenglMesh);
+    //  connect(openSecondMesh, &QAction::triggered, this, &MainAppWindow::setSecondOpenglMesh);
     connect(openAlignFile, &QAction::triggered, this, &MainAppWindow::openAlignFile);
-   // connect(saveSecondMesh, &QAction::triggered, this, &MainAppWindow::saveSecondMesh);
+    // connect(saveSecondMesh, &QAction::triggered, this, &MainAppWindow::saveSecondMesh);
     connect(saveFirstMesh, &QAction::triggered, this, &MainAppWindow::saveFirstMesh);
     connect(exitAction, &QAction::triggered, this, &QWidget::close);
     connect(openGlViewer, &OpenGlViewer::setDistanceInLabel, distanceLabel, &QLabel::setText);
@@ -224,6 +230,46 @@ bool MainAppWindow::nativeEvent(const QByteArray &eventType, void *message, long
         // emit infoDisplay(val.toLocal8Bit());
 
         emit signalClearMeshesData();
+
+        return true;
+    }
+
+    if(msg->message==WM_Integrate)
+    {
+        HWND hwndNewParent=(HWND) msg->wParam;
+        this->setStyleSheet("border: none;");
+        this->setGeometry(0,0,this->width(),this->height());
+        this->setWindowFlags(Qt::Window | Qt::FramelessWindowHint);
+        this->show();
+
+        parentHWND=GetParent((HWND)this->winId());
+
+
+
+        if(hwndNewParent)
+            SetParent((HWND)this->winId(),hwndNewParent);
+
+        return true;
+    }
+
+    if(msg->message==WM_ChangeSize)
+    {
+        this->setGeometry(0,0,(int)msg->wParam,(int)msg->lParam);
+        return true;
+    }
+    if(msg->message==WM_SwitchVisibility)
+    {
+        if((int)msg->wParam==0)
+            hide();
+        else show();
+
+        return true;
+    }
+
+    if(msg->message==WM_CloseProgram)
+    {
+        SetParent((HWND)this->winId(),parentHWND);
+        close();
 
         return true;
     }
@@ -366,14 +412,14 @@ void MainAppWindow::getMessageCustom()
             pathToFile=val;
             emit infoDisplay(val.toLocal8Bit());
         }
-     
+
 
         //  TranslateMessage(&msg); // интерпретируем сообщения
         // DispatchMessage(&msg); // передаём сообщения обратно ОС
 
     }
 
-   
+
 
 
 }
