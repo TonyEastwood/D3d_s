@@ -675,6 +675,9 @@ void OpenGlViewer::alignSecondMesh(MyMesh * firstMesh=nullptr, MyMesh * secondMe
     vcg::AlignPair::A2GridVert VG;
     std::vector<vcg::AlignPair::A2Vertex> tmpmv;
 
+    //set parameter value
+    ap.SampleNum=5000;
+
 
     // 1) Convert fixed mesh and put it into the grid.
     aa.convertMesh<MyMesh>(*firstMesh,fix);
