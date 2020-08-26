@@ -119,6 +119,8 @@ OpenGlViewer::~OpenGlViewer() {
     if(drawVertex!=nullptr)
         delete [] drawVertex;
     delete ui;
+
+    QApplication::restoreOverrideCursor();
 }
 
 void OpenGlViewer::initializeGL() {

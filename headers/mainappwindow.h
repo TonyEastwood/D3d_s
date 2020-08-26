@@ -30,6 +30,22 @@ private:
     UINT WM_NewMesh;
     UINT WM_FilePath ;
 
+
+    //deep Integr start
+    HWND parentHWND;
+
+    UINT WM_Integrate;  // wParam - parent HWND
+    UINT WM_CloseProgram;
+    UINT WM_ChangeSize;       //wParam - width lParam - high
+    UINT WM_SwitchVisibility;  //wParam 0 - not visible 1 - visible
+
+    const LPCSTR WM_IntegrateName= PCSTR("WM_Integrate_D3D-s");
+    const LPCSTR WM_CloseProgramName =PCSTR("WM_CloseProgram_D3D-s");
+    const LPCSTR WM_ChangeSizeName  =PCSTR("WM_ChangeSize_D3D-s");
+    const LPCSTR WM_SwitchVisibilityName  =PCSTR("WM_SwitchVisibility_D3D-s");
+    //deep integr end
+
+
     QString pathToFile;
 
 public:
