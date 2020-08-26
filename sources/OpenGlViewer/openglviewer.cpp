@@ -61,25 +61,15 @@ OpenGlViewer::OpenGlViewer( QWidget *parent)
 
     ui->setupUi(this);
 
-
     rotation.setVector(0,0,0);
-    // rotationAxis=QVector3D(0,0,0);
 
     sizeDrawVertex=0;
     distanceInfo.clear();
     drawVertex=nullptr;
 
-    translateX=0;
-    translateY=0;
-
     translateSpeed=5;
 
-    //  drawFirstObject=new MyMesh();
-
-
     ratioWidthHeight=1;
-
-    //  drawSecondObject=new MyMesh();
 
     meshes.clear();
     setFormat(QGLFormat(QGL::DoubleBuffer));  // double buff
@@ -389,23 +379,16 @@ QString OpenGlViewer::vcgMatrixToString(const vcg::Matrix44d &resultTransformMat
 
 void OpenGlViewer::InitMaxOrigin()
 {
-
     minMaxXYZ[0]=minMaxXYZ[2]=minMaxXYZ[4]=100000000;
     minMaxXYZ[1]=minMaxXYZ[3]=minMaxXYZ[5]=-100000000;
 
     for(int i=0;i<meshes.size();++i)
         findMinMaxForStl(meshes[i]);
 
-
-
-
-
     double distanceX=abs((minMaxXYZ[1]-minMaxXYZ[0]));
     double distanceY=abs((minMaxXYZ[3]-minMaxXYZ[2]));
     double distanceZ=abs((minMaxXYZ[5]-minMaxXYZ[4]));
 
-
-    //transformMatrix.setToIdentity();
     maxOrigin=distanceX;
 
     if(maxOrigin<distanceY)
@@ -431,17 +414,12 @@ void OpenGlViewer::updateDrawVertex()
     sizeDrawVertex=0;
     for(int i=0;i<meshes.size();++i)
         sizeDrawVertex+=n*meshes[i]->face.size();
-    //    if(drawSecondObject==nullptr)
-    //        sizeDrawVertex=n*drawFirstObject->face.size();
-    //    else
-    //        sizeDrawVertex=n*(drawFirstObject->face.size()+drawSecondObject->face.size());
-
 
     drawVertex=new GLfloat[sizeDrawVertex];
 
     int currentSize=0;
-
     int currentPosition=0;
+
     for(int i=0;i<meshes.size();++i)
     {
         currentSize=meshes[i]->face.size();
@@ -473,10 +451,6 @@ void OpenGlViewer::updateDrawVertex()
             drawVertex[currentPosition+n*j+17]=meshes[i]->face[j].N().Z();
         }
         currentPosition+=n*currentSize;
-
-
-
-
     }
 
 
@@ -542,8 +516,6 @@ void OpenGlViewer::updateDrawVertex()
     //        }
 
     //    }
-
-
     f->glBufferData(GL_ARRAY_BUFFER,  sizeDrawVertex * sizeof(GLfloat), drawVertex, GL_STATIC_DRAW);
     update();
 }
@@ -566,7 +538,6 @@ void OpenGlViewer::exportAsMLP(QString filename)
     // QString exportPath=QFileDialog::getSaveFileName(this,"Save object","C://",tr("MLP (*.mlp)"));
     // if(exportPath.isEmpty())
     //    return;
-
 
     QByteArray mlpFileContent="<!DOCTYPE MeshLabDocument>\n"
                               "<MeshLabProject>\n"
@@ -610,7 +581,6 @@ bool OpenGlViewer::addMesh(QString path, bool isNeedToDraw)
     //    if(drawFirstObject!=nullptr)
     //        delete drawFirstObject;
     QApplication::setOverrideCursor(Qt::WaitCursor);
-
 
     meshes.push_back(new MyMesh());
 
@@ -672,8 +642,6 @@ void OpenGlViewer::saveFirstMesh()
 
 void OpenGlViewer::alignSecondMesh(MyMesh * firstMesh=nullptr, MyMesh * secondMesh=nullptr,vcg::Matrix44d * resultTransformMatrix=nullptr, bool * isVisible=nullptr)
 {
-
-
     if(firstMesh==nullptr || secondMesh==nullptr)
     {
         if(meshes.size()<2)
@@ -686,7 +654,7 @@ void OpenGlViewer::alignSecondMesh(MyMesh * firstMesh=nullptr, MyMesh * secondMe
         distanceInfo.clear();
     }
 
-    if(firstMesh->fn==0 || secondMesh->fn==0)
+    if(firstMesh->face.size()==0 || secondMesh->face.size()==0)
     {
         QMessageBox::warning(this, "Warning","Please, choose two objects");
         return;
@@ -706,6 +674,9 @@ void OpenGlViewer::alignSecondMesh(MyMesh * firstMesh=nullptr, MyMesh * secondMe
     vcg::AlignPair::A2Grid UG;
     vcg::AlignPair::A2GridVert VG;
     std::vector<vcg::AlignPair::A2Vertex> tmpmv;
+
+    //set parameter value
+    ap.SampleNum=5000;
 
 
     // 1) Convert fixed mesh and put it into the grid.
