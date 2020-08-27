@@ -943,105 +943,126 @@ void OpenGlViewer::openAlignFile()
     clearMeshesVector();
     distanceInfo.clear();
     vectorContentMLP.clear();
-    std::vector<QString> vectorFileNames;
-    std::vector<vcg::Matrix44d> vectorMatrix;
-    std::vector<bool> vectorVisible;
+//    std::vector<QString> vectorFileNames;
+//    std::vector<vcg::Matrix44d> vectorMatrix;
+//    std::vector<bool> vectorVisible;
     //path to file with meshes that need to align
     QString pathAlignMeshes=QFileDialog::getOpenFileName(this,"Open file with collect of meshes" );
-    QString exportPath=pathAlignMeshes.split(".")[0]+".mlp";
-
-    QFileInfo fileInfo(pathAlignMeshes);
-
-    //get path to dir where file with meshes located
-    const QString pathToDir=pathAlignMeshes.mid(0,pathAlignMeshes.size()-fileInfo.fileName().size());
-
-    if(pathAlignMeshes.isEmpty())
-        return;
-
-    QFile fileWithAlignMeshes(pathAlignMeshes);
-    if(fileWithAlignMeshes.open(QIODevice::ReadOnly))
+    //QString exportPath=pathAlignMeshes.split(".")[0]+".mlp";
+    QStringList stringList;
+    if(!pathAlignMeshes.isEmpty())
     {
-        QString fileName;
-        QByteArray isEmpty;
-        do{
-            isEmpty=fileWithAlignMeshes.readLine();
-            if(isEmpty.isEmpty() || isEmpty=="\r\n" || isEmpty=="\n")
-                continue;
-
-            fileName=QString::fromStdString(isEmpty.toStdString()).split(QRegExp("[\r\n]"),QString::SkipEmptyParts)[0];
-
-            if(!QFileInfo(pathToDir+fileName).exists())
-                continue;
-        }while(!addMesh(pathToDir+fileName,false) && !fileWithAlignMeshes.atEnd());
-
-        // vectorContentMLP.push_back({fileName,identityMatrix,"1"}); //add First mesh to MPL vector with Identity matrix
-
-        //read all meshes from file and import it
-        vcg::Matrix44d tempMatrix;
-        tempMatrix.SetIdentity();
-
-        bool isVisible=false;
-        vectorFileNames.push_back(fileName);
-        vectorMatrix.push_back(tempMatrix);
-        vectorVisible.push_back(true);
-
-        while(!fileWithAlignMeshes.atEnd())
+        QFile file(pathAlignMeshes);
+        QByteArray data;
+        if(file.open(QIODevice::ReadOnly))
         {
-            isEmpty=fileWithAlignMeshes.readLine();
-            if(isEmpty.isEmpty() || isEmpty=="\r\n" || isEmpty=="\n")
-                continue;
-
-            fileName=QString::fromStdString(isEmpty.toStdString()).split(QRegExp("[\r\n]"),QString::SkipEmptyParts)[0];
-
-            if(!QFileInfo(pathToDir+fileName).exists() || !addMesh(pathToDir+fileName,false))
-                continue;
-
-            alignSecondMesh(meshes[meshes.size()-1],meshes[meshes.size()-2],&tempMatrix,&isVisible);
-
-            if(isVisible)
-            {
-                for(int i=0;i<vectorMatrix.size();++i)
-                {
-                    if(vectorVisible[i])
-                        vectorMatrix[i]*=tempMatrix;
-                }
-                vectorFileNames.push_back(fileName);
-
-                tempMatrix.SetIdentity();
-                vectorMatrix.push_back(tempMatrix);
-                vectorVisible.push_back(true);
-                // vectorContentMLP.push_back({fileName,vcgMatrixToString(tempMatrix),"1"});  //if visible push actual matrix data with visible ==1
-                //appendSecondMeshToFirst();
-                //                if(drawFirstObject!=nullptr)
-                //                    delete drawFirstObject;
-                //                drawFirstObject=drawSecondObject;
-                //                drawSecondObject=nullptr;
-            }
-            else
-            {
-                vectorFileNames.push_back(fileName);
-
-                tempMatrix.SetIdentity();
-                vectorMatrix.push_back(tempMatrix);
-                vectorVisible.push_back(false);
-                // vectorContentMLP.push_back({fileName,identityMatrix,"0"}); //if non visible, - push Matrix Identity with visible ==0
-            }
+            while(!file.atEnd())
+                stringList.append(QString::fromStdString(file.readLine().toStdString()).split(QRegExp("[\r\n]"),QString::SkipEmptyParts)[0]);
         }
+        file.close();
+
+        //emit infoDisplay("MessageParse start");
+        // for(auto &i:stringList)
+        //   emit infoDisplay(i);
+        //emit infoDisplay("MessageParse end");
+        //   qDebug()<<data;
+        addedMeshesToAlign(stringList,pathAlignMeshes);
+       // qDebug()<<"Emit signal append mesh 2";
     }
-    if(vectorMatrix.size()!=vectorVisible.size() || vectorMatrix.size()!=vectorFileNames.size())
-    {
-        QMessageBox::warning(this,"Error size incorrect", "Send it to developer error in code");
-        return;
-    }
+   // addedMeshesToAlign(QStringList(),pathAlignMeshes);
 
-    for(int i=0;i<vectorMatrix.size();++i)
-        vectorContentMLP.push_back({vectorFileNames[i],vcgMatrixToString(vectorMatrix[i]),vectorVisible[i]?"1":"0"});
+//    QFileInfo fileInfo(pathAlignMeshes);
 
-    fileWithAlignMeshes.close();
-    exportAsMLP(exportPath);
+//    //get path to dir where file with meshes located
+//    const QString pathToDir=pathAlignMeshes.mid(0,pathAlignMeshes.size()-fileInfo.fileName().size());
 
-    InitMaxOrigin();
-    updateDrawVertex();
+//    if(pathAlignMeshes.isEmpty())
+//        return;
+
+//    QFile fileWithAlignMeshes(pathAlignMeshes);
+//    if(fileWithAlignMeshes.open(QIODevice::ReadOnly))
+//    {
+//        QString fileName;
+//        QByteArray isEmpty;
+//        do{
+//            isEmpty=fileWithAlignMeshes.readLine();
+//            if(isEmpty.isEmpty() || isEmpty=="\r\n" || isEmpty=="\n")
+//                continue;
+
+//            fileName=QString::fromStdString(isEmpty.toStdString()).split(QRegExp("[\r\n]"),QString::SkipEmptyParts)[0];
+
+//            if(!QFileInfo(pathToDir+fileName).exists())
+//                continue;
+//        }while(!addMesh(pathToDir+fileName,false) && !fileWithAlignMeshes.atEnd());
+
+//        // vectorContentMLP.push_back({fileName,identityMatrix,"1"}); //add First mesh to MPL vector with Identity matrix
+
+//        //read all meshes from file and import it
+//        vcg::Matrix44d tempMatrix;
+//        tempMatrix.SetIdentity();
+
+//        bool isVisible=false;
+//        vectorFileNames.push_back(fileName);
+//        vectorMatrix.push_back(tempMatrix);
+//        vectorVisible.push_back(true);
+
+//        while(!fileWithAlignMeshes.atEnd())
+//        {
+//            isEmpty=fileWithAlignMeshes.readLine();
+//            if(isEmpty.isEmpty() || isEmpty=="\r\n" || isEmpty=="\n")
+//                continue;
+
+//            fileName=QString::fromStdString(isEmpty.toStdString()).split(QRegExp("[\r\n]"),QString::SkipEmptyParts)[0];
+
+//            if(!QFileInfo(pathToDir+fileName).exists() || !addMesh(pathToDir+fileName,false))
+//                continue;
+
+//            alignSecondMesh(meshes[meshes.size()-1],meshes[meshes.size()-2],&tempMatrix,&isVisible);
+
+//            if(isVisible)
+//            {
+//                for(int i=0;i<vectorMatrix.size();++i)
+//                {
+//                    if(vectorVisible[i])
+//                        vectorMatrix[i]*=tempMatrix;
+//                }
+//                vectorFileNames.push_back(fileName);
+
+//                tempMatrix.SetIdentity();
+//                vectorMatrix.push_back(tempMatrix);
+//                vectorVisible.push_back(true);
+//                // vectorContentMLP.push_back({fileName,vcgMatrixToString(tempMatrix),"1"});  //if visible push actual matrix data with visible ==1
+//                //appendSecondMeshToFirst();
+//                //                if(drawFirstObject!=nullptr)
+//                //                    delete drawFirstObject;
+//                //                drawFirstObject=drawSecondObject;
+//                //                drawSecondObject=nullptr;
+//            }
+//            else
+//            {
+//                vectorFileNames.push_back(fileName);
+
+//                tempMatrix.SetIdentity();
+//                vectorMatrix.push_back(tempMatrix);
+//                vectorVisible.push_back(false);
+//                // vectorContentMLP.push_back({fileName,identityMatrix,"0"}); //if non visible, - push Matrix Identity with visible ==0
+//            }
+//        }
+//    }
+//    if(vectorMatrix.size()!=vectorVisible.size() || vectorMatrix.size()!=vectorFileNames.size())
+//    {
+//        QMessageBox::warning(this,"Error size incorrect", "Send it to developer error in code");
+//        return;
+//    }
+
+//    for(int i=0;i<vectorMatrix.size();++i)
+//        vectorContentMLP.push_back({vectorFileNames[i],vcgMatrixToString(vectorMatrix[i]),vectorVisible[i]?"1":"0"});
+
+//    fileWithAlignMeshes.close();
+//    exportAsMLP(exportPath);
+
+//    InitMaxOrigin();
+//    updateDrawVertex();
 }
 
 
