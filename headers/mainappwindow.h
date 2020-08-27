@@ -24,34 +24,34 @@ class MainAppWindow : public QMainWindow
     Q_OBJECT
 
 private:
-    const LPCSTR WM_NewMeshName= LPCSTR("WM_NewMesh_D3D-s");
-    const LPCSTR WM_FilePathName  = LPCSTR("WM_FilePathName_D3D-s");
+   // const LPCSTR WM_NewMeshName= LPCSTR("WM_NewMesh_D3D-s");
+   // const LPCSTR WM_FilePathName  = LPCSTR("WM_FilePathName_D3D-s");
 
-    UINT WM_NewMesh;
-    UINT WM_FilePath ;
+   // UINT WM_NewMesh;
+   // UINT WM_FilePath ;
 
 
     //deep Integr start
     HWND parentHWND;
 
-    UINT WM_Integrate;  // wParam - parent HWND
-    UINT WM_CloseProgram;
-    UINT WM_ChangeSize;       //wParam - width lParam - high
-    UINT WM_SwitchVisibility;  //wParam 0 - not visible 1 - visible
+   // UINT WM_Integrate;  // wParam - parent HWND
+   // UINT WM_CloseProgram;
+   // UINT WM_ChangeSize;       //wParam - width lParam - high
+   // UINT WM_SwitchVisibility;  //wParam 0 - not visible 1 - visible
 
-    const LPCSTR WM_IntegrateName= PCSTR("WM_Integrate_D3D-s");
-    const LPCSTR WM_CloseProgramName =PCSTR("WM_CloseProgram_D3D-s");
-    const LPCSTR WM_ChangeSizeName  =PCSTR("WM_ChangeSize_D3D-s");
-    const LPCSTR WM_SwitchVisibilityName  =PCSTR("WM_SwitchVisibility_D3D-s");
+    //const LPCSTR WM_IntegrateName= PCSTR("WM_Integrate_D3D-s");
+   // const LPCSTR WM_CloseProgramName =PCSTR("WM_CloseProgram_D3D-s");
+   // const LPCSTR WM_ChangeSizeName  =PCSTR("WM_ChangeSize_D3D-s");
+    //const LPCSTR WM_SwitchVisibilityName  =PCSTR("WM_SwitchVisibility_D3D-s");
     //deep integr end
 
 
-    QString pathToFile;
+    //QString pathToFile;
 
 public:
     explicit MainAppWindow(  QWidget *parent = nullptr);
 
-    bool nativeEvent(const QByteArray &eventType, void *message, long *result) override;
+   // bool nativeEvent(const QByteArray &eventType, void *message, long *result) override;
 
     ~MainAppWindow();
 public slots:
@@ -79,6 +79,10 @@ public slots:
     void coutInfo(const QString & info);
 
     void clearMeshesOpengl();
+
+    void appToClose();
+    void appChangeSize(int x,int y,int width,int height);
+    void appIntegrate(HWND app);
 signals:
     void infoDisplay(const QString &result);
 

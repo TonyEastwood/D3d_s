@@ -19,6 +19,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
     main.cpp \
+    sources/mainwindowformessagereceive.cpp \
     sources/mainappwindow.cpp \
     sources/mainwindow.cpp \
     sources/OpenGlViewer/openglviewer.cpp \
@@ -330,6 +331,7 @@ HEADERS += \
     headers/mainwindow.h \
     headers/OpenGlViewer/openglviewer.h \
     headers/vcgUtils.h \
+    headers/mainwindowformessagereceive.h \
     vcg/complex/algorithms/align_pair.h \
     vcg/complex/algorithms/attribute_seam.h \
     vcg/complex/algorithms/autoalign_4pcs.h \
@@ -623,6 +625,7 @@ HEADERS += \
     wrap/utils.h
 
 FORMS += \
+    ui/mainwindowformessagereceive.ui \
     ui/mainappwindow.ui \
     ui/mainwindow.ui \
     ui/OpenGlViewer/openglviewer.ui
