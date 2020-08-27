@@ -7,14 +7,14 @@ MainAppWindow::MainAppWindow(  QWidget *parent)
     , ui(new Ui::MainAppWindow)
 {
 
-    WM_NewMesh = RegisterWindowMessageA(WM_NewMeshName);
-    WM_FilePath = RegisterWindowMessageA(WM_FilePathName);
+//    WM_NewMesh = RegisterWindowMessageA(WM_NewMeshName);
+//    WM_FilePath = RegisterWindowMessageA(WM_FilePathName);
 
 
-    WM_Integrate= RegisterWindowMessageA(WM_IntegrateName);  // wParam - parent HWND
-    WM_CloseProgram= RegisterWindowMessageA(WM_CloseProgramName);
-    WM_ChangeSize= RegisterWindowMessageA(WM_ChangeSizeName);       //wParam - width lParam - high
-    WM_SwitchVisibility= RegisterWindowMessageA(WM_SwitchVisibilityName);  //wParam 0 - not visible 1 - visible
+ //   WM_Integrate= RegisterWindowMessageA(WM_IntegrateName);  // wParam - parent HWND
+//    WM_CloseProgram= RegisterWindowMessageA(WM_CloseProgramName);
+//    WM_ChangeSize= RegisterWindowMessageA(WM_ChangeSizeName);       //wParam - width lParam - high
+//    WM_SwitchVisibility= RegisterWindowMessageA(WM_SwitchVisibilityName);  //wParam 0 - not visible 1 - visible
 
 
 
@@ -192,97 +192,103 @@ MainAppWindow::MainAppWindow(  QWidget *parent)
     // t1.detach();
 }
 
-bool MainAppWindow::nativeEvent(const QByteArray &eventType, void *message, long *result)
-{
+//bool MainAppWindow::nativeEvent(const QByteArray &eventType, void *message, long *result)
+//{
 
-    MSG *msg = static_cast<MSG*>(message);
-    //if(GetMessage(&msg, NULL, NULL, NULL)>0){ // извлекаем сообщения из очереди, посылаемые фу-циями, ОС
-    if(msg->message==WM_NewMesh)
-    {
-        QStringList stringList;
-        if(!pathToFile.isEmpty())
-        {
-            QFile file(pathToFile);
-            QByteArray data;
-            if(file.open(QIODevice::ReadOnly))
-            {
-                while(!file.atEnd())
-                    stringList.append(QString::fromStdString(file.readLine().toStdString()).split(QRegExp("[\r\n]"),QString::SkipEmptyParts)[0]);
-            }
-            file.close();
 
-            //emit infoDisplay("MessageParse start");
-            // for(auto &i:stringList)
-            //   emit infoDisplay(i);
-            //emit infoDisplay("MessageParse end");
-            //   qDebug()<<data;
-            emit signalAppendMesh(stringList,pathToFile);
-        }
-        return true;
-    }
+//    MSG *msg = static_cast<MSG*>(message);
+//    if(msg->message==WM_Integrate)
+//    {
+//        HWND hwndNewParent=(HWND) msg->wParam;
+//        this->setStyleSheet("border: none;");
+//        this->setGeometry(0,0,this->width(),this->height());
+//        this->setWindowFlags(Qt::Window | Qt::FramelessWindowHint);
+//        this->show();
 
-    if(msg->message==WM_FilePath)
-    {
-        QSettings m("HKEY_CURRENT_USER\\Software\\D3D-s\\AlignLab",QSettings::Registry64Format);
-        // qDebug()<<GetRegistryValueString(HKEY_CURRENT_USER, 'Software\D3D-s\AlignLab',  'PathToMeshList');
-        QString val = m.value("PathToMeshList").toString();
-        pathToFile=val;
-        // emit infoDisplay(val.toLocal8Bit());
-
-        emit signalClearMeshesData();
-
-        return true;
-    }
-
-    if(msg->message==WM_Integrate)
-    {
-        HWND hwndNewParent=(HWND) msg->wParam;
-        this->setStyleSheet("border: none;");
-        this->setGeometry(0,0,this->width(),this->height());
-        this->setWindowFlags(Qt::Window | Qt::FramelessWindowHint);
-        this->show();
-
-        parentHWND=GetParent((HWND)this->winId());
+//        parentHWND=GetParent((HWND)this->winId());
 
 
 
-        if(hwndNewParent)
-            SetParent((HWND)this->winId(),hwndNewParent);
-
-        return true;
-    }
-
-    if(msg->message==WM_ChangeSize)
-    {
-        this->setGeometry(0,0,(int)msg->wParam,(int)msg->lParam);
-        return true;
-    }
-    if(msg->message==WM_SwitchVisibility)
-    {
-        if((int)msg->wParam==0)
-            hide();
-        else show();
-
-        return true;
-    }
-
-    if(msg->message==WM_CloseProgram)
-    {
-        SetParent((HWND)this->winId(),parentHWND);
-        close();
-
-        return true;
-    }
+//        if(hwndNewParent)
+//        {
+//            SetParent((HWND)this->winId(),hwndNewParent);
+//        }
 
 
-    //  TranslateMessage(&msg); // интерпретируем сообщения
-    // DispatchMessage(&msg); // передаём сообщения обратно ОС
+//        return true;
+//    }
+//    /*    qDebug()<<"Message=="<<msg->message;
+//    //if(GetMessage(&msg, NULL, NULL, NULL)>0){ // извлекаем сообщения из очереди, посылаемые фу-циями, ОС
+//    if(msg->message==WM_NewMesh)
+//    {
+//        QStringList stringList;
+//        if(!pathToFile.isEmpty())
+//        {
+//            QFile file(pathToFile);
+//            QByteArray data;
+//            if(file.open(QIODevice::ReadOnly))
+//            {
+//                while(!file.atEnd())
+//                    stringList.append(QString::fromStdString(file.readLine().toStdString()).split(QRegExp("[\r\n]"),QString::SkipEmptyParts)[0]);
+//            }
+//            file.close();
 
-    //  }
+//            //emit infoDisplay("MessageParse start");
+//            // for(auto &i:stringList)
+//            //   emit infoDisplay(i);
+//            //emit infoDisplay("MessageParse end");
+//            //   qDebug()<<data;
+//            emit signalAppendMesh(stringList,pathToFile);
+//        }
+//        return true;
+//    }
+
+//    if(msg->message==WM_FilePath)
+//    {
+//        QSettings m("HKEY_CURRENT_USER\\Software\\D3D-s\\AlignLab",QSettings::Registry64Format);
+//        // qDebug()<<GetRegistryValueString(HKEY_CURRENT_USER, 'Software\D3D-s\AlignLab',  'PathToMeshList');
+//        QString val = m.value("PathToMeshList").toString();
+//        pathToFile=val;
+//        // emit infoDisplay(val.toLocal8Bit());
+
+//        emit signalClearMeshesData();
+
+//        return true;
+//    }*/
 
 
-    return false;
-}
+
+//    /* if(msg->message==WM_ChangeSize)
+//    {
+//        this->setGeometry(0,0,(int)msg->wParam,(int)msg->lParam);
+//        return true;
+//    }
+//    if(msg->message==WM_SwitchVisibility)
+//    {
+//        if((int)msg->wParam==0)
+//            hide();
+//        else show();
+
+//        return true;
+//    }
+
+//    if(msg->message==WM_CloseProgram)
+//    {
+//        SetParent((HWND)this->winId(),parentHWND);
+//        close();
+
+//        return true;
+//    }
+
+
+//    //  TranslateMessage(&msg); // интерпретируем сообщения
+//    // DispatchMessage(&msg); // передаём сообщения обратно ОС
+
+//    //  }*/
+
+
+//    return false;
+//}
 
 MainAppWindow::~MainAppWindow()
 {
@@ -375,49 +381,49 @@ void MainAppWindow::exportMlpFile()
 void MainAppWindow::getMessageCustom()
 {
 
-    MSG msg;
+//    MSG msg;
 
 
 
-    if(GetMessage(&msg, NULL, NULL, NULL)>0){ // извлекаем сообщения из очереди, посылаемые фу-циями, ОС
-        if(msg.message==WM_NewMesh)
-        {
-            QStringList stringList;
-            if(!pathToFile.isEmpty())
-            {
-                QFile file(pathToFile);
-                QByteArray data;
-                if(file.open(QIODevice::ReadOnly))
-                {
-                    while(!file.atEnd())
-                    {
-                        stringList.append(QString::fromStdString(file.readLine().toStdString()).split(QRegExp("[\r\n]"),QString::SkipEmptyParts)[0]);
-                    }
+//    if(GetMessage(&msg, NULL, NULL, NULL)>0){ // извлекаем сообщения из очереди, посылаемые фу-циями, ОС
+//        if(msg.message==WM_NewMesh)
+//        {
+//            QStringList stringList;
+//            if(!pathToFile.isEmpty())
+//            {
+//                QFile file(pathToFile);
+//                QByteArray data;
+//                if(file.open(QIODevice::ReadOnly))
+//                {
+//                    while(!file.atEnd())
+//                    {
+//                        stringList.append(QString::fromStdString(file.readLine().toStdString()).split(QRegExp("[\r\n]"),QString::SkipEmptyParts)[0]);
+//                    }
 
-                }
-                file.close();
-                emit infoDisplay("MessageParse start");
-                for(auto &i:stringList)
-                    emit infoDisplay(i);
-                emit infoDisplay("MessageParse end");
-                //   qDebug()<<data;
-            }
-        }
+//                }
+//                file.close();
+//                emit infoDisplay("MessageParse start");
+//                for(auto &i:stringList)
+//                    emit infoDisplay(i);
+//                emit infoDisplay("MessageParse end");
+//                //   qDebug()<<data;
+//            }
+//        }
 
-        else if(msg.message==WM_FilePath)
-        {
-            QSettings m("HKEY_CURRENT_USER\\Software\\D3D-s\\AlignLab",QSettings::Registry64Format);
-            // qDebug()<<GetRegistryValueString(HKEY_CURRENT_USER, 'Software\D3D-s\AlignLab',  'PathToMeshList');
-            QString val = m.value("PathToMeshList").toString();
-            pathToFile=val;
-            emit infoDisplay(val.toLocal8Bit());
-        }
+//        else if(msg.message==WM_FilePath)
+//        {
+//            QSettings m("HKEY_CURRENT_USER\\Software\\D3D-s\\AlignLab",QSettings::Registry64Format);
+//            // qDebug()<<GetRegistryValueString(HKEY_CURRENT_USER, 'Software\D3D-s\AlignLab',  'PathToMeshList');
+//            QString val = m.value("PathToMeshList").toString();
+//            pathToFile=val;
+//            emit infoDisplay(val.toLocal8Bit());
+//        }
 
 
         //  TranslateMessage(&msg); // интерпретируем сообщения
         // DispatchMessage(&msg); // передаём сообщения обратно ОС
 
-    }
+  //  }
 
 
 
@@ -433,6 +439,34 @@ void MainAppWindow::coutInfo(const QString & info)
 void MainAppWindow::clearMeshesOpengl()
 {
     openGlViewer->clearMeshes();
+}
+
+void MainAppWindow::appToClose()
+{
+    if(parentHWND)
+        SetParent((HWND)this->winId(),parentHWND);
+    close();
+}
+
+void MainAppWindow::appChangeSize(int x, int y, int width, int height)
+{
+    this->setGeometry(x,y,width,height);
+}
+
+void MainAppWindow::appIntegrate(HWND app)
+{
+
+    this->setStyleSheet("border: none;");
+    this->setGeometry(0,0,this->width(),this->height());
+    this->setWindowFlags(Qt::Window | Qt::FramelessWindowHint);
+    this->show();
+
+    parentHWND=GetParent((HWND)this->winId());
+
+    if(app)
+    {
+        SetParent((HWND)this->winId(),app);
+    }
 }
 
 
