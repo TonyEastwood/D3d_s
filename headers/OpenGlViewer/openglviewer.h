@@ -43,7 +43,7 @@ public:
     void saveFirstMesh();
     //void saveSecondMesh();
 
-    void alignSecondMesh(MyMesh * firstMesh, MyMesh * secondMesh, vcg::Matrix44d * resultTransformMatrix, bool * isVisible);
+    void alignSecondMesh(MyMesh * firstMesh, MyMesh * secondMesh, vcg::Matrix44d * resultTransformMatrix, bool * isVisible, int * Iteration, float * dist);
     void appendSecondMeshToFirst(MyMesh * firstMesh=nullptr, MyMesh * secondMesh=nullptr);
 
     void openAlignFile();
@@ -90,7 +90,7 @@ private:
     //temporary const
 private:
     const uint COUNT_ALIGN_CYCLES=50;
-    const double ERROR_ALIGN=0.005f;
+    const double ERROR_ALIGN=0.012f;
 
     std::vector<QString> WRvectorFileNames;
     std::vector<vcg::Matrix44d> WRvectorMatrix;

@@ -360,7 +360,7 @@ void MainAppWindow::saveFirstMesh()
 
 void MainAppWindow::alignSecondMesh()
 {
-    openGlViewer->alignSecondMesh(nullptr,nullptr,nullptr,nullptr);
+    openGlViewer->alignSecondMesh(nullptr,nullptr,nullptr,nullptr, nullptr,nullptr);
 }
 
 void MainAppWindow::appendSecondToFirst()
