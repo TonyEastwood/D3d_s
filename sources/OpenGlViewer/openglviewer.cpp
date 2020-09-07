@@ -61,6 +61,8 @@ OpenGlViewer::OpenGlViewer( QWidget *parent)
 
     ui->setupUi(this);
 
+    timer=new QElapsedTimer();
+
     rotation.setVector(0,0,0);
 
     sizeDrawVertex=0;
@@ -644,6 +646,7 @@ void OpenGlViewer::saveFirstMesh()
 
 void OpenGlViewer::alignSecondMesh(MyMesh * firstMesh=nullptr, MyMesh * secondMesh=nullptr,vcg::Matrix44d * resultTransformMatrix=nullptr, bool * isVisible=nullptr)
 {
+
     if(firstMesh==nullptr || secondMesh==nullptr)
     {
         if(meshes.size()<2)
@@ -666,6 +669,7 @@ void OpenGlViewer::alignSecondMesh(MyMesh * firstMesh=nullptr, MyMesh * secondMe
     if(resultTransformMatrix!=nullptr)
         resultTransformMatrix->SetIdentity();
 
+
     vcg::AlignPair::Result result;
 
     vcg::AlignPair::Result previousResult;
@@ -677,10 +681,18 @@ void OpenGlViewer::alignSecondMesh(MyMesh * firstMesh=nullptr, MyMesh * secondMe
     vcg::AlignPair::A2GridVert VG;
     std::vector<vcg::AlignPair::A2Vertex> tmpmv;
 
+    ap.MaxIterNum=10000;
+   // ap.TrgDistAbs=0.005;
+  //  ap.EndStepNum=10;
+   // ap.MinMinDistPerc=0.005;
+    ap.UseVertexOnly=true;
+
+
+
     //set parameter value
     ap.SampleNum=5000;
 
-
+    //timer->restart();
     // 1) Convert fixed mesh and put it into the grid.
     aa.convertMesh<MyMesh>(*firstMesh,fix);
 
@@ -751,11 +763,13 @@ void OpenGlViewer::alignSecondMesh(MyMesh * firstMesh=nullptr, MyMesh * secondMe
         //        }
 
     }
+   // QString time= QString::number(timer->elapsed());
+
     if(distance.first>ERROR_ALIGN)
     {
         if(isVisible!=nullptr)
             (*isVisible)=true;
-        distanceInfo.append("Iteration="+QString::number(quantityIteration+1)+" Distance="+QString::number(distance.first)+"[Bad mesh][Included]\n");
+        distanceInfo.append("Iteration="+QString::number(quantityIteration+1)+" Distance="+QString::number(distance.first)+"[Bad mesh][Included]\n"); //Time="+time +"\n");
         emit setDistanceInLabel(distanceInfo);
     }
     else
@@ -763,7 +777,7 @@ void OpenGlViewer::alignSecondMesh(MyMesh * firstMesh=nullptr, MyMesh * secondMe
         if(isVisible!=nullptr)
             (*isVisible)=true;
 
-        distanceInfo.append("Iteration="+QString::number(quantityIteration+1)+" Distance="+QString::number(distance.first)+"[Good mesh][Included]\n");
+        distanceInfo.append("Iteration="+QString::number(quantityIteration+1)+" Distance="+QString::number(distance.first)+"[Good mesh][Included]\n"); //Time="+time +"\n");
         emit setDistanceInLabel(distanceInfo);
     }
     updateDrawVertex();
