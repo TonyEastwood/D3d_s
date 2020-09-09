@@ -44,11 +44,15 @@ signals:
 
     void signalClearMeshesData();
 
+    void signalSetQuantity(int quantity);
+
     void appToClose();
     void appChangeSize(int x,int y,int width,int height);
     void appHide();
     void appShow();
     void appIntegrate(HWND app);
+
+
 
 
 

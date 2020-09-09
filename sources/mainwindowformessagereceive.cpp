@@ -58,6 +58,9 @@ bool MainWindowForMessageReceive::nativeEvent(const QByteArray &eventType, void 
         qDebug()<<"Emit signal clear MeshesData2";
         emit signalClearMeshesData();
 
+        val = m.value("quantity").toString();
+        emit signalSetQuantity(val.toInt());
+
         return true;
     }
 
