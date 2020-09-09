@@ -24,6 +24,7 @@
 #include <QOpenGLShaderProgram>
 #include <QOpenGLBuffer>
 #include <QOpenGLVertexArrayObject>
+#include <QElapsedTimer >
 namespace Ui {
 class OpenGlViewer;
 }
@@ -89,8 +90,10 @@ private:
     //  void drawTestCube();
     //temporary const
 private:
-    const uint COUNT_ALIGN_CYCLES=50;
-    const double ERROR_ALIGN=0.005f;
+    QElapsedTimer  * timer;
+
+    const uint COUNT_ALIGN_CYCLES=1;
+    const double ERROR_ALIGN=0.006f;
 
     std::vector<QString> WRvectorFileNames;
     std::vector<vcg::Matrix44d> WRvectorMatrix;
