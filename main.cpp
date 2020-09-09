@@ -6,6 +6,8 @@
 
 int main(int argc, char *argv[])
 {
+
+
     QApplication a(argc, argv);
     MainAppWindow mainWin;
 
@@ -19,6 +21,21 @@ int main(int argc, char *argv[])
     QObject::connect(&messageReceiver,&MainWindowForMessageReceive::appHide,&mainWin,&MainAppWindow::hide);
     QObject::connect(&messageReceiver,&MainWindowForMessageReceive::appShow,&mainWin,&MainAppWindow::show);
     QObject::connect(&messageReceiver,&MainWindowForMessageReceive::appToClose,&mainWin,&MainAppWindow::appToClose);
+
+
+    if(argc==2)
+    {
+        HWND hw=(HWND)std::stoull(argv[1]);
+        messageReceiver.appIntegrate(hw);
+    }
+    else if(argc==4)
+    {
+        HWND hw=(HWND)std::stoull(argv[1]);
+        int width=QString(argv[2]).toInt();
+        int height=QString(argv[3]).toInt();
+        messageReceiver.appIntegrate(hw);
+        messageReceiver.appChangeSize(0,0,width,height);
+    }
 
     messageReceiver.show();
     messageReceiver.hide();
