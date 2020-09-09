@@ -25,11 +25,13 @@ private:
     UINT WM_CloseProgram;
     UINT WM_ChangeSize;       //wParam - width lParam - high
     UINT WM_SwitchVisibility;  //wParam 0 - not visible 1 - visible
+    UINT WM_CancelScanning; //cancel scanning
 
     const LPCSTR WM_IntegrateName= PCSTR("WM_Integrate_D3D-s");
     const LPCSTR WM_CloseProgramName =PCSTR("WM_CloseProgram_D3D-s");
     const LPCSTR WM_ChangeSizeName  =PCSTR("WM_ChangeSize_D3D-s");
     const LPCSTR WM_SwitchVisibilityName  =PCSTR("WM_SwitchVisibility_D3D-s");
+    const LPCSTR WM_CancelScanningName  =PCSTR("WM_ CancelScanning _D3D-s");
     //deep integr end
 
 
@@ -45,13 +47,17 @@ signals:
     void signalClearMeshesData();
 
     void signalSetQuantity(int quantity);
+    void signalSetValue(int value);
+    void signalShowProgressBar();
 
     void appToClose();
     void appChangeSize(int x,int y,int width,int height);
     void appHide();
     void appShow();
     void appIntegrate(HWND app);
+public slots:
 
+    void cancelScanning();
 
 
 

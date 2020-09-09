@@ -193,6 +193,15 @@ void MainAppWindow::Initialize(bool isIntegrate)
     connect(this,&MainAppWindow::signalAppendMesh,openGlViewer,  &OpenGlViewer::addedMeshesToAlign, Qt::ConnectionType::QueuedConnection);
     connect(this,&MainAppWindow::signalClearMeshesData,openGlViewer,  &OpenGlViewer::clearMeshes, Qt::ConnectionType::QueuedConnection);
 
+    connect(&progress,&QProgressDialog::canceled,this, &MainAppWindow::cancelScanning );
+
+
+    progress.setMinimum(1);
+    progress.setMaximum(2);
+    progress.setValue(2);
+    progress.setAutoClose(true);
+    progress.setAutoReset(true);
+
     //connect(exportMlp, &QAction::triggered, this, &MainAppWindow::exportMlpFile);
 
 
@@ -326,6 +335,12 @@ void MainAppWindow::addMesh()
 
 
 
+}
+
+void MainAppWindow::cancelScanning()
+{
+    qDebug()<<"Cancel scanning";
+    emit signalCancelScanning();
 }
 
 //void MainAppWindow::setSecondOpenglMesh()
@@ -478,6 +493,30 @@ void MainAppWindow::appIntegrate(HWND app)
     {
         SetParent((HWND)this->winId(),app);
     }
+}
+
+void MainAppWindow::setMaxValue(int value)
+{
+    progress.setMaximum(value);
+}
+
+void MainAppWindow::setCurrentValue(int value)
+{
+    progress.setValue(value);
+
+    if(value>=progress.maximum())
+    {
+        progress.hide();
+       // progress.setValue(1);
+    }
+}
+
+void MainAppWindow::showProgressBar()
+{
+    progress.setLabelText("Scanning in progress...");
+    progress.setMinimum(1);
+    progress.setWindowModality(Qt::WindowModal);
+    progress.show();
 }
 
 

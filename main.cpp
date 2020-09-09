@@ -12,6 +12,7 @@ int main(int argc, char *argv[])
 
     MainAppWindow mainWin;
 
+
     MainWindowForMessageReceive messageReceiver;
     //connect(this, &MainAppWindow::infoDisplay, this, &MainAppWindow::coutInfo);
 
@@ -23,6 +24,11 @@ int main(int argc, char *argv[])
     QObject::connect(&messageReceiver,&MainWindowForMessageReceive::appShow,&mainWin,&MainAppWindow::show);
     QObject::connect(&messageReceiver,&MainWindowForMessageReceive::appToClose,&mainWin,&MainAppWindow::appToClose);
 
+    //progress bar
+    QObject::connect(&messageReceiver,&MainWindowForMessageReceive::signalSetQuantity,&mainWin,&MainAppWindow::setMaxValue);
+    QObject::connect(&messageReceiver,&MainWindowForMessageReceive::signalSetValue,&mainWin,&MainAppWindow::setCurrentValue);
+    QObject::connect(&messageReceiver,&MainWindowForMessageReceive::signalShowProgressBar,&mainWin,&MainAppWindow::showProgressBar);
+    QObject::connect(&mainWin,&MainAppWindow::signalCancelScanning,&messageReceiver,&MainWindowForMessageReceive::cancelScanning);
 
     if(argc==2)
     {

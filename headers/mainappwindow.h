@@ -15,6 +15,7 @@
 #include <QStyleFactory>
 #include <QSettings>
 #include <QDebug>
+#include <QProgressDialog>
 namespace Ui {
 class MainAppWindow;
 }
@@ -33,6 +34,8 @@ private:
 
     //deep Integr start
     HWND parentHWND;
+
+    QProgressDialog progress;
 
    // UINT WM_Integrate;  // wParam - parent HWND
    // UINT WM_CloseProgram;
@@ -58,6 +61,7 @@ public slots:
     void addMesh();
     //void setSecondOpenglMesh();
 
+    void cancelScanning();
 
     void setDrawGrid(bool value);
     void setDrawFaces(bool value);
@@ -83,12 +87,19 @@ public slots:
     void appToClose();
     void appChangeSize(int x,int y,int width,int height);
     void appIntegrate(HWND app);
+
+    //progress bar slots
+    void setMaxValue(int value);
+    void setCurrentValue(int value);
+    void showProgressBar();
 signals:
     void infoDisplay(const QString &result);
 
     void signalAppendMesh(QStringList meshesList, QString path);
 
     void signalClearMeshesData();
+
+    void signalCancelScanning();
 
 private:
     void initAlignWindow();

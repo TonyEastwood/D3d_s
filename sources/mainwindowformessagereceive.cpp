@@ -5,15 +5,15 @@ MainWindowForMessageReceive::MainWindowForMessageReceive(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindowForMessageReceive)
 {
-        WM_NewMesh = RegisterWindowMessageA(WM_NewMeshName);
-        WM_FilePath = RegisterWindowMessageA(WM_FilePathName);
+    WM_NewMesh = RegisterWindowMessageA(WM_NewMeshName);
+    WM_FilePath = RegisterWindowMessageA(WM_FilePathName);
 
 
-        WM_Integrate= RegisterWindowMessageA(WM_IntegrateName);  // wParam - parent HWND
-        WM_CloseProgram= RegisterWindowMessageA(WM_CloseProgramName);
-        WM_ChangeSize= RegisterWindowMessageA(WM_ChangeSizeName);       //wParam - width lParam - high
-        WM_SwitchVisibility= RegisterWindowMessageA(WM_SwitchVisibilityName);  //wParam 0 - not visible 1 - visible
-
+    WM_Integrate= RegisterWindowMessageA(WM_IntegrateName);  // wParam - parent HWND
+    WM_CloseProgram= RegisterWindowMessageA(WM_CloseProgramName);
+    WM_ChangeSize= RegisterWindowMessageA(WM_ChangeSizeName);       //wParam - width lParam - high
+    WM_SwitchVisibility= RegisterWindowMessageA(WM_SwitchVisibilityName);  //wParam 0 - not visible 1 - visible
+    WM_CancelScanning=RegisterWindowMessageA(WM_CancelScanningName);
     ui->setupUi(this);
 }
 bool MainWindowForMessageReceive::nativeEvent(const QByteArray &eventType, void *message, long *result)
@@ -43,6 +43,7 @@ bool MainWindowForMessageReceive::nativeEvent(const QByteArray &eventType, void 
             //emit infoDisplay("MessageParse end");
             //   qDebug()<<data;
             emit signalAppendMesh(stringList,pathToFile);
+            emit signalSetValue(stringList.size());
             qDebug()<<"Emit signal append mesh 2";
         }
         return true;
@@ -52,21 +53,25 @@ bool MainWindowForMessageReceive::nativeEvent(const QByteArray &eventType, void 
     {
         QSettings m("HKEY_CURRENT_USER\\Software\\D3D-s\\AlignLab",QSettings::Registry64Format);
         // qDebug()<<GetRegistryValueString(HKEY_CURRENT_USER, 'Software\D3D-s\AlignLab',  'PathToMeshList');
-        QString val = m.value("PathToMeshList").toString();
-        pathToFile=val;
+        //QString val = ;
+        pathToFile=m.value("PathToMeshList").toString();
         // emit infoDisplay(val.toLocal8Bit());
         qDebug()<<"Emit signal clear MeshesData2";
         emit signalClearMeshesData();
 
-        val = m.value("quantity").toString();
-        emit signalSetQuantity(val.toInt());
+
+        if(m.value("quantity").toString().toInt()!=0)
+        {
+            emit signalSetQuantity(m.value("quantity").toString().toInt());
+            emit signalShowProgressBar();
+        }
 
         return true;
     }
 
     if(msg->message==WM_Integrate)
     {
-       // HWND hwndNewParent=(HWND) msg->wParam;
+        HWND hwndNewParent=(HWND) msg->wParam;
 
         emit appIntegrate((HWND) msg->wParam);
 
@@ -91,7 +96,7 @@ bool MainWindowForMessageReceive::nativeEvent(const QByteArray &eventType, void 
     if(msg->message==WM_CloseProgram)
     {
         emit appToClose();
-       // SetParent((HWND)this->winId(),parentHWND);
+        // SetParent((HWND)this->winId(),parentHWND);
         close();
 
         return true;
@@ -110,4 +115,9 @@ bool MainWindowForMessageReceive::nativeEvent(const QByteArray &eventType, void 
 MainWindowForMessageReceive::~MainWindowForMessageReceive()
 {
     delete ui;
+}
+
+void MainWindowForMessageReceive::cancelScanning()
+{
+    PostMessage(HWND_BROADCAST, WM_CancelScanning, 0, 0);
 }
