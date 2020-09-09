@@ -2,19 +2,24 @@
 #include "ui_mainappwindow.h"
 
 #include <QDebug>
-MainAppWindow::MainAppWindow(  QWidget *parent)
+MainAppWindow::MainAppWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainAppWindow)
 {
 
-//    WM_NewMesh = RegisterWindowMessageA(WM_NewMeshName);
-//    WM_FilePath = RegisterWindowMessageA(WM_FilePathName);
+
+}
+
+void MainAppWindow::Initialize(bool isIntegrate)
+{
+    //    WM_NewMesh = RegisterWindowMessageA(WM_NewMeshName);
+    //    WM_FilePath = RegisterWindowMessageA(WM_FilePathName);
 
 
- //   WM_Integrate= RegisterWindowMessageA(WM_IntegrateName);  // wParam - parent HWND
-//    WM_CloseProgram= RegisterWindowMessageA(WM_CloseProgramName);
-//    WM_ChangeSize= RegisterWindowMessageA(WM_ChangeSizeName);       //wParam - width lParam - high
-//    WM_SwitchVisibility= RegisterWindowMessageA(WM_SwitchVisibilityName);  //wParam 0 - not visible 1 - visible
+    //   WM_Integrate= RegisterWindowMessageA(WM_IntegrateName);  // wParam - parent HWND
+    //    WM_CloseProgram= RegisterWindowMessageA(WM_CloseProgramName);
+    //    WM_ChangeSize= RegisterWindowMessageA(WM_ChangeSizeName);       //wParam - width lParam - high
+    //    WM_SwitchVisibility= RegisterWindowMessageA(WM_SwitchVisibilityName);  //wParam 0 - not visible 1 - visible
 
 
 
@@ -138,19 +143,25 @@ MainAppWindow::MainAppWindow(  QWidget *parent)
     openGlViewer->setFocusPolicy(Qt::FocusPolicy::StrongFocus);
 
 
-    QMenuBar * menuBar = new QMenuBar(this);
 
-    menuBar->addMenu(fileMenu);
+
+
     //menuBar->addMenu(functions);
 
 
 
     mainLayout = new QHBoxLayout();
-
-    mainLayout->setMenuBar(menuBar);
     mainLayout->addWidget(openGlViewer,90);
-    mainLayout->addLayout(Vbox,10);
+    mainLayout->setMargin(0);
+    if(!isIntegrate)
+    {
+        QMenuBar * menuBar = new QMenuBar(this);
+        menuBar->addMenu(fileMenu);
+        mainLayout->setMenuBar(menuBar);
+        mainLayout->addLayout(Vbox,10);
+    }
 
+    ui->centralwidget->setContentsMargins(0,0,0,0);
     ui->centralwidget->setLayout(mainLayout);
     ui->centralwidget->show();
 
@@ -381,49 +392,49 @@ void MainAppWindow::exportMlpFile()
 void MainAppWindow::getMessageCustom()
 {
 
-//    MSG msg;
+    //    MSG msg;
 
 
 
-//    if(GetMessage(&msg, NULL, NULL, NULL)>0){ // извлекаем сообщения из очереди, посылаемые фу-циями, ОС
-//        if(msg.message==WM_NewMesh)
-//        {
-//            QStringList stringList;
-//            if(!pathToFile.isEmpty())
-//            {
-//                QFile file(pathToFile);
-//                QByteArray data;
-//                if(file.open(QIODevice::ReadOnly))
-//                {
-//                    while(!file.atEnd())
-//                    {
-//                        stringList.append(QString::fromStdString(file.readLine().toStdString()).split(QRegExp("[\r\n]"),QString::SkipEmptyParts)[0]);
-//                    }
+    //    if(GetMessage(&msg, NULL, NULL, NULL)>0){ // извлекаем сообщения из очереди, посылаемые фу-циями, ОС
+    //        if(msg.message==WM_NewMesh)
+    //        {
+    //            QStringList stringList;
+    //            if(!pathToFile.isEmpty())
+    //            {
+    //                QFile file(pathToFile);
+    //                QByteArray data;
+    //                if(file.open(QIODevice::ReadOnly))
+    //                {
+    //                    while(!file.atEnd())
+    //                    {
+    //                        stringList.append(QString::fromStdString(file.readLine().toStdString()).split(QRegExp("[\r\n]"),QString::SkipEmptyParts)[0]);
+    //                    }
 
-//                }
-//                file.close();
-//                emit infoDisplay("MessageParse start");
-//                for(auto &i:stringList)
-//                    emit infoDisplay(i);
-//                emit infoDisplay("MessageParse end");
-//                //   qDebug()<<data;
-//            }
-//        }
+    //                }
+    //                file.close();
+    //                emit infoDisplay("MessageParse start");
+    //                for(auto &i:stringList)
+    //                    emit infoDisplay(i);
+    //                emit infoDisplay("MessageParse end");
+    //                //   qDebug()<<data;
+    //            }
+    //        }
 
-//        else if(msg.message==WM_FilePath)
-//        {
-//            QSettings m("HKEY_CURRENT_USER\\Software\\D3D-s\\AlignLab",QSettings::Registry64Format);
-//            // qDebug()<<GetRegistryValueString(HKEY_CURRENT_USER, 'Software\D3D-s\AlignLab',  'PathToMeshList');
-//            QString val = m.value("PathToMeshList").toString();
-//            pathToFile=val;
-//            emit infoDisplay(val.toLocal8Bit());
-//        }
+    //        else if(msg.message==WM_FilePath)
+    //        {
+    //            QSettings m("HKEY_CURRENT_USER\\Software\\D3D-s\\AlignLab",QSettings::Registry64Format);
+    //            // qDebug()<<GetRegistryValueString(HKEY_CURRENT_USER, 'Software\D3D-s\AlignLab',  'PathToMeshList');
+    //            QString val = m.value("PathToMeshList").toString();
+    //            pathToFile=val;
+    //            emit infoDisplay(val.toLocal8Bit());
+    //        }
 
 
-        //  TranslateMessage(&msg); // интерпретируем сообщения
-        // DispatchMessage(&msg); // передаём сообщения обратно ОС
+    //  TranslateMessage(&msg); // интерпретируем сообщения
+    // DispatchMessage(&msg); // передаём сообщения обратно ОС
 
-  //  }
+    //  }
 
 
 

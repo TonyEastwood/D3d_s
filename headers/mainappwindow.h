@@ -49,10 +49,10 @@ private:
     //QString pathToFile;
 
 public:
-    explicit MainAppWindow(  QWidget *parent = nullptr);
+    explicit MainAppWindow(QWidget *parent = nullptr);
 
    // bool nativeEvent(const QByteArray &eventType, void *message, long *result) override;
-
+    void Initialize(bool isIntegrate);
     ~MainAppWindow();
 public slots:
     void addMesh();

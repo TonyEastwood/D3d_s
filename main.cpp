@@ -9,6 +9,7 @@ int main(int argc, char *argv[])
 
 
     QApplication a(argc, argv);
+
     MainAppWindow mainWin;
 
     MainWindowForMessageReceive messageReceiver;
@@ -25,17 +26,22 @@ int main(int argc, char *argv[])
 
     if(argc==2)
     {
+        mainWin.Initialize(true);
         HWND hw=(HWND)std::stoull(argv[1]);
         messageReceiver.appIntegrate(hw);
+
     }
     else if(argc==4)
     {
+        mainWin.Initialize(true);
         HWND hw=(HWND)std::stoull(argv[1]);
         int width=QString(argv[2]).toInt();
         int height=QString(argv[3]).toInt();
         messageReceiver.appIntegrate(hw);
         messageReceiver.appChangeSize(0,0,width,height);
+
     }
+    else  mainWin.Initialize(false);
 
     messageReceiver.show();
     messageReceiver.hide();
