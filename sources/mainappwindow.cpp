@@ -517,18 +517,18 @@ void MainAppWindow::setMaxValue(int value)
 void MainAppWindow::setCurrentValue(int value)
 {
     progress.setValue(value);
-    progress.setLabelText("Scanning in progress...("+QString::number(progress.value())+"/"+QString::number(progress.maximum())+")");
+    progress.setLabelText("Scanning in progress...("+QString::number(value)+"/"+QString::number(progress.maximum())+")");
     if(value>=progress.maximum())
     {
         progress.hide();
        // progress.setValue(1);
-    }
+    }else progress.show();
 }
 
 void MainAppWindow::showProgressBar()
 {
     progress.setLabelText("Scanning in progress...("+QString::number(progress.value())+"/"+QString::number(progress.maximum())+")");
-    progress.setMinimum(1);
+    progress.setMinimum(0);
     progress.setWindowModality(Qt::WindowModal);
     progress.show();
 }
