@@ -30,11 +30,21 @@ int main(int argc, char *argv[])
     QObject::connect(&messageReceiver,&MainWindowForMessageReceive::signalShowProgressBar,&mainWin,&MainAppWindow::showProgressBar);
     QObject::connect(&mainWin,&MainAppWindow::signalCancelScanning,&messageReceiver,&MainWindowForMessageReceive::cancelScanning);
 
+    messageReceiver.show();
+    messageReceiver.hide();
+
+    mainWin.setMinimumSize(QSize(500,500));
+    mainWin.setSizePolicy(QSizePolicy::Fixed,QSizePolicy::Fixed);
+    mainWin.setWindowTitle("D3Ds");
+    //mainWin.setStyleSheet(" background-color:"+CONSTANTS::backgroundColor+";");
+    mainWin.setContentsMargins(0,0,0,0);
+    mainWin.showMaximized();
     if(argc==2)
     {
         mainWin.Initialize(true);
         HWND hw=(HWND)std::stoull(argv[1]);
-        messageReceiver.appIntegrate(hw);
+        //HWND hw=(HWND)atoi(argv[1]);
+       emit messageReceiver.appIntegrate(hw);
 
     }
     else if(argc==4)
@@ -43,18 +53,14 @@ int main(int argc, char *argv[])
         HWND hw=(HWND)std::stoull(argv[1]);
         int width=QString(argv[2]).toInt();
         int height=QString(argv[3]).toInt();
-        messageReceiver.appIntegrate(hw);
-        messageReceiver.appChangeSize(0,0,width,height);
+        emit messageReceiver.appIntegrate(hw);
+        emit messageReceiver.appChangeSize(0,0,width,height);
 
     }
     else  mainWin.Initialize(false);
 
-    messageReceiver.show();
-    messageReceiver.hide();
-    mainWin.setMinimumSize(QSize(500,500));
-    mainWin.setSizePolicy(QSizePolicy::Fixed,QSizePolicy::Fixed);
-    mainWin.setWindowTitle("D3Ds");
-    //mainWin.setStyleSheet(" background-color:"+CONSTANTS::backgroundColor+";");
-    mainWin.showMaximized();
+
+
+
     return a.exec();
 }

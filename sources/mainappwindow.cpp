@@ -146,13 +146,24 @@ void MainAppWindow::Initialize(bool isIntegrate)
 
 
 
+
     //menuBar->addMenu(functions);
 
 
 
     mainLayout = new QHBoxLayout();
-    mainLayout->addWidget(openGlViewer,90);
+ //   mainLayout->addWidget(openGlViewer,90);
+    this->setContentsMargins(0,0,0,0);
     mainLayout->setMargin(0);
+    mainLayout->setContentsMargins(0,0,0,0);
+    mainLayout->setSpacing(0);
+    mainLayout->addWidget(openGlViewer,100);
+    mainLayout->layout()->setSpacing(0);
+
+
+
+
+
     if(!isIntegrate)
     {
         QMenuBar * menuBar = new QMenuBar(this);
@@ -162,6 +173,9 @@ void MainAppWindow::Initialize(bool isIntegrate)
     }
 
     ui->centralwidget->setContentsMargins(0,0,0,0);
+    statusBar()->hide();
+
+    //ui->centralwidget->layout()->setSpacing(0);
     ui->centralwidget->setLayout(mainLayout);
     ui->centralwidget->show();
 
@@ -503,7 +517,7 @@ void MainAppWindow::setMaxValue(int value)
 void MainAppWindow::setCurrentValue(int value)
 {
     progress.setValue(value);
-
+    progress.setLabelText("Scanning in progress...("+QString::number(progress.value())+"/"+QString::number(progress.maximum())+")");
     if(value>=progress.maximum())
     {
         progress.hide();
@@ -513,7 +527,7 @@ void MainAppWindow::setCurrentValue(int value)
 
 void MainAppWindow::showProgressBar()
 {
-    progress.setLabelText("Scanning in progress...");
+    progress.setLabelText("Scanning in progress...("+QString::number(progress.value())+"/"+QString::number(progress.maximum())+")");
     progress.setMinimum(1);
     progress.setWindowModality(Qt::WindowModal);
     progress.show();
