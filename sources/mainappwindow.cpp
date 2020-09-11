@@ -152,7 +152,7 @@ void MainAppWindow::Initialize(bool isIntegrate)
 
 
     mainLayout = new QHBoxLayout();
- //   mainLayout->addWidget(openGlViewer,90);
+    //   mainLayout->addWidget(openGlViewer,90);
     this->setContentsMargins(0,0,0,0);
     mainLayout->setMargin(0);
     mainLayout->setContentsMargins(0,0,0,0);
@@ -162,6 +162,24 @@ void MainAppWindow::Initialize(bool isIntegrate)
 
 
 
+    QVBoxLayout * VboxIntegrate=new QVBoxLayout(this);
+    progress=new QProgressBar(this);
+    labelScanning=new QLabel("Scanning in process...");
+    buttonCancel=new QPushButton("Cancel");
+
+    hideCustomProgressBar();
+    buttonCancel->resize(buttonCancel->width()/2,buttonCancel->height());
+
+
+
+    VboxIntegrate->setContentsMargins(0,0,0,0);
+    VboxIntegrate->setSpacing(0);
+    VboxIntegrate->setMargin(10);
+    VboxIntegrate->setStretch(0,0);
+
+    VboxIntegrate->addWidget(labelScanning,0,Qt::AlignTop);
+    VboxIntegrate->addWidget(progress,1,Qt::AlignTop);
+    VboxIntegrate->addWidget(buttonCancel,30,Qt::AlignTop);
 
 
     if(!isIntegrate)
@@ -170,6 +188,9 @@ void MainAppWindow::Initialize(bool isIntegrate)
         menuBar->addMenu(fileMenu);
         mainLayout->setMenuBar(menuBar);
         mainLayout->addLayout(Vbox,10);
+    }
+    else{
+        mainLayout->addLayout(VboxIntegrate,10);
     }
 
     ui->centralwidget->setContentsMargins(0,0,0,0);
@@ -207,14 +228,14 @@ void MainAppWindow::Initialize(bool isIntegrate)
     connect(this,&MainAppWindow::signalAppendMesh,openGlViewer,  &OpenGlViewer::addedMeshesToAlign, Qt::ConnectionType::QueuedConnection);
     connect(this,&MainAppWindow::signalClearMeshesData,openGlViewer,  &OpenGlViewer::clearMeshes, Qt::ConnectionType::QueuedConnection);
 
-    connect(&progress,&QProgressDialog::canceled,this, &MainAppWindow::cancelScanning );
+    // connect(&progress,&QProgressDialog::canceled,this, &MainAppWindow::cancelScanning );
+     connect(buttonCancel,&QPushButton::clicked,this, &MainAppWindow::cancelScanning );
 
-
-    progress.setMinimum(1);
-    progress.setMaximum(2);
-    progress.setValue(2);
-    progress.setAutoClose(true);
-    progress.setAutoReset(true);
+        progress->setMinimum(1);
+        progress->setMaximum(2);
+        progress->setValue(2);
+       // progress->setAutoClose(true);
+        //progress->setAutoReset(true);
 
 
     //connect(exportMlp, &QAction::triggered, this, &MainAppWindow::exportMlpFile);
@@ -512,26 +533,42 @@ void MainAppWindow::appIntegrate(HWND app)
 
 void MainAppWindow::setMaxValue(int value)
 {
-    progress.setMaximum(value);
+      progress->setMaximum(value);
 }
 
 void MainAppWindow::setCurrentValue(int value)
 {
-    progress.setValue(value);
-    progress.setLabelText("Scanning in progress...("+QString::number(value)+"/"+QString::number(progress.maximum())+")");
-    if(value>=progress.maximum())
-    {
-        progress.hide();
-       // progress.setValue(1);
-    }else progress.show();
+        progress->setValue(value);
+       // progress->setLabelText("Scanning in progress...("+QString::number(value)+"/"+QString::number(progress.maximum())+")");
+        if(value>=progress->maximum())
+        {
+            //progress->hide();
+            hideCustomProgressBar();
+            progress->setValue(1);
+        }else showCustomProgressBar();//progress->show();
 }
 
 void MainAppWindow::showProgressBar()
 {
-    progress.setLabelText("Scanning in progress...("+QString::number(progress.value())+"/"+QString::number(progress.maximum())+")");
-    progress.setMinimum(0);
-    progress.setWindowModality(Qt::WindowModal);
-    progress.hide();
+     //   progress->setLabelText("Scanning in progress...("+QString::number(progress.value())+"/"+QString::number(progress.maximum())+")");
+        progress->setMinimum(0);
+        progress->setWindowModality(Qt::WindowModal);
+       hideCustomProgressBar();
+        // progress->hide();
+}
+
+void MainAppWindow::hideCustomProgressBar()
+{
+    labelScanning->hide();
+    buttonCancel->hide();
+    progress->hide();
+}
+
+void MainAppWindow::showCustomProgressBar()
+{
+    labelScanning->show();
+    buttonCancel->show();
+    progress->show();
 }
 
 

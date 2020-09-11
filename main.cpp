@@ -24,11 +24,7 @@ int main(int argc, char *argv[])
     QObject::connect(&messageReceiver,&MainWindowForMessageReceive::appShow,&mainWin,&MainAppWindow::show);
     QObject::connect(&messageReceiver,&MainWindowForMessageReceive::appToClose,&mainWin,&MainAppWindow::appToClose);
 
-    //progress bar
-    QObject::connect(&messageReceiver,&MainWindowForMessageReceive::signalSetQuantity,&mainWin,&MainAppWindow::setMaxValue);
-    QObject::connect(&messageReceiver,&MainWindowForMessageReceive::signalSetValue,&mainWin,&MainAppWindow::setCurrentValue);
-    QObject::connect(&messageReceiver,&MainWindowForMessageReceive::signalShowProgressBar,&mainWin,&MainAppWindow::showProgressBar);
-    QObject::connect(&mainWin,&MainAppWindow::signalCancelScanning,&messageReceiver,&MainWindowForMessageReceive::cancelScanning);
+
 
     messageReceiver.show();
     messageReceiver.hide();
@@ -41,6 +37,11 @@ int main(int argc, char *argv[])
 
     if(argc==2)
     {
+        //progress bar
+        QObject::connect(&messageReceiver,&MainWindowForMessageReceive::signalSetQuantity,&mainWin,&MainAppWindow::setMaxValue);
+        QObject::connect(&messageReceiver,&MainWindowForMessageReceive::signalSetValue,&mainWin,&MainAppWindow::setCurrentValue);
+        QObject::connect(&messageReceiver,&MainWindowForMessageReceive::signalShowProgressBar,&mainWin,&MainAppWindow::showProgressBar);
+        QObject::connect(&mainWin,&MainAppWindow::signalCancelScanning,&messageReceiver,&MainWindowForMessageReceive::cancelScanning);
         mainWin.Initialize(true);
         HWND hw=(HWND)std::stoull(argv[1]);
         //HWND hw=(HWND)atoi(argv[1]);
@@ -49,6 +50,11 @@ int main(int argc, char *argv[])
     }
     else if(argc==4)
     {
+        //progress bar
+        QObject::connect(&messageReceiver,&MainWindowForMessageReceive::signalSetQuantity,&mainWin,&MainAppWindow::setMaxValue);
+        QObject::connect(&messageReceiver,&MainWindowForMessageReceive::signalSetValue,&mainWin,&MainAppWindow::setCurrentValue);
+        QObject::connect(&messageReceiver,&MainWindowForMessageReceive::signalShowProgressBar,&mainWin,&MainAppWindow::showProgressBar);
+        QObject::connect(&mainWin,&MainAppWindow::signalCancelScanning,&messageReceiver,&MainWindowForMessageReceive::cancelScanning);
         mainWin.Initialize(true);
         HWND hw=(HWND)std::stoull(argv[1]);
         int width=QString(argv[2]).toInt();
