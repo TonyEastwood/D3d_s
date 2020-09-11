@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
     mainWin.setWindowTitle("D3Ds");
     //mainWin.setStyleSheet(" background-color:"+CONSTANTS::backgroundColor+";");
     mainWin.setContentsMargins(0,0,0,0);
-    mainWin.showMaximized();
+
     if(argc==2)
     {
         mainWin.Initialize(true);
@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
 
     }
     else  mainWin.Initialize(false);
-
+    mainWin.showMaximized();
 
 
 
