@@ -157,7 +157,7 @@ void MainAppWindow::Initialize(bool isIntegrate)
     mainLayout->setMargin(0);
     mainLayout->setContentsMargins(0,0,0,0);
     mainLayout->setSpacing(0);
-    mainLayout->addWidget(openGlViewer,100);
+    mainLayout->addWidget(openGlViewer,90);
     mainLayout->layout()->setSpacing(0);
 
 
@@ -168,7 +168,7 @@ void MainAppWindow::Initialize(bool isIntegrate)
     buttonCancel=new QPushButton("Cancel");
 
     hideCustomProgressBar();
-    buttonCancel->resize(buttonCancel->width()/2,buttonCancel->height());
+   // buttonCancel->resize(buttonCancel->width()/2,buttonCancel->height());
 
 
 
@@ -552,23 +552,23 @@ void MainAppWindow::showProgressBar()
 {
      //   progress->setLabelText("Scanning in progress...("+QString::number(progress.value())+"/"+QString::number(progress.maximum())+")");
         progress->setMinimum(0);
-        progress->setWindowModality(Qt::WindowModal);
+      //  progress->setWindowModality(Qt::WindowModal);
        hideCustomProgressBar();
         // progress->hide();
 }
 
 void MainAppWindow::hideCustomProgressBar()
 {
-    labelScanning->hide();
-    buttonCancel->hide();
-    progress->hide();
+    labelScanning->setVisible(false);
+    buttonCancel->setVisible(false);
+    progress->setVisible(false);
 }
 
 void MainAppWindow::showCustomProgressBar()
 {
-    labelScanning->show();
-    buttonCancel->show();
-    progress->show();
+    labelScanning->setVisible(true);
+    buttonCancel->setVisible(true);
+    progress->setVisible(true);
 }
 
 
