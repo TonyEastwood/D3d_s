@@ -216,6 +216,7 @@ void MainAppWindow::Initialize(bool isIntegrate)
     progress.setAutoClose(true);
     progress.setAutoReset(true);
 
+
     //connect(exportMlp, &QAction::triggered, this, &MainAppWindow::exportMlpFile);
 
 
@@ -530,7 +531,7 @@ void MainAppWindow::showProgressBar()
     progress.setLabelText("Scanning in progress...("+QString::number(progress.value())+"/"+QString::number(progress.maximum())+")");
     progress.setMinimum(0);
     progress.setWindowModality(Qt::WindowModal);
-    progress.show();
+    progress.hide();
 }
 
 
