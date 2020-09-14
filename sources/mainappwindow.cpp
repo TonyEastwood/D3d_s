@@ -167,6 +167,10 @@ void MainAppWindow::Initialize(bool isIntegrate)
     labelScanning=new QLabel("Scanning in process...");
     buttonCancel=new QPushButton("Cancel");
 
+    buttonCancel->setFixedSize(100,30);
+
+
+
     hideCustomProgressBar();
    // buttonCancel->resize(buttonCancel->width()/2,buttonCancel->height());
 
@@ -180,6 +184,8 @@ void MainAppWindow::Initialize(bool isIntegrate)
     VboxIntegrate->addWidget(labelScanning,0,Qt::AlignTop);
     VboxIntegrate->addWidget(progress,1,Qt::AlignTop);
     VboxIntegrate->addWidget(buttonCancel,30,Qt::AlignTop);
+    VboxIntegrate->setSizeConstraint(QLayout::SetFixedSize);
+
 
 
     if(!isIntegrate)
@@ -190,7 +196,7 @@ void MainAppWindow::Initialize(bool isIntegrate)
         mainLayout->addLayout(Vbox,10);
     }
     else{
-        mainLayout->addLayout(VboxIntegrate,10);
+        mainLayout->addLayout(VboxIntegrate);
     }
 
     ui->centralwidget->setContentsMargins(0,0,0,0);

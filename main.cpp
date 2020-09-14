@@ -58,13 +58,12 @@ int main(int argc, char *argv[])
         mainWin.Initialize(true);
         HWND hw=(HWND)std::stoull(argv[1]);
         int width=QString(argv[2]).toInt();
-        int height=QString(argv[3]).toInt();
-        emit messageReceiver.appIntegrate(hw);
+        int height=QString(argv[3]).toInt();	    
+        messageReceiver.appIntegrate(hw);
         emit messageReceiver.appChangeSize(0,0,width,height);
-
     }
     else  mainWin.Initialize(false);
-    mainWin.showMaximized();
+    mainWin.show();
 
 
 
