@@ -25,9 +25,9 @@ int main(int argc, char *argv[])
     QObject::connect(&messageReceiver,&MainWindowForMessageReceive::appToClose,&mainWin,&MainAppWindow::appToClose);
 
 
-
-    messageReceiver.show();
+    messageReceiver.showMinimized();
     messageReceiver.hide();
+
 
     mainWin.setMinimumSize(QSize(500,500));
     mainWin.setSizePolicy(QSizePolicy::Fixed,QSizePolicy::Fixed);
@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
         mainWin.Initialize(true);
         HWND hw=(HWND)std::stoull(argv[1]);
         //HWND hw=(HWND)atoi(argv[1]);
-       emit messageReceiver.appIntegrate(hw);
+        emit messageReceiver.appIntegrate(hw);
 
     }
     else if(argc==4)
@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
         mainWin.Initialize(true);
         HWND hw=(HWND)std::stoull(argv[1]);
         int width=QString(argv[2]).toInt();
-        int height=QString(argv[3]).toInt();	    
+        int height=QString(argv[3]).toInt();
         messageReceiver.appIntegrate(hw);
         emit messageReceiver.appChangeSize(0,0,width,height);
     }
