@@ -169,7 +169,7 @@ void MainAppWindow::Initialize(bool isIntegrate)
 
     progress->setAlignment(Qt::AlignCenter);
 
-    buttonCancel->setFixedSize(100,30);
+    buttonCancel->setFixedSize(150,30);
 
 
 
