@@ -568,14 +568,14 @@ void MainAppWindow::showProgressBar()
 void MainAppWindow::hideCustomProgressBar()
 {
     labelScanning->setVisible(false);
-    buttonCancel->setVisible(false);
+    //buttonCancel->setVisible(false);
     progress->setVisible(false);
 }
 
 void MainAppWindow::showCustomProgressBar()
 {
     labelScanning->setVisible(true);
-    buttonCancel->setVisible(true);
+   // buttonCancel->setVisible(true);
     progress->setVisible(true);
 }
 
