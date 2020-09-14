@@ -167,6 +167,8 @@ void MainAppWindow::Initialize(bool isIntegrate)
     labelScanning=new QLabel("Scanning in process...");
     buttonCancel=new QPushButton("Cancel");
 
+    progress->setAlignment(Qt::AlignCenter);
+
     buttonCancel->setFixedSize(100,30);
 
 
@@ -235,13 +237,13 @@ void MainAppWindow::Initialize(bool isIntegrate)
     connect(this,&MainAppWindow::signalClearMeshesData,openGlViewer,  &OpenGlViewer::clearMeshes, Qt::ConnectionType::QueuedConnection);
 
     // connect(&progress,&QProgressDialog::canceled,this, &MainAppWindow::cancelScanning );
-     connect(buttonCancel,&QPushButton::clicked,this, &MainAppWindow::cancelScanning );
+    connect(buttonCancel,&QPushButton::clicked,this, &MainAppWindow::cancelScanning );
 
-        progress->setMinimum(1);
-        progress->setMaximum(2);
-        progress->setValue(2);
-       // progress->setAutoClose(true);
-        //progress->setAutoReset(true);
+    progress->setMinimum(1);
+    progress->setMaximum(2);
+    progress->setValue(2);
+    // progress->setAutoClose(true);
+    //progress->setAutoReset(true);
 
 
     //connect(exportMlp, &QAction::triggered, this, &MainAppWindow::exportMlpFile);
@@ -539,28 +541,28 @@ void MainAppWindow::appIntegrate(HWND app)
 
 void MainAppWindow::setMaxValue(int value)
 {
-      progress->setMaximum(value);
+    progress->setMaximum(value);
 }
 
 void MainAppWindow::setCurrentValue(int value)
 {
-        progress->setValue(value);
-       // progress->setLabelText("Scanning in progress...("+QString::number(value)+"/"+QString::number(progress.maximum())+")");
-        if(value>=progress->maximum())
-        {
-            //progress->hide();
-            hideCustomProgressBar();
-            progress->setValue(1);
-        }else showCustomProgressBar();//progress->show();
+    progress->setValue(value);
+    // progress->setLabelText("Scanning in progress...("+QString::number(value)+"/"+QString::number(progress.maximum())+")");
+    if(value>=progress->maximum())
+    {
+        //progress->hide();
+        hideCustomProgressBar();
+        progress->setValue(1);
+    }else showCustomProgressBar();//progress->show();
 }
 
 void MainAppWindow::showProgressBar()
 {
-     //   progress->setLabelText("Scanning in progress...("+QString::number(progress.value())+"/"+QString::number(progress.maximum())+")");
-        progress->setMinimum(0);
-      //  progress->setWindowModality(Qt::WindowModal);
-       hideCustomProgressBar();
-        // progress->hide();
+    //   progress->setLabelText("Scanning in progress...("+QString::number(progress.value())+"/"+QString::number(progress.maximum())+")");
+    progress->setMinimum(0);
+    //  progress->setWindowModality(Qt::WindowModal);
+    hideCustomProgressBar();
+    // progress->hide();
 }
 
 void MainAppWindow::hideCustomProgressBar()
