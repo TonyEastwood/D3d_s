@@ -33,7 +33,8 @@ int main(int argc, char *argv[])
 
     mainWin.setMinimumSize(QSize(500,500));
     mainWin.setSizePolicy(QSizePolicy::Fixed,QSizePolicy::Fixed);
-    mainWin.setWindowTitle("D3Ds");
+
+
     //mainWin.setStyleSheet(" background-color:"+CONSTANTS::backgroundColor+";");
     mainWin.setContentsMargins(0,0,0,0);
 
@@ -47,24 +48,26 @@ int main(int argc, char *argv[])
         mainWin.Initialize(true);
         //HWND hw=(HWND)std::stoull(argv[1]);
         //HWND hw=(HWND)atoi(argv[1]);
-       // emit messageReceiver.appIntegrate(hw);
+        // emit messageReceiver.appIntegrate(hw);
 
     }
-//    else if(argc==4)
-//    {
-//        //progress bar
-//        QObject::connect(&messageReceiver,&MainWindowForMessageReceive::signalSetQuantity,&mainWin,&MainAppWindow::setMaxValue);
-//        QObject::connect(&messageReceiver,&MainWindowForMessageReceive::signalSetValue,&mainWin,&MainAppWindow::setCurrentValue);
-//        QObject::connect(&messageReceiver,&MainWindowForMessageReceive::signalShowProgressBar,&mainWin,&MainAppWindow::showProgressBar);
-//        QObject::connect(&mainWin,&MainAppWindow::signalCancelScanning,&messageReceiver,&MainWindowForMessageReceive::cancelScanning);
-//        mainWin.Initialize(true);
-//        HWND hw=(HWND)std::stoull(argv[1]);
-//        int width=QString(argv[2]).toInt();
-//        int height=QString(argv[3]).toInt();
-//        messageReceiver.appIntegrate(hw);
-//        emit messageReceiver.appChangeSize(0,0,width,height);
-//    }
+    //    else if(argc==4)
+    //    {
+    //        //progress bar
+    //        QObject::connect(&messageReceiver,&MainWindowForMessageReceive::signalSetQuantity,&mainWin,&MainAppWindow::setMaxValue);
+    //        QObject::connect(&messageReceiver,&MainWindowForMessageReceive::signalSetValue,&mainWin,&MainAppWindow::setCurrentValue);
+    //        QObject::connect(&messageReceiver,&MainWindowForMessageReceive::signalShowProgressBar,&mainWin,&MainAppWindow::showProgressBar);
+    //        QObject::connect(&mainWin,&MainAppWindow::signalCancelScanning,&messageReceiver,&MainWindowForMessageReceive::cancelScanning);
+    //        mainWin.Initialize(true);
+    //        HWND hw=(HWND)std::stoull(argv[1]);
+    //        int width=QString(argv[2]).toInt();
+    //        int height=QString(argv[3]).toInt();
+    //        messageReceiver.appIntegrate(hw);
+    //        emit messageReceiver.appChangeSize(0,0,width,height);
+    //    }
     else  mainWin.Initialize(false);
+
+    mainWin.setWindowTitle("Preview");
     mainWin.showMaximized();
 
 
