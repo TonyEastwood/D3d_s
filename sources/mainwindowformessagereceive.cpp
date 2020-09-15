@@ -14,6 +14,7 @@ MainWindowForMessageReceive::MainWindowForMessageReceive(QWidget *parent) :
     WM_ChangeSize= RegisterWindowMessageA(WM_ChangeSizeName);       //wParam - width lParam - high
     WM_SwitchVisibility= RegisterWindowMessageA(WM_SwitchVisibilityName);  //wParam 0 - not visible 1 - visible
     WM_CancelScanning=RegisterWindowMessageA(WM_CancelScanningName);
+    WM_PreviewClosed=RegisterWindowMessageA(WM_PreviewClosedName);
     ui->setupUi(this);
 }
 bool MainWindowForMessageReceive::nativeEvent(const QByteArray &eventType, void *message, long *result)
@@ -120,4 +121,9 @@ MainWindowForMessageReceive::~MainWindowForMessageReceive()
 void MainWindowForMessageReceive::cancelScanning()
 {
     PostMessage(HWND_BROADCAST, WM_CancelScanning, 0, 0);
+}
+
+void MainWindowForMessageReceive::previewClosed()
+{
+    PostMessage(HWND_BROADCAST, WM_PreviewClosed, 0, 0);
 }

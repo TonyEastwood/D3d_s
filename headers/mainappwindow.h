@@ -105,10 +105,14 @@ signals:
 
     void signalCancelScanning();
 
+    void signalOnClose();
+
 private:
     void initAlignWindow();
     void hideCustomProgressBar();
     void showCustomProgressBar();
+
+    void closeEvent (QCloseEvent *event) override;
 
     Ui::MainAppWindow *ui;
     OpenGlViewer *openGlViewer; // openGl viewer

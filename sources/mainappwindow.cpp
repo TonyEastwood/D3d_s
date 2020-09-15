@@ -579,4 +579,9 @@ void MainAppWindow::showCustomProgressBar()
     progress->setVisible(true);
 }
 
+void MainAppWindow::closeEvent(QCloseEvent *event)
+{
+    emit signalOnClose();
+}
+
 

@@ -24,6 +24,8 @@ int main(int argc, char *argv[])
     QObject::connect(&messageReceiver,&MainWindowForMessageReceive::appShow,&mainWin,&MainAppWindow::show);
     QObject::connect(&messageReceiver,&MainWindowForMessageReceive::appToClose,&mainWin,&MainAppWindow::appToClose);
 
+    QObject::connect(&mainWin,&MainAppWindow::signalOnClose,&messageReceiver,&MainWindowForMessageReceive::previewClosed);
+
 
     messageReceiver.showMinimized();
     messageReceiver.hide();

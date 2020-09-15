@@ -26,12 +26,14 @@ private:
     UINT WM_ChangeSize;       //wParam - width lParam - high
     UINT WM_SwitchVisibility;  //wParam 0 - not visible 1 - visible
     UINT WM_CancelScanning; //cancel scanning
+    UINT WM_PreviewClosed; //send message when preview form closed
 
     const LPCSTR WM_IntegrateName= PCSTR("WM_Integrate_D3D-s");
     const LPCSTR WM_CloseProgramName =PCSTR("WM_CloseProgram_D3D-s");
     const LPCSTR WM_ChangeSizeName  =PCSTR("WM_ChangeSize_D3D-s");
     const LPCSTR WM_SwitchVisibilityName  =PCSTR("WM_SwitchVisibility_D3D-s");
     const LPCSTR WM_CancelScanningName  =PCSTR("WM_ CancelScanning _D3D-s");
+    const LPCSTR WM_PreviewClosedName  =PCSTR("WM_PreviewClose_D3D-s");
     //deep integr end
 
 
@@ -58,6 +60,8 @@ signals:
 public slots:
 
     void cancelScanning();
+
+    void previewClosed();
 
 
 
