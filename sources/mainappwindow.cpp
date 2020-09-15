@@ -2,19 +2,24 @@
 #include "ui_mainappwindow.h"
 
 #include <QDebug>
-MainAppWindow::MainAppWindow(  QWidget *parent)
+MainAppWindow::MainAppWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainAppWindow)
 {
 
-//    WM_NewMesh = RegisterWindowMessageA(WM_NewMeshName);
-//    WM_FilePath = RegisterWindowMessageA(WM_FilePathName);
+
+}
+
+void MainAppWindow::Initialize(bool isIntegrate)
+{
+    //    WM_NewMesh = RegisterWindowMessageA(WM_NewMeshName);
+    //    WM_FilePath = RegisterWindowMessageA(WM_FilePathName);
 
 
- //   WM_Integrate= RegisterWindowMessageA(WM_IntegrateName);  // wParam - parent HWND
-//    WM_CloseProgram= RegisterWindowMessageA(WM_CloseProgramName);
-//    WM_ChangeSize= RegisterWindowMessageA(WM_ChangeSizeName);       //wParam - width lParam - high
-//    WM_SwitchVisibility= RegisterWindowMessageA(WM_SwitchVisibilityName);  //wParam 0 - not visible 1 - visible
+    //   WM_Integrate= RegisterWindowMessageA(WM_IntegrateName);  // wParam - parent HWND
+    //    WM_CloseProgram= RegisterWindowMessageA(WM_CloseProgramName);
+    //    WM_ChangeSize= RegisterWindowMessageA(WM_ChangeSizeName);       //wParam - width lParam - high
+    //    WM_SwitchVisibility= RegisterWindowMessageA(WM_SwitchVisibilityName);  //wParam 0 - not visible 1 - visible
 
 
 
@@ -138,19 +143,68 @@ MainAppWindow::MainAppWindow(  QWidget *parent)
     openGlViewer->setFocusPolicy(Qt::FocusPolicy::StrongFocus);
 
 
-    QMenuBar * menuBar = new QMenuBar(this);
 
-    menuBar->addMenu(fileMenu);
+
+
+
     //menuBar->addMenu(functions);
 
 
 
     mainLayout = new QHBoxLayout();
-
-    mainLayout->setMenuBar(menuBar);
+    //   mainLayout->addWidget(openGlViewer,90);
+    this->setContentsMargins(0,0,0,0);
+    mainLayout->setMargin(0);
+    mainLayout->setContentsMargins(0,0,0,0);
+    mainLayout->setSpacing(0);
     mainLayout->addWidget(openGlViewer,90);
-    mainLayout->addLayout(Vbox,10);
+    mainLayout->layout()->setSpacing(0);
 
+
+
+    QVBoxLayout * VboxIntegrate=new QVBoxLayout(this);
+    progress=new QProgressBar(this);
+    labelScanning=new QLabel("Scanning in process...");
+    buttonCancel=new QPushButton("Cancel");
+
+    progress->setAlignment(Qt::AlignCenter);
+
+    buttonCancel->setFixedSize(150,30);
+
+
+
+    hideCustomProgressBar();
+   // buttonCancel->resize(buttonCancel->width()/2,buttonCancel->height());
+
+
+
+    VboxIntegrate->setContentsMargins(0,0,0,0);
+    VboxIntegrate->setSpacing(0);
+    VboxIntegrate->setMargin(10);
+    VboxIntegrate->setStretch(0,0);
+
+    VboxIntegrate->addWidget(labelScanning,0,Qt::AlignTop);
+    VboxIntegrate->addWidget(progress,1,Qt::AlignTop);
+    VboxIntegrate->addWidget(buttonCancel,30,Qt::AlignTop);
+    VboxIntegrate->setSizeConstraint(QLayout::SetFixedSize);
+
+
+
+    if(!isIntegrate)
+    {
+        QMenuBar * menuBar = new QMenuBar(this);
+        menuBar->addMenu(fileMenu);
+        mainLayout->setMenuBar(menuBar);
+        mainLayout->addLayout(Vbox,10);
+    }
+    else{
+        mainLayout->addLayout(VboxIntegrate);
+    }
+
+    ui->centralwidget->setContentsMargins(0,0,0,0);
+    statusBar()->hide();
+
+    //ui->centralwidget->layout()->setSpacing(0);
     ui->centralwidget->setLayout(mainLayout);
     ui->centralwidget->show();
 
@@ -181,6 +235,16 @@ MainAppWindow::MainAppWindow(  QWidget *parent)
 
     connect(this,&MainAppWindow::signalAppendMesh,openGlViewer,  &OpenGlViewer::addedMeshesToAlign, Qt::ConnectionType::QueuedConnection);
     connect(this,&MainAppWindow::signalClearMeshesData,openGlViewer,  &OpenGlViewer::clearMeshes, Qt::ConnectionType::QueuedConnection);
+
+    // connect(&progress,&QProgressDialog::canceled,this, &MainAppWindow::cancelScanning );
+    connect(buttonCancel,&QPushButton::clicked,this, &MainAppWindow::cancelScanning );
+
+    progress->setMinimum(1);
+    progress->setMaximum(2);
+    progress->setValue(2);
+    // progress->setAutoClose(true);
+    //progress->setAutoReset(true);
+
 
     //connect(exportMlp, &QAction::triggered, this, &MainAppWindow::exportMlpFile);
 
@@ -317,6 +381,12 @@ void MainAppWindow::addMesh()
 
 }
 
+void MainAppWindow::cancelScanning()
+{
+    qDebug()<<"Cancel scanning";
+    emit signalCancelScanning();
+}
+
 //void MainAppWindow::setSecondOpenglMesh()
 //{
 //    QString path=QFileDialog::getOpenFileName(this,"Open object",QString(),tr("STL (*.stl);;PLY (*.ply)" ));
@@ -381,49 +451,49 @@ void MainAppWindow::exportMlpFile()
 void MainAppWindow::getMessageCustom()
 {
 
-//    MSG msg;
+    //    MSG msg;
 
 
 
-//    if(GetMessage(&msg, NULL, NULL, NULL)>0){ // извлекаем сообщения из очереди, посылаемые фу-циями, ОС
-//        if(msg.message==WM_NewMesh)
-//        {
-//            QStringList stringList;
-//            if(!pathToFile.isEmpty())
-//            {
-//                QFile file(pathToFile);
-//                QByteArray data;
-//                if(file.open(QIODevice::ReadOnly))
-//                {
-//                    while(!file.atEnd())
-//                    {
-//                        stringList.append(QString::fromStdString(file.readLine().toStdString()).split(QRegExp("[\r\n]"),QString::SkipEmptyParts)[0]);
-//                    }
+    //    if(GetMessage(&msg, NULL, NULL, NULL)>0){ // извлекаем сообщения из очереди, посылаемые фу-циями, ОС
+    //        if(msg.message==WM_NewMesh)
+    //        {
+    //            QStringList stringList;
+    //            if(!pathToFile.isEmpty())
+    //            {
+    //                QFile file(pathToFile);
+    //                QByteArray data;
+    //                if(file.open(QIODevice::ReadOnly))
+    //                {
+    //                    while(!file.atEnd())
+    //                    {
+    //                        stringList.append(QString::fromStdString(file.readLine().toStdString()).split(QRegExp("[\r\n]"),QString::SkipEmptyParts)[0]);
+    //                    }
 
-//                }
-//                file.close();
-//                emit infoDisplay("MessageParse start");
-//                for(auto &i:stringList)
-//                    emit infoDisplay(i);
-//                emit infoDisplay("MessageParse end");
-//                //   qDebug()<<data;
-//            }
-//        }
+    //                }
+    //                file.close();
+    //                emit infoDisplay("MessageParse start");
+    //                for(auto &i:stringList)
+    //                    emit infoDisplay(i);
+    //                emit infoDisplay("MessageParse end");
+    //                //   qDebug()<<data;
+    //            }
+    //        }
 
-//        else if(msg.message==WM_FilePath)
-//        {
-//            QSettings m("HKEY_CURRENT_USER\\Software\\D3D-s\\AlignLab",QSettings::Registry64Format);
-//            // qDebug()<<GetRegistryValueString(HKEY_CURRENT_USER, 'Software\D3D-s\AlignLab',  'PathToMeshList');
-//            QString val = m.value("PathToMeshList").toString();
-//            pathToFile=val;
-//            emit infoDisplay(val.toLocal8Bit());
-//        }
+    //        else if(msg.message==WM_FilePath)
+    //        {
+    //            QSettings m("HKEY_CURRENT_USER\\Software\\D3D-s\\AlignLab",QSettings::Registry64Format);
+    //            // qDebug()<<GetRegistryValueString(HKEY_CURRENT_USER, 'Software\D3D-s\AlignLab',  'PathToMeshList');
+    //            QString val = m.value("PathToMeshList").toString();
+    //            pathToFile=val;
+    //            emit infoDisplay(val.toLocal8Bit());
+    //        }
 
 
-        //  TranslateMessage(&msg); // интерпретируем сообщения
-        // DispatchMessage(&msg); // передаём сообщения обратно ОС
+    //  TranslateMessage(&msg); // интерпретируем сообщения
+    // DispatchMessage(&msg); // передаём сообщения обратно ОС
 
-  //  }
+    //  }
 
 
 
@@ -467,6 +537,51 @@ void MainAppWindow::appIntegrate(HWND app)
     {
         SetParent((HWND)this->winId(),app);
     }
+}
+
+void MainAppWindow::setMaxValue(int value)
+{
+    progress->setMaximum(value);
+}
+
+void MainAppWindow::setCurrentValue(int value)
+{
+    progress->setValue(value);
+    // progress->setLabelText("Scanning in progress...("+QString::number(value)+"/"+QString::number(progress.maximum())+")");
+    if(value>=progress->maximum())
+    {
+        //progress->hide();
+        hideCustomProgressBar();
+        progress->setValue(1);
+    }else showCustomProgressBar();//progress->show();
+}
+
+void MainAppWindow::showProgressBar()
+{
+    //   progress->setLabelText("Scanning in progress...("+QString::number(progress.value())+"/"+QString::number(progress.maximum())+")");
+    progress->setMinimum(0);
+    //  progress->setWindowModality(Qt::WindowModal);
+    hideCustomProgressBar();
+    // progress->hide();
+}
+
+void MainAppWindow::hideCustomProgressBar()
+{
+    labelScanning->setVisible(false);
+    //buttonCancel->setVisible(false);
+    progress->setVisible(false);
+}
+
+void MainAppWindow::showCustomProgressBar()
+{
+    labelScanning->setVisible(true);
+   // buttonCancel->setVisible(true);
+    progress->setVisible(true);
+}
+
+void MainAppWindow::closeEvent(QCloseEvent *event)
+{
+    emit signalOnClose();
 }
 
 

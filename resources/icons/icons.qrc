@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/icons">
+        <file>d3ds.ico</file>
+    </qresource>
+</RCC>
