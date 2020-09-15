@@ -67,6 +67,33 @@ const GLchar* fragmentShaderSource = "#version 330 core\n"
 
 //   "color = ourColor;\n"
 
+const GLchar* vertexShaderBackground = "#version 330 core\n"
+                                       " out vec2 v_uv;\n"
+
+                                       "void main()\n"
+                                       "{\n"
+
+                                       " uint idx = uint(gl_VertexID);\n"
+                                       " gl_Position = vec4( idx & 1U, idx >> 1U, 0.0, 0.5 ) * 4.0 - 1.0;\n"
+                                       " v_uv = vec2( gl_Position.xy * 0.5 + 0.5 );\n"
+
+                                       "}\n\0";
+
+const GLchar* fragmentShaderBackground = "#version 330 core\n"
+                                         "uniform vec4 top_color;\n"
+                                         "uniform vec4 bot_color;\n"
+                                         "in vec2 v_uv;\n"
+                                         " out vec4 frag_color;\n"
+                                         "void main()\n"
+                                         "{\n"
+
+
+                                         " frag_color = bot_color * (1 - v_uv.y) + top_color * v_uv.y;\n"
+
+                                         "}\n\0";
+
+
+
 OpenGlViewer::OpenGlViewer( QWidget *parent)
     : QGLWidget(parent) {
 
@@ -191,6 +218,47 @@ void OpenGlViewer::initializeGL() {
     f->glDeleteShader(fragmentShader);
 
 
+
+    //BACKGROUND SHADER START
+    GLuint vertexShader2=f->glCreateShader(GL_VERTEX_SHADER);
+    f->glShaderSource(vertexShader2, 1, &vertexShaderBackground, NULL);
+    f->glCompileShader(vertexShader2);
+    // Check for compile time errors
+
+    f->glGetShaderiv(vertexShader2, GL_COMPILE_STATUS, &success);
+    if (!success)
+    {
+        f->glGetShaderInfoLog(vertexShader2, 512, NULL, infoLog);
+        std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
+    }
+    GLuint fragmentShader2 = f->glCreateShader(GL_FRAGMENT_SHADER);
+    f->glShaderSource(fragmentShader2, 1, &fragmentShaderBackground, NULL);
+    f->glCompileShader(fragmentShader2);
+    // Check for compile time errors
+    f->glGetShaderiv(fragmentShader2, GL_COMPILE_STATUS, &success);
+    if (!success)
+    {
+        f->glGetShaderInfoLog(fragmentShader2, 512, NULL, infoLog);
+        std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
+    }
+    // Link shaders
+    shaderProgramBackground = f->glCreateProgram();
+    f->glAttachShader(shaderProgramBackground, vertexShader2);
+    f->glAttachShader(shaderProgramBackground, fragmentShader2);
+    f->glLinkProgram(shaderProgramBackground);
+    // Check for linking errors
+    f->glGetProgramiv(shaderProgramBackground, GL_LINK_STATUS, &success);
+    if (!success) {
+        f->glGetProgramInfoLog(shaderProgramBackground, 512, NULL, infoLog);
+        std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
+    }
+    f->glDeleteShader(vertexShader2);
+    f->glDeleteShader(fragmentShader2);
+
+    //BACKGROUND SHADER END
+
+
+
     // Set up vertex data (and buffer(s)) and attribute pointers
 
 
@@ -221,7 +289,10 @@ void OpenGlViewer::initializeGL() {
     f->glEnable(GL_COLOR_MATERIAL);
     f->glEnable(GL_NORMALIZE);
     // Game loop
+    f->glGenVertexArrays(2, &background_vao);
+
     f->glUseProgram(shaderProgram);
+
     // Check if any events have been activiated (key pressed, mouse moved etc.) and call corresponding response functions
 
     GPUobjectColor =  f->glGetUniformLocation(shaderProgram, "ourColor");
@@ -230,6 +301,12 @@ void OpenGlViewer::initializeGL() {
     GPUlightPosition=f->glGetUniformLocation(shaderProgram, "LightPosition");
     GPUlightPosition2=f->glGetUniformLocation(shaderProgram, "LightPosition2");
     GPUlightColor=f->glGetUniformLocation(shaderProgram, "lightColor");
+
+    f->glUseProgram(shaderProgramBackground);
+    GPUtopcolor=f->glGetUniformLocation(shaderProgramBackground, "top_color");
+    GPUbotcolor=f->glGetUniformLocation(shaderProgramBackground, "bot_color");
+
+
 }
 void OpenGlViewer::resizeGL(int w, int h) {
     glMatrixMode(GL_PROJECTION);
@@ -243,6 +320,19 @@ void OpenGlViewer::paintGL() {
     f->glClearColor(BACKGROUND_COLOR[0],BACKGROUND_COLOR[1],BACKGROUND_COLOR[2],1.0f);
     f->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+
+
+    f->glDisable(GL_DEPTH_TEST);
+    f->glUseProgram(shaderProgramBackground);
+    //draw background
+    f->glUniform4f(GPUtopcolor,BACKGROUND_GRADIENT_TOP[0],BACKGROUND_GRADIENT_TOP[1],BACKGROUND_GRADIENT_TOP[2],1);
+    f->glUniform4f(GPUbotcolor,BACKGROUND_GRADIENT_BOT[0],BACKGROUND_GRADIENT_BOT[1],BACKGROUND_GRADIENT_BOT[2],1);
+    f->glBindVertexArray( background_vao );
+    f-> glDrawArrays(GL_TRIANGLES, 0, 3);
+ //   f->glBindVertexArray(0);
+    f->glEnable(GL_DEPTH_TEST);
+
+    f->glUseProgram(shaderProgram);
     m_transform.setToIdentity();
     m_projection.setToIdentity();
 

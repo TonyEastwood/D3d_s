@@ -37,7 +37,7 @@ public:
     ~OpenGlViewer() override;
 
     bool addMesh(QString path,bool isNeedToDraw=true);
-   // bool setSecondMesh(QString path,bool isNeedToDraw=true);
+    // bool setSecondMesh(QString path,bool isNeedToDraw=true);
 
     void setLight(bool value);
 
@@ -102,6 +102,9 @@ private:
 
     const GLclampf BACKGROUND_COLOR[3]={0.709,0.588, 0.921}; //White background
 
+    const GLclampf BACKGROUND_GRADIENT_TOP[3]={0,0, 0}; // background gradient top
+    const GLclampf BACKGROUND_GRADIENT_BOT[3]={0.44,0.44,0.88}; // background gradient bottom
+
     const std::tuple<float,float,float> MESH1_FACES_COLOR={0.5f, 0.5f, 0.5f}; //color faces mesh1
     const std::tuple<float,float,float> MESH1_GRID_COLOR={1.0f, 0.5f, 0.2f}; // color grid mesh1
 
@@ -115,7 +118,6 @@ private:
 
 
 private:
-
     GLfloat * drawVertex;   //vertex that contain Vertex shader
     uint sizeDrawVertex=0;  //size all of vertex that need to draw
 
@@ -125,16 +127,23 @@ private:
     GLint GPUprojectionMatrix;
     GLint GPUlightColor;
 
+    GLint GPUtopcolor;
+    GLint GPUbotcolor;
+
     GLint GPUlightPosition;
     GLint GPUlightPosition2;
 
     GLuint VBO, VAO;
+    GLuint background_vao =0;
+
     GLuint shaderProgram;
+
+    GLuint shaderProgramBackground;
 
     QOpenGLExtraFunctions *f;
 
 
-     QString distanceInfo;
+    QString distanceInfo;
 
     QVector2D mousePressPosition;       //save mouse position
     // QVector3D rotationAxis;
@@ -152,8 +161,8 @@ private:
 
 
     std::vector<MyMesh*> meshes;
-//    MyMesh *  drawFirstObject;                     // object that need to draw
-//    MyMesh *  drawSecondObject;                     // object that need to draw
+    //    MyMesh *  drawFirstObject;                     // object that need to draw
+    //    MyMesh *  drawSecondObject;                     // object that need to draw
 
     float x_pos, y_pos, rotate_y, rotate_x;  // rotate values
     float translateX, translateY;
