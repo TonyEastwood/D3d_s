@@ -12,13 +12,19 @@ const GLchar* vertexShaderSource = "#version 330 core\n"
         // "out vec3 ourColor;\n"
         "out vec3 Normal;\n"
         "out vec3 FragPos;\n"
+        "out vec4 myColor;\n"
 
         "void main()\n"
         "{\n"
         "vec4 tempPos = vec4(position, 1.0);\n"
         "Normal =vec3(projMatrix * transMatrix*vec4(-normal,0.0));\n"
-        "FragPos =vec3(transMatrix*vec4(position,1.0f));\n"
+        "FragPos =vec3(projMatrix *transMatrix*vec4(position,1.0f));\n"
         "gl_Position = projMatrix * transMatrix*  tempPos;\n"
+
+        "vec3 normal_cameraspace = normalize((projMatrix * transMatrix* vec4(-normal,0)).xyz);\n"
+        "vec3 cameraVector = normalize(vec3(0, 0, 1) - (projMatrix * transMatrix*  vec4(position, 1)).xyz);\n"
+        "float cosTheta = clamp( dot( normal_cameraspace, cameraVector ), 0,1 );\n"
+        "myColor = vec4(0.3 * vec3(0.9, 0.9, 0.9) + cosTheta * vec3(0.5, 0.5, 0.5), 1);\n"
         "}\0";
 
 
@@ -28,6 +34,7 @@ const GLchar* fragmentShaderSource = "#version 330 core\n"
                                      "out vec4 color;\n"
                                      "in vec3 FragPos;\n"
                                      "in vec3 Normal;\n"
+                                     "in vec4 myColor;\n"
 
                                      "uniform vec3 LightPosition;\n"
                                      "uniform vec3 LightPosition2;\n"
@@ -36,21 +43,25 @@ const GLchar* fragmentShaderSource = "#version 330 core\n"
                                      "void main()\n"
                                      "{\n"
 
-                                     "vec3 ambient = 0.3f *lightColor;\n"
+        //                                     "vec3 ambient = 0.3f *lightColor;\n"
 
-                                     "vec3 norm =normalize(Normal);\n"
-                                     "vec3 lightDir =normalize(LightPosition-FragPos);\n"
-                                     "vec3 lightDir2 =normalize(LightPosition2-FragPos);\n"
-        //"vec3 lightDir =normalize(vec3(0.5,0.5,0.5));\n"
-        "float diff;\n"
-        "if(max(dot(norm,lightDir),0.0)>max(dot(norm,lightDir2),0.0)) \n"
-        " diff=max(dot(norm,lightDir),0.0);\n"
-        "else \n"
-        " diff=max(dot(norm,lightDir2),0.0);\n"
-        "vec3 diffuse=diff*lightColor;\n"
-        //  "color = vec4 (lightColor*ourColor, 1.0f);\n"
-        "vec3 result=(ambient+diffuse)*ourColor;\n"
-        "color=vec4(result,1.0f);\n"
+        //                                     "vec3 norm =normalize(Normal);\n"
+        //                                     "vec3 lightDir =normalize(LightPosition-FragPos);\n"
+        //                                     "vec3 lightDir2 =normalize(LightPosition2-FragPos);\n"
+        //        //"vec3 lightDir =normalize(vec3(0.5,0.5,0.5));\n"
+        //        "float diff;\n"
+        //        "float diff2;\n"
+        //        //"if(max(dot(norm,lightDir),0.0)>max(dot(norm,lightDir2),0.0)) \n"
+        //        " diff=clamp(max(dot(norm,lightDir),0.0),0.0,1.0);\n"
+        //        //  "else \n"
+        //        " diff2=clamp(max(dot(norm,lightDir2),0.0),0.0,1.0);\n"
+        //        "vec3 diffuse=clamp(diff+diff2, 0.0, 1.0)*lightColor;\n"
+        //        //  "color = vec4 (lightColor*ourColor, 1.0f);\n"
+        //        "vec3 result=clamp((ambient+diffuse),0.0,1.0)*ourColor;\n"
+
+
+
+        "color=myColor;\n"
         //"color =ourColor;\n"
         "}\n\0";
 
@@ -94,15 +105,26 @@ OpenGlViewer::OpenGlViewer( QWidget *parent)
     //    scaleSpeed = 0.001;
     scaleWheel = 1;
 
+    //    light_position[0]=0;
+    //    light_position[1]=-50;
+    //    light_position[2]=-10;
+    //    light_position[3]=0;
+
+
+    //    light_position2[0]=maxOrigin;
+    //    light_position2[1]=maxOrigin;
+    //    light_position2[2]=-maxOrigin;
+    //    light_position2[3]=0;
+
     light_position[0]=0;
-    light_position[1]=-50;
-    light_position[2]=-10;
+    light_position[1]=0;
+    light_position[2]=1;
     light_position[3]=0;
 
 
-    light_position2[0]=maxOrigin;
-    light_position2[1]=maxOrigin;
-    light_position2[2]=-maxOrigin;
+    light_position2[0]=0;
+    light_position2[1]=0;
+    light_position2[2]=-1;
     light_position2[3]=0;
 
     rotate_x=0;
@@ -682,9 +704,9 @@ void OpenGlViewer::alignSecondMesh(MyMesh * firstMesh=nullptr, MyMesh * secondMe
     std::vector<vcg::AlignPair::A2Vertex> tmpmv;
 
     ap.MaxIterNum=10000;
-   // ap.TrgDistAbs=0.005;
-  //  ap.EndStepNum=10;
-   // ap.MinMinDistPerc=0.005;
+    // ap.TrgDistAbs=0.005;
+    //  ap.EndStepNum=10;
+    // ap.MinMinDistPerc=0.005;
     ap.UseVertexOnly=true;
 
 
@@ -763,7 +785,7 @@ void OpenGlViewer::alignSecondMesh(MyMesh * firstMesh=nullptr, MyMesh * secondMe
         //        }
 
     }
-   // QString time= QString::number(timer->elapsed());
+    // QString time= QString::number(timer->elapsed());
 
     if(distance.first>ERROR_ALIGN)
     {
@@ -962,9 +984,9 @@ void OpenGlViewer::openAlignFile()
     clearMeshesVector();
     distanceInfo.clear();
     vectorContentMLP.clear();
-//    std::vector<QString> vectorFileNames;
-//    std::vector<vcg::Matrix44d> vectorMatrix;
-//    std::vector<bool> vectorVisible;
+    //    std::vector<QString> vectorFileNames;
+    //    std::vector<vcg::Matrix44d> vectorMatrix;
+    //    std::vector<bool> vectorVisible;
     //path to file with meshes that need to align
     QString pathAlignMeshes=QFileDialog::getOpenFileName(this,"Open file with collect of meshes" );
     //QString exportPath=pathAlignMeshes.split(".")[0]+".mlp";
@@ -986,102 +1008,102 @@ void OpenGlViewer::openAlignFile()
         //emit infoDisplay("MessageParse end");
         //   qDebug()<<data;
         addedMeshesToAlign(stringList,pathAlignMeshes);
-       // qDebug()<<"Emit signal append mesh 2";
+        // qDebug()<<"Emit signal append mesh 2";
     }
-   // addedMeshesToAlign(QStringList(),pathAlignMeshes);
+    // addedMeshesToAlign(QStringList(),pathAlignMeshes);
 
-//    QFileInfo fileInfo(pathAlignMeshes);
+    //    QFileInfo fileInfo(pathAlignMeshes);
 
-//    //get path to dir where file with meshes located
-//    const QString pathToDir=pathAlignMeshes.mid(0,pathAlignMeshes.size()-fileInfo.fileName().size());
+    //    //get path to dir where file with meshes located
+    //    const QString pathToDir=pathAlignMeshes.mid(0,pathAlignMeshes.size()-fileInfo.fileName().size());
 
-//    if(pathAlignMeshes.isEmpty())
-//        return;
+    //    if(pathAlignMeshes.isEmpty())
+    //        return;
 
-//    QFile fileWithAlignMeshes(pathAlignMeshes);
-//    if(fileWithAlignMeshes.open(QIODevice::ReadOnly))
-//    {
-//        QString fileName;
-//        QByteArray isEmpty;
-//        do{
-//            isEmpty=fileWithAlignMeshes.readLine();
-//            if(isEmpty.isEmpty() || isEmpty=="\r\n" || isEmpty=="\n")
-//                continue;
+    //    QFile fileWithAlignMeshes(pathAlignMeshes);
+    //    if(fileWithAlignMeshes.open(QIODevice::ReadOnly))
+    //    {
+    //        QString fileName;
+    //        QByteArray isEmpty;
+    //        do{
+    //            isEmpty=fileWithAlignMeshes.readLine();
+    //            if(isEmpty.isEmpty() || isEmpty=="\r\n" || isEmpty=="\n")
+    //                continue;
 
-//            fileName=QString::fromStdString(isEmpty.toStdString()).split(QRegExp("[\r\n]"),QString::SkipEmptyParts)[0];
+    //            fileName=QString::fromStdString(isEmpty.toStdString()).split(QRegExp("[\r\n]"),QString::SkipEmptyParts)[0];
 
-//            if(!QFileInfo(pathToDir+fileName).exists())
-//                continue;
-//        }while(!addMesh(pathToDir+fileName,false) && !fileWithAlignMeshes.atEnd());
+    //            if(!QFileInfo(pathToDir+fileName).exists())
+    //                continue;
+    //        }while(!addMesh(pathToDir+fileName,false) && !fileWithAlignMeshes.atEnd());
 
-//        // vectorContentMLP.push_back({fileName,identityMatrix,"1"}); //add First mesh to MPL vector with Identity matrix
+    //        // vectorContentMLP.push_back({fileName,identityMatrix,"1"}); //add First mesh to MPL vector with Identity matrix
 
-//        //read all meshes from file and import it
-//        vcg::Matrix44d tempMatrix;
-//        tempMatrix.SetIdentity();
+    //        //read all meshes from file and import it
+    //        vcg::Matrix44d tempMatrix;
+    //        tempMatrix.SetIdentity();
 
-//        bool isVisible=false;
-//        vectorFileNames.push_back(fileName);
-//        vectorMatrix.push_back(tempMatrix);
-//        vectorVisible.push_back(true);
+    //        bool isVisible=false;
+    //        vectorFileNames.push_back(fileName);
+    //        vectorMatrix.push_back(tempMatrix);
+    //        vectorVisible.push_back(true);
 
-//        while(!fileWithAlignMeshes.atEnd())
-//        {
-//            isEmpty=fileWithAlignMeshes.readLine();
-//            if(isEmpty.isEmpty() || isEmpty=="\r\n" || isEmpty=="\n")
-//                continue;
+    //        while(!fileWithAlignMeshes.atEnd())
+    //        {
+    //            isEmpty=fileWithAlignMeshes.readLine();
+    //            if(isEmpty.isEmpty() || isEmpty=="\r\n" || isEmpty=="\n")
+    //                continue;
 
-//            fileName=QString::fromStdString(isEmpty.toStdString()).split(QRegExp("[\r\n]"),QString::SkipEmptyParts)[0];
+    //            fileName=QString::fromStdString(isEmpty.toStdString()).split(QRegExp("[\r\n]"),QString::SkipEmptyParts)[0];
 
-//            if(!QFileInfo(pathToDir+fileName).exists() || !addMesh(pathToDir+fileName,false))
-//                continue;
+    //            if(!QFileInfo(pathToDir+fileName).exists() || !addMesh(pathToDir+fileName,false))
+    //                continue;
 
-//            alignSecondMesh(meshes[meshes.size()-1],meshes[meshes.size()-2],&tempMatrix,&isVisible);
+    //            alignSecondMesh(meshes[meshes.size()-1],meshes[meshes.size()-2],&tempMatrix,&isVisible);
 
-//            if(isVisible)
-//            {
-//                for(int i=0;i<vectorMatrix.size();++i)
-//                {
-//                    if(vectorVisible[i])
-//                        vectorMatrix[i]*=tempMatrix;
-//                }
-//                vectorFileNames.push_back(fileName);
+    //            if(isVisible)
+    //            {
+    //                for(int i=0;i<vectorMatrix.size();++i)
+    //                {
+    //                    if(vectorVisible[i])
+    //                        vectorMatrix[i]*=tempMatrix;
+    //                }
+    //                vectorFileNames.push_back(fileName);
 
-//                tempMatrix.SetIdentity();
-//                vectorMatrix.push_back(tempMatrix);
-//                vectorVisible.push_back(true);
-//                // vectorContentMLP.push_back({fileName,vcgMatrixToString(tempMatrix),"1"});  //if visible push actual matrix data with visible ==1
-//                //appendSecondMeshToFirst();
-//                //                if(drawFirstObject!=nullptr)
-//                //                    delete drawFirstObject;
-//                //                drawFirstObject=drawSecondObject;
-//                //                drawSecondObject=nullptr;
-//            }
-//            else
-//            {
-//                vectorFileNames.push_back(fileName);
+    //                tempMatrix.SetIdentity();
+    //                vectorMatrix.push_back(tempMatrix);
+    //                vectorVisible.push_back(true);
+    //                // vectorContentMLP.push_back({fileName,vcgMatrixToString(tempMatrix),"1"});  //if visible push actual matrix data with visible ==1
+    //                //appendSecondMeshToFirst();
+    //                //                if(drawFirstObject!=nullptr)
+    //                //                    delete drawFirstObject;
+    //                //                drawFirstObject=drawSecondObject;
+    //                //                drawSecondObject=nullptr;
+    //            }
+    //            else
+    //            {
+    //                vectorFileNames.push_back(fileName);
 
-//                tempMatrix.SetIdentity();
-//                vectorMatrix.push_back(tempMatrix);
-//                vectorVisible.push_back(false);
-//                // vectorContentMLP.push_back({fileName,identityMatrix,"0"}); //if non visible, - push Matrix Identity with visible ==0
-//            }
-//        }
-//    }
-//    if(vectorMatrix.size()!=vectorVisible.size() || vectorMatrix.size()!=vectorFileNames.size())
-//    {
-//        QMessageBox::warning(this,"Error size incorrect", "Send it to developer error in code");
-//        return;
-//    }
+    //                tempMatrix.SetIdentity();
+    //                vectorMatrix.push_back(tempMatrix);
+    //                vectorVisible.push_back(false);
+    //                // vectorContentMLP.push_back({fileName,identityMatrix,"0"}); //if non visible, - push Matrix Identity with visible ==0
+    //            }
+    //        }
+    //    }
+    //    if(vectorMatrix.size()!=vectorVisible.size() || vectorMatrix.size()!=vectorFileNames.size())
+    //    {
+    //        QMessageBox::warning(this,"Error size incorrect", "Send it to developer error in code");
+    //        return;
+    //    }
 
-//    for(int i=0;i<vectorMatrix.size();++i)
-//        vectorContentMLP.push_back({vectorFileNames[i],vcgMatrixToString(vectorMatrix[i]),vectorVisible[i]?"1":"0"});
+    //    for(int i=0;i<vectorMatrix.size();++i)
+    //        vectorContentMLP.push_back({vectorFileNames[i],vcgMatrixToString(vectorMatrix[i]),vectorVisible[i]?"1":"0"});
 
-//    fileWithAlignMeshes.close();
-//    exportAsMLP(exportPath);
+    //    fileWithAlignMeshes.close();
+    //    exportAsMLP(exportPath);
 
-//    InitMaxOrigin();
-//    updateDrawVertex();
+    //    InitMaxOrigin();
+    //    updateDrawVertex();
 }
 
 
