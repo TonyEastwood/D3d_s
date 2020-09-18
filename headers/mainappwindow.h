@@ -26,6 +26,8 @@ class MainAppWindow : public QMainWindow
     Q_OBJECT
 
 private:
+
+    bool isExternalClose;
     // const LPCSTR WM_NewMeshName= LPCSTR("WM_NewMesh_D3D-s");
     // const LPCSTR WM_FilePathName  = LPCSTR("WM_FilePathName_D3D-s");
 

@@ -30,6 +30,8 @@ void MainAppWindow::Initialize(bool isIntegrate)
 
 
     // this->setStyleSheet("color:"+CONSTANTS::textColorMenu+";  background-color:"+CONSTANTS::backgroundColor+"; ");
+    isExternalClose=false;
+
     QMenu *fileMenu = new QMenu(tr("&File"), this);
 
     // fileMenu->setStyleSheet(" QMenu::title { background-color: red;} ");
@@ -174,7 +176,7 @@ void MainAppWindow::Initialize(bool isIntegrate)
 
 
     hideCustomProgressBar();
-   // buttonCancel->resize(buttonCancel->width()/2,buttonCancel->height());
+    // buttonCancel->resize(buttonCancel->width()/2,buttonCancel->height());
 
 
 
@@ -513,6 +515,7 @@ void MainAppWindow::clearMeshesOpengl()
 
 void MainAppWindow::appToClose()
 {
+    isExternalClose=true;
     if(parentHWND)
         SetParent((HWND)this->winId(),parentHWND);
     close();
@@ -575,13 +578,14 @@ void MainAppWindow::hideCustomProgressBar()
 void MainAppWindow::showCustomProgressBar()
 {
     labelScanning->setVisible(true);
-   // buttonCancel->setVisible(true);
+    // buttonCancel->setVisible(true);
     progress->setVisible(true);
 }
 
 void MainAppWindow::closeEvent(QCloseEvent *event)
 {
-    emit signalOnClose();
+    if(!isExternalClose)
+        emit signalOnClose();
 }
 
 
