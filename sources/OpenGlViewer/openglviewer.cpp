@@ -708,6 +708,13 @@ bool OpenGlViewer::addMesh(QString path, bool isNeedToDraw)
         QApplication::restoreOverrideCursor();
         return false;
     }
+    if(meshes.back()->face.size()==0)
+    {
+        delete meshes[meshes.size()-1];
+        meshes.pop_back();
+        QApplication::restoreOverrideCursor();
+        return false;
+    }
 
     vcg::tri::UpdateNormal<MyMesh>::PerVertexNormalizedPerFace(*meshes.back());
 
@@ -764,6 +771,7 @@ void OpenGlViewer::alignSecondMesh(MyMesh * firstMesh=nullptr, MyMesh * secondMe
         if(meshes.size()<2)
         {
             QMessageBox::warning(this, "Error align SecondMesh","Please, add at least two meshes");
+            (*isVisible)=false;
             return;
         }
         firstMesh=meshes[0];
@@ -774,6 +782,7 @@ void OpenGlViewer::alignSecondMesh(MyMesh * firstMesh=nullptr, MyMesh * secondMe
     if(firstMesh->face.size()==0 || secondMesh->face.size()==0)
     {
         QMessageBox::warning(this, "Warning","Please, choose two objects");
+        (*isVisible)=false;
         return;
     }
     QApplication::setOverrideCursor(Qt::WaitCursor);
@@ -793,7 +802,7 @@ void OpenGlViewer::alignSecondMesh(MyMesh * firstMesh=nullptr, MyMesh * secondMe
     vcg::AlignPair::A2GridVert VG;
     std::vector<vcg::AlignPair::A2Vertex> tmpmv;
 
-    ap.MaxIterNum=10000;
+    //ap.MaxIterNum=1000;
     // ap.TrgDistAbs=0.005;
     //  ap.EndStepNum=10;
     // ap.MinMinDistPerc=0.005;
