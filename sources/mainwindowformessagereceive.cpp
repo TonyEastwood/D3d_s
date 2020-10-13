@@ -19,7 +19,7 @@ MainWindowForMessageReceive::MainWindowForMessageReceive(QWidget *parent) :
 }
 bool MainWindowForMessageReceive::nativeEvent(const QByteArray &eventType, void *message, long *result)
 {
-
+    emit signalSetValue(0);
     MSG *msg = static_cast<MSG*>(message);
 
     qDebug()<<"Message2=="<<msg->message;
@@ -64,7 +64,13 @@ bool MainWindowForMessageReceive::nativeEvent(const QByteArray &eventType, void 
         if(m.value("quantity").toString().toInt()!=0)
         {
             emit signalSetQuantity(m.value("quantity").toString().toInt());
-            emit signalShowProgressBar();
+            emit signalSetValue(0);
+            //emit signalShowProgressBar();
+        }
+        else
+        {
+            emit signalSetQuantity(3);
+            emit signalSetValue(0);
         }
 
         return true;

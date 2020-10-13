@@ -387,6 +387,7 @@ void MainAppWindow::cancelScanning()
 {
     qDebug()<<"Cancel scanning";
     emit signalCancelScanning();
+    appToClose();
 }
 
 //void MainAppWindow::setSecondOpenglMesh()
@@ -549,6 +550,7 @@ void MainAppWindow::setMaxValue(int value)
 
 void MainAppWindow::setCurrentValue(int value)
 {
+    progress->setMinimum(0);
     progress->setValue(value);
     // progress->setLabelText("Scanning in progress...("+QString::number(value)+"/"+QString::number(progress.maximum())+")");
     if(value>=progress->maximum())
