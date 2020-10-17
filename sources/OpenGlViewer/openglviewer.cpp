@@ -101,7 +101,11 @@ OpenGlViewer::OpenGlViewer( QWidget *parent)
 
     timer=new QElapsedTimer();
 
-    rotation.setVector(0,0,0);
+    //rotation.setVector(0,0,0);
+    rotation.setVector(-0.173981   ,0.70098    ,0.659057);
+    rotation.setScalar(-0.209778);
+    //rotation.normalize();
+
 
     sizeDrawVertex=0;
     distanceInfo.clear();
