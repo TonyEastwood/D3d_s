@@ -130,7 +130,7 @@ OpenGlViewer::OpenGlViewer( QWidget *parent)
     scaleSpeed = 0.001;
     //  scaleWheel = orthoCoefficient * maxOrigin*0.1;
     //    scaleSpeed = 0.001;
-    scaleWheel = 1;
+    scaleWheel = 2;
 
     //    light_position[0]=0;
     //    light_position[1]=-50;
