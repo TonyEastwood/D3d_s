@@ -1044,12 +1044,12 @@ void OpenGlViewer::addedMeshesToAlign(QStringList meshesList, QString path)
             }
         }
     }
-    else
-    {
-        InitMaxOrigin();
-        updateDrawVertex();
-        return;
-    }
+//    else
+//    {
+//        InitMaxOrigin();
+//        updateDrawVertex();
+//        return;
+//    }
 
     if(WRvectorMatrix.size()!=WRvectorVisible.size() || WRvectorMatrix.size()!=WRvectorFileNames.size())
     {
