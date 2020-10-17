@@ -56,7 +56,9 @@ private:
 
 
     //QString pathToFile;
-
+protected:
+    void showEvent(QShowEvent *ev) override;
+    void hideEvent(QHideEvent *event) override;
 public:
     explicit MainAppWindow(QWidget *parent = nullptr);
 

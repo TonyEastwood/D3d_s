@@ -19,7 +19,7 @@ MainWindowForMessageReceive::MainWindowForMessageReceive(QWidget *parent) :
 }
 bool MainWindowForMessageReceive::nativeEvent(const QByteArray &eventType, void *message, long *result)
 {
-    emit signalSetValue(0);
+    //emit signalSetValue(0);
     MSG *msg = static_cast<MSG*>(message);
 
     qDebug()<<"Message2=="<<msg->message;

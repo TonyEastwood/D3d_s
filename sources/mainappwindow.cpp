@@ -2,6 +2,20 @@
 #include "ui_mainappwindow.h"
 
 #include <QDebug>
+void MainAppWindow::showEvent(QShowEvent *ev)
+{
+    if(!progress->value())
+        hideCustomProgressBar();
+    else showCustomProgressBar();
+}
+
+void MainAppWindow::hideEvent(QHideEvent *event)
+{
+    if(!progress->value())
+        hideCustomProgressBar();
+    else showCustomProgressBar();
+}
+
 MainAppWindow::MainAppWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainAppWindow)
@@ -241,9 +255,9 @@ void MainAppWindow::Initialize(bool isIntegrate)
     // connect(&progress,&QProgressDialog::canceled,this, &MainAppWindow::cancelScanning );
     connect(buttonCancel,&QPushButton::clicked,this, &MainAppWindow::cancelScanning );
 
-    progress->setMinimum(1);
+    progress->setMinimum(0);
     progress->setMaximum(2);
-    progress->setValue(2);
+    progress->setValue(0);
     // progress->setAutoClose(true);
     //progress->setAutoReset(true);
 
@@ -557,8 +571,9 @@ void MainAppWindow::setCurrentValue(int value)
     {
         //progress->hide();
         hideCustomProgressBar();
-        progress->setValue(1);
-    }else showCustomProgressBar();//progress->show();
+        progress->setValue(0);
+    }else if(value) showCustomProgressBar();//progress->show();
+    else hideCustomProgressBar();
 }
 
 void MainAppWindow::showProgressBar()
