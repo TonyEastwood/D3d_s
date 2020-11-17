@@ -100,6 +100,8 @@ public slots:
     void setMaxValue(int value);
     void setCurrentValue(int value);
     void showProgressBar();
+
+    void sendLineRotationAxis(float x1, float y1, float z1, float x2, float y2, float z2);
 signals:
     void infoDisplay(const QString &result);
 

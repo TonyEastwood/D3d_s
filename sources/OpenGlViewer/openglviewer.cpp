@@ -101,6 +101,7 @@ OpenGlViewer::OpenGlViewer( QWidget *parent)
 
     timer=new QElapsedTimer();
 
+    tempRotationMatrix.setToIdentity();
     //rotation.setVector(0,0,0);
     rotation.setVector(-0.173981   ,0.70098    ,0.659057);
     rotation.setScalar(-0.209778);
@@ -340,7 +341,11 @@ void OpenGlViewer::paintGL() {
     m_transform.setToIdentity();
     m_projection.setToIdentity();
 
+    tempRotationMatrix = tempRotationMatrix * getRotationMatrixFromRotationLine(x1Line,y1Line,z1Line,x2Line,y2Line,z2Line,tempAngleYRotation);
+    m_transform = m_transform * tempRotationMatrix;
     m_transform.rotate(rotation);
+   // tempRotationMatrix = tempRotationMatrix * getRotationMatrixFromRotationLine(76.960,54.643,46.698,25.577,59.829,46.194,tempAngleYRotation);
+
     m_transform.translate(-(minMaxXYZ[1] + minMaxXYZ[0])/2.0f,-(minMaxXYZ[3] + minMaxXYZ[2])/2.0f,-(minMaxXYZ[4] + minMaxXYZ[5])/2.0f);
 
     m_projection.ortho(-maxOrigin*scaleWheel*aspect,maxOrigin*scaleWheel*aspect,
@@ -392,46 +397,31 @@ void OpenGlViewer::paintGL() {
 
 void OpenGlViewer::mouseMoveEvent(QMouseEvent *e) {
 
-    //    if (e->buttons() & Qt::LeftButton && cameraMove) {
+//    if (e->buttons() & Qt::LeftButton) {
+//        QVector2D diff = QVector2D(e->localPos()) - mousePressPosition;
+//        rotation = QQuaternion::fromAxisAndAngle((QVector3D(diff.y(), diff.x(), 0.0).normalized() * diff.length() / 100.0).normalized(), rotationSpeed) * rotation;
 
-    //        QVector2D diff = QVector2D(e->localPos()) - mousePressPosition;
-    //        QVector2D n = QVector2D(diff.x(),diff.y()).normalized();
+//        mousePressPosition=QVector2D(e->localPos());
+//        // Request an update
+//        update();
+//    }
+        if (e->buttons() & Qt::LeftButton) {
 
-    //       // x_pos = e->x();
-    //      //  y_pos = e->y();
-    //        translateX -= n.x()* translateSpeed;
-    //        translateY -= n.y() * translateSpeed;
-    //        qDebug()<<"transX="<<translateX<<" transY="<<translateY;
+            float scale=5;
+            tempAngleYRotation = (e->localPos().y() - mousePressPosition.y())/scale;
 
-    //        mousePressPosition=QVector2D(e->localPos());
-    //       // prevRotation_x = x_pos;
-    //       // prevRotation_y = y_pos;
-    //        update();  // update Form that display Object
-    //        qDebug() << "Shift";
-    //        return;
-    //    }
-    //    else
-    if (e->buttons() & Qt::LeftButton) {
-        QVector2D diff = QVector2D(e->localPos()) - mousePressPosition;
+         mousePressPosition=QVector2D(e->localPos());
+            qDebug()<<"tempAngle y ROtation ="<<tempAngleYRotation;
 
-        //QVector3D n = QVector3D(diff.y(), diff.x(), 0.0).normalized();
-        // qreal acc = diff.length() / 100.0;
-
-        // Calculate new rotation axis as weighted sum
-        //rotationAxis = ( QVector3D(diff.y(), diff.x(), 0.0).normalized() * diff.length() / 100.0).normalized();
-
-        rotation = QQuaternion::fromAxisAndAngle((QVector3D(diff.y(), diff.x(), 0.0).normalized() * diff.length() / 100.0).normalized(), rotationSpeed) * rotation;
-
-        mousePressPosition=QVector2D(e->localPos());
-        // Request an update
-        update();
-    }
+            update();
+        }
 }
 void OpenGlViewer::mousePressEvent(QMouseEvent *e) {
     mousePressPosition = QVector2D(e->localPos());
 }
 
 void OpenGlViewer::mouseReleaseEvent(QMouseEvent *e) {
+
 
 }
 
@@ -647,6 +637,39 @@ void OpenGlViewer::clearMeshesVector()
     meshes.clear();
 }
 
+QMatrix4x4 OpenGlViewer::getRotationMatrixFromRotationLine(float x1, float y1, float z1, float x2, float y2, float z2, float angle)
+{
+    float u =x2-x1;
+    float v =y2-y1;
+    float w =z2-z1;
+
+    float theta =  angle / 180 * 3.14 ; //deg in radians
+
+    float l = sqrt(u*u + v*v+ w*w);
+    if(!l)
+    {
+        qDebug()<<"Error l ==0";
+        return QMatrix4x4();
+    }
+
+    float u2=u*u;
+    float v2=v*v;
+    float w2=w*w;
+
+    float cosT = cos(theta);
+
+    float oneMinusCosT = 1 - cosT;
+    float sinT=sin(theta);
+
+    float l2 = u2+v2+w2;
+
+
+    return QMatrix4x4((u2 + (v2 + w2) * cosT)/l2,(u*v * oneMinusCosT - w*l*sinT)/l2,(u*w * oneMinusCosT + v*l*sinT)/l2,((x1*(v2 + w2) - u*(y1*v + z1*w)) * oneMinusCosT+ (y1*w - z1*v)*l*sinT)/l2,
+                      (u*v * oneMinusCosT + w*l*sinT)/l2,(v2 + (u2 + w2) * cosT)/l2, (v*w * oneMinusCosT - u*l*sinT)/l2,((y1*(u2 + w2) - v*(x1*u + z1*w)) * oneMinusCosT        + (z1*u - x1*w)*l*sinT)/l2,
+                      (u*w * oneMinusCosT - v*l*sinT)/l2,(v*w * oneMinusCosT + u*l*sinT)/l2,(w2 + (u2 + v2) * cosT)/l2,((z1*(u2 + v2) - w*(x1*u + y1*v)) * oneMinusCosT + (x1*v - y1*u)*l*sinT)/l2,
+                      0,0,0,1);
+}
+
 void OpenGlViewer::exportAsMLP(QString filename)
 {
     if(vectorContentMLP.empty() || filename.isEmpty())
@@ -691,6 +714,17 @@ void OpenGlViewer::exportAsMLP(QString filename)
     if(file.open(QIODevice::WriteOnly))
         file.write(mlpFileContent);
     file.close();
+}
+
+void OpenGlViewer::setRotationLineAxis(float x1, float y1, float z1, float x2, float y2, float z2)
+{
+    x1Line = x1;
+    y1Line = y1;
+    z1Line = z1;
+
+    x2Line = x2;
+    y2Line = y2;
+    z2Line = z2;
 }
 
 

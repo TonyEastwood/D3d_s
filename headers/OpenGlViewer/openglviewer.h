@@ -51,6 +51,8 @@ public:
 
     void exportAsMLP(QString path);
 
+    void setRotationLineAxis(float x1, float y1, float z1, float x2, float y2, float z2);
+
 signals:
     void setDistanceInLabel(QString textDistance);
 public slots:
@@ -87,6 +89,8 @@ private:
 
     void clearMeshesVector();
 
+    QMatrix4x4 getRotationMatrixFromRotationLine(float x1, float y1, float z1, float x2, float y2, float z2, float angle);
+
     //  void drawTestCube();
     //temporary const
 private:
@@ -118,6 +122,14 @@ private:
 
 
 private:
+    //line rotation axis
+    float x1Line = 0;
+    float y1Line = 0;
+    float z1Line = 0;
+    float x2Line = 0;
+    float y2Line = 0;
+    float z2Line = 0;
+
     GLfloat * drawVertex;   //vertex that contain Vertex shader
     uint sizeDrawVertex=0;  //size all of vertex that need to draw
 
@@ -142,6 +154,8 @@ private:
 
     QOpenGLExtraFunctions *f;
 
+    float tempAngleYRotation=0;
+    QMatrix4x4 tempRotationMatrix;
 
     QString distanceInfo;
 

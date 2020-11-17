@@ -73,6 +73,20 @@ bool MainWindowForMessageReceive::nativeEvent(const QByteArray &eventType, void 
             emit signalSetValue(0);
         }
 
+
+        //get line rotation axis
+        float x1 = m.value("Line1X").toFloat();
+        float y1 = m.value("Line1Y").toFloat();
+        float z1 = m.value("Line1Z").toFloat();
+
+        float x2 = m.value("Line2X").toFloat();
+        float y2 = m.value("Line2Y").toFloat();
+        float z2 = m.value("Line2Z").toFloat();
+
+        emit signalSendRotationAxis(x1,y1,z1,x2,y2,z2);
+
+
+
         return true;
     }
 
