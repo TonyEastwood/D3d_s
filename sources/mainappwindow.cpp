@@ -572,7 +572,7 @@ void MainAppWindow::setCurrentValue(int value)
         //progress->hide();
         hideCustomProgressBar();
         progress->setValue(0);
-        emit appToClose();
+        //emit appToClose();
     }else if(value) showCustomProgressBar();//progress->show();
     else hideCustomProgressBar();
 }
