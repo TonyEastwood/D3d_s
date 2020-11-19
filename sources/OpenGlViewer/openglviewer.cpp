@@ -341,7 +341,13 @@ void OpenGlViewer::paintGL() {
     m_transform.setToIdentity();
     m_projection.setToIdentity();
 
-    tempRotationMatrix = tempRotationMatrix * getRotationMatrixFromRotationLine(x1Line,y1Line,z1Line,x2Line,y2Line,z2Line,tempAngleYRotation);
+    tempRotationMatrix = tempRotationMatrix * getRotationMatrixFromRotationLine(x1Line-(minMaxXYZ[1] + minMaxXYZ[0])/2.0f,
+                                                                                y1Line-(minMaxXYZ[3] + minMaxXYZ[2])/2.0f,
+                                                                                z1Line-(minMaxXYZ[4] + minMaxXYZ[5])/2.0f,
+                                                                                x2Line-(minMaxXYZ[1] + minMaxXYZ[0])/2.0f,
+                                                                                y2Line-(minMaxXYZ[3] + minMaxXYZ[2])/2.0f,
+                                                                                z2Line-(minMaxXYZ[4] + minMaxXYZ[5])/2.0f,
+                                                                                tempAngleYRotation);
     m_transform = m_transform * tempRotationMatrix;
     m_transform.rotate(rotation);
    // tempRotationMatrix = tempRotationMatrix * getRotationMatrixFromRotationLine(76.960,54.643,46.698,25.577,59.829,46.194,tempAngleYRotation);
