@@ -83,7 +83,17 @@ bool MainWindowForMessageReceive::nativeEvent(const QByteArray &eventType, void 
         float y2 = m.value("Line2Y").toFloat()/1000;
         float z2 = m.value("Line2Z").toFloat()/1000;
 
-        emit signalSendRotationAxis(x1,y1,z1,x2,y2,z2);
+        emit signalSendHorizontalRotationAxis(x1,y1,z1,x2,y2,z2);
+
+         x1 = m.value("Line1XVertical").toFloat()/1000;
+         y1 = m.value("Line1YVertical").toFloat()/1000;
+         z1 = m.value("Line1ZVertical").toFloat()/1000;
+
+         x2 = m.value("Line2XVertical").toFloat()/1000;
+         y2 = m.value("Line2YVertical").toFloat()/1000;
+         z2 = m.value("Line2ZVertical").toFloat()/1000;
+
+        emit signalSendVerticalRotationAxis(x1,y1,z1,x2,y2,z2);
 
 
 

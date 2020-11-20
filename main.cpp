@@ -43,7 +43,8 @@ int main(int argc, char *argv[])
         //progress bar
         QObject::connect(&messageReceiver,&MainWindowForMessageReceive::signalSetQuantity,&mainWin,&MainAppWindow::setMaxValue);
         QObject::connect(&messageReceiver,&MainWindowForMessageReceive::signalSetValue,&mainWin,&MainAppWindow::setCurrentValue);
-        QObject::connect(&messageReceiver,&MainWindowForMessageReceive::signalSendRotationAxis,&mainWin,&MainAppWindow::sendLineRotationAxis);
+        QObject::connect(&messageReceiver,&MainWindowForMessageReceive::signalSendHorizontalRotationAxis,&mainWin,&MainAppWindow::sendLineHorizontalRotationAxis);
+        QObject::connect(&messageReceiver,&MainWindowForMessageReceive::signalSendVerticalRotationAxis,&mainWin,&MainAppWindow::sendLineVerticalRotationAxis);
 
         QObject::connect(&messageReceiver,&MainWindowForMessageReceive::signalShowProgressBar,&mainWin,&MainAppWindow::showProgressBar);
         QObject::connect(&mainWin,&MainAppWindow::signalCancelScanning,&messageReceiver,&MainWindowForMessageReceive::cancelScanning);

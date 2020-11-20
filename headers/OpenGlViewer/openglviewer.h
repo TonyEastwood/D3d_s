@@ -51,7 +51,8 @@ public:
 
     void exportAsMLP(QString path);
 
-    void setRotationLineAxis(float x1, float y1, float z1, float x2, float y2, float z2);
+    void setRotationVerticalLineAxis(float x1, float y1, float z1, float x2, float y2, float z2);
+    void setRotationHorizontalLineAxis(float x1, float y1, float z1, float x2, float y2, float z2);
 
 signals:
     void setDistanceInLabel(QString textDistance);
@@ -89,7 +90,8 @@ private:
 
     void clearMeshesVector();
 
-    QMatrix4x4 getRotationMatrixFromRotationLine(float x1, float y1, float z1, float x2, float y2, float z2, float angle);
+    QMatrix4x4 getRotationMatrixFromHorizontalRotationLine(float x1, float y1, float z1, float x2, float y2, float z2, float angle);
+    QMatrix4x4 getRotationMatrixFromVerticalRotationLine(float x1, float y1, float z1, float x2, float y2, float z2, float angle);
 
     //  void drawTestCube();
     //temporary const
@@ -123,12 +125,19 @@ private:
 
 private:
     //line rotation axis
-    float x1Line = 0;
-    float y1Line = 0;
-    float z1Line = 0;
-    float x2Line = 0;
-    float y2Line = 0;
-    float z2Line = 0;
+    float x1HorizontalLine = 0;
+    float y1HorizontalLine = 0;
+    float z1HorizontalLine = 0;
+    float x2HorizontalLine = 0;
+    float y2HorizontalLine = 0;
+    float z2HorizontalLine = 0;
+
+    float x1VerticalLine = 0;
+    float y1VerticalLine = 0;
+    float z1VerticalLine = 0;
+    float x2VerticalLine = 0;
+    float y2VerticalLine = 0;
+    float z2VerticalLine = 0;
 
     GLfloat * drawVertex;   //vertex that contain Vertex shader
     uint sizeDrawVertex=0;  //size all of vertex that need to draw
@@ -155,7 +164,11 @@ private:
     QOpenGLExtraFunctions *f;
 
     float tempAngleYRotation=0;
-    QMatrix4x4 tempRotationMatrix;
+    float tempAngleXRotation=0;
+
+    float absoluteZAngle = 0;   //from 0 to 180
+    QMatrix4x4 tempHorizontalRotationMatrix;
+    QMatrix4x4 tempVerticalRotationMatrix;
 
     QString distanceInfo;
 

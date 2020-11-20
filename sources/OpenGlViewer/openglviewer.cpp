@@ -101,10 +101,11 @@ OpenGlViewer::OpenGlViewer( QWidget *parent)
 
     timer=new QElapsedTimer();
 
-    tempRotationMatrix.setToIdentity();
+    tempHorizontalRotationMatrix.setToIdentity();
+    tempVerticalRotationMatrix.setToIdentity();
     //rotation.setVector(0,0,0);
-    rotation.setVector(-0.173981   ,0.70098    ,0.659057);
-    rotation.setScalar(-0.209778);
+   // rotation.setVector(-0.173981   ,0.70098    ,0.659057);
+   // rotation.setScalar(-0.209778);
     //rotation.normalize();
 
 
@@ -164,6 +165,10 @@ OpenGlViewer::OpenGlViewer( QWidget *parent)
 
     translateX=0;
     translateY=0;
+
+
+    //setRotationHorizontalLineAxis(-10,0,0,20,0,0);
+    //setRotationVerticalLineAxis(0,-10,0,0,10,0);
 
 
 }
@@ -341,15 +346,27 @@ void OpenGlViewer::paintGL() {
     m_transform.setToIdentity();
     m_projection.setToIdentity();
 
-    tempRotationMatrix = tempRotationMatrix * getRotationMatrixFromRotationLine(x1Line-(minMaxXYZ[1] + minMaxXYZ[0])/2.0f,
-                                                                                y1Line-(minMaxXYZ[3] + minMaxXYZ[2])/2.0f,
-                                                                                z1Line-(minMaxXYZ[4] + minMaxXYZ[5])/2.0f,
-                                                                                x2Line-(minMaxXYZ[1] + minMaxXYZ[0])/2.0f,
-                                                                                y2Line-(minMaxXYZ[3] + minMaxXYZ[2])/2.0f,
-                                                                                z2Line-(minMaxXYZ[4] + minMaxXYZ[5])/2.0f,
+    tempVerticalRotationMatrix = tempVerticalRotationMatrix * getRotationMatrixFromVerticalRotationLine(x1VerticalLine-(minMaxXYZ[1] + minMaxXYZ[0])/2.0f,
+                                                                                y1VerticalLine-(minMaxXYZ[3] + minMaxXYZ[2])/2.0f,
+                                                                                z1VerticalLine-(minMaxXYZ[4] + minMaxXYZ[5])/2.0f,
+                                                                                x2VerticalLine-(minMaxXYZ[1] + minMaxXYZ[0])/2.0f,
+                                                                                y2VerticalLine-(minMaxXYZ[3] + minMaxXYZ[2])/2.0f,
+                                                                                z2VerticalLine-(minMaxXYZ[4] + minMaxXYZ[5])/2.0f,
+                                                                                tempAngleXRotation);
+
+    tempHorizontalRotationMatrix = tempHorizontalRotationMatrix * getRotationMatrixFromHorizontalRotationLine(x1HorizontalLine-(minMaxXYZ[1] + minMaxXYZ[0])/2.0f,
+                                                                                y1HorizontalLine-(minMaxXYZ[3] + minMaxXYZ[2])/2.0f,
+                                                                                z1HorizontalLine-(minMaxXYZ[4] + minMaxXYZ[5])/2.0f,
+                                                                                x2HorizontalLine-(minMaxXYZ[1] + minMaxXYZ[0])/2.0f,
+                                                                                y2HorizontalLine-(minMaxXYZ[3] + minMaxXYZ[2])/2.0f,
+                                                                                z2HorizontalLine-(minMaxXYZ[4] + minMaxXYZ[5])/2.0f,
                                                                                 tempAngleYRotation);
-    m_transform = m_transform * tempRotationMatrix;
-    m_transform.rotate(rotation);
+
+
+    m_transform = m_transform * tempVerticalRotationMatrix;
+    m_transform = m_transform * tempHorizontalRotationMatrix;
+
+   // m_transform.rotate(rotation);
    // tempRotationMatrix = tempRotationMatrix * getRotationMatrixFromRotationLine(76.960,54.643,46.698,25.577,59.829,46.194,tempAngleYRotation);
 
     m_transform.translate(-(minMaxXYZ[1] + minMaxXYZ[0])/2.0f,-(minMaxXYZ[3] + minMaxXYZ[2])/2.0f,-(minMaxXYZ[4] + minMaxXYZ[5])/2.0f);
@@ -411,13 +428,30 @@ void OpenGlViewer::mouseMoveEvent(QMouseEvent *e) {
 //        // Request an update
 //        update();
 //    }
+
+
         if (e->buttons() & Qt::LeftButton) {
 
             float scale=5;
             tempAngleYRotation = (e->localPos().y() - mousePressPosition.y())/scale;
+            tempAngleXRotation = (e->localPos().x() - mousePressPosition.x())/scale;
+
+            absoluteZAngle+=tempAngleXRotation;
+
+            if(absoluteZAngle<-180)
+            {
+                tempAngleXRotation = tempAngleXRotation - (absoluteZAngle + 180);
+                absoluteZAngle = -180;
+            }
+            else if (absoluteZAngle > 0)
+            {
+                tempAngleXRotation = tempAngleXRotation - (absoluteZAngle);
+                absoluteZAngle = 0;
+            }
+
 
          mousePressPosition=QVector2D(e->localPos());
-            qDebug()<<"tempAngle y ROtation ="<<tempAngleYRotation;
+           // qDebug()<<"tempAngle y ROtation ="<<tempAngleYRotation;
 
             update();
         }
@@ -643,7 +677,40 @@ void OpenGlViewer::clearMeshesVector()
     meshes.clear();
 }
 
-QMatrix4x4 OpenGlViewer::getRotationMatrixFromRotationLine(float x1, float y1, float z1, float x2, float y2, float z2, float angle)
+QMatrix4x4 OpenGlViewer::getRotationMatrixFromHorizontalRotationLine(float x1, float y1, float z1, float x2, float y2, float z2, float angle)
+{
+    float u =x2-x1;
+    float v =y2-y1;
+    float w =z2-z1;
+
+    float theta =  angle / 180 * 3.14 ; //deg in radians
+
+    float l = sqrt(u*u + v*v+ w*w);
+    if(!l)
+    {
+        qDebug()<<"Error l ==0";
+        return QMatrix4x4();
+    }
+
+    float u2=u*u;
+    float v2=v*v;
+    float w2=w*w;
+
+    float cosT = cos(theta);
+
+    float oneMinusCosT = 1 - cosT;
+    float sinT=sin(theta);
+
+    float l2 = u2+v2+w2;
+
+
+    return QMatrix4x4((u2 + (v2 + w2) * cosT)/l2,(u*v * oneMinusCosT - w*l*sinT)/l2,(u*w * oneMinusCosT + v*l*sinT)/l2,((x1*(v2 + w2) - u*(y1*v + z1*w)) * oneMinusCosT+ (y1*w - z1*v)*l*sinT)/l2,
+                      (u*v * oneMinusCosT + w*l*sinT)/l2,(v2 + (u2 + w2) * cosT)/l2, (v*w * oneMinusCosT - u*l*sinT)/l2,((y1*(u2 + w2) - v*(x1*u + z1*w)) * oneMinusCosT        + (z1*u - x1*w)*l*sinT)/l2,
+                      (u*w * oneMinusCosT - v*l*sinT)/l2,(v*w * oneMinusCosT + u*l*sinT)/l2,(w2 + (u2 + v2) * cosT)/l2,((z1*(u2 + v2) - w*(x1*u + y1*v)) * oneMinusCosT + (x1*v - y1*u)*l*sinT)/l2,
+                      0,0,0,1);
+}
+
+QMatrix4x4 OpenGlViewer::getRotationMatrixFromVerticalRotationLine(float x1, float y1, float z1, float x2, float y2, float z2, float angle)
 {
     float u =x2-x1;
     float v =y2-y1;
@@ -722,15 +789,26 @@ void OpenGlViewer::exportAsMLP(QString filename)
     file.close();
 }
 
-void OpenGlViewer::setRotationLineAxis(float x1, float y1, float z1, float x2, float y2, float z2)
+void OpenGlViewer::setRotationHorizontalLineAxis(float x1, float y1, float z1, float x2, float y2, float z2)
 {
-    x1Line = x1;
-    y1Line = y1;
-    z1Line = z1;
+    x1HorizontalLine = x1;
+    y1HorizontalLine = y1;
+    z1HorizontalLine = z1;
 
-    x2Line = x2;
-    y2Line = y2;
-    z2Line = z2;
+    x2HorizontalLine = x2;
+    y2HorizontalLine = y2;
+    z2HorizontalLine = z2;
+}
+
+void OpenGlViewer::setRotationVerticalLineAxis(float x1, float y1, float z1, float x2, float y2, float z2)
+{
+    x1VerticalLine = x1;
+    y1VerticalLine = y1;
+    z1VerticalLine = z1;
+
+    x2VerticalLine = x2;
+    y2VerticalLine = y2;
+    z2VerticalLine = z2;
 }
 
 
